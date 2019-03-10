@@ -1,0 +1,2 @@
+# django_ai_platform
+基于django的AI对战游戏运行平台
