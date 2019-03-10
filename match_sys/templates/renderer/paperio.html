@@ -1,0 +1,522 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+
+{% block title %}查看比赛记录: {{match.code1.name}} vs. {{match.code2.name}} - {{record_id}}{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" type="text/css" href="/assets/css/view_base.css">
+<style>
+    .screen-pool{
+        box-shadow: 0px 0px 5px rgba(0,0,0,0.5);
+        margin:15px;
+    }
+    .xscroll{
+        width:100%
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class='container'>
+    <div class='row header bg-info'>
+        <div class='col-sm-4'>
+            <h1>
+                <a href='../' title='{{match.code1.name}} vs. {{match.code2.name}}'>返回比赛</a>
+            </h1>
+        </div>
+        <div class='col-sm-4 text-center'>
+            {% if record_id %}
+            <h1 class='d-inline-block'>
+                <a href='../{{record_id | add:"-1"}}'>
+                    上一场
+                </a>
+            </h1>
+            {% endif %}
+            <h1 class='d-inline-block' style="margin-left:10px;margin-right:10px">
+                {{record_id|add:"1"}}/{{match.finished_rounds}}
+            </h1>
+            {% if not_last_record %}
+            <h1 class='d-inline-block'>
+                <a href='../{{record_id | add:"1"}}'>
+                下一场
+                </a>
+            </h1>
+            {% endif %}
+        </div>
+        <div class='col-sm-4'>
+            <div class='float-right'>
+                <button class='btn btn-sm btn-success' id='btn_play'>播放/暂停</button>
+                <button class='btn btn-sm btn-success' id='btn_speed'>播放速度: 1x</button>
+            </div>
+        </div>
+    </div>
+    <div class='row x_block'>
+        <div class='col-sm-4'>
+            <div>
+                第<span id='num_frame_cur'></span>帧 / 共<span id='num_frame_total'></span>帧
+            </div>
+        </div>
+        <div class='col-sm-4 text-center'>
+            <div>
+                双方剩余时间:
+                <span id='timeleft0'></span>秒 /
+                <span id='timeleft1'></span>秒
+            </div>
+        </div>
+        <div class='col-sm-4 text-right'>
+            <div>
+                双方占地面积:
+                <canvas id='field_counter' width=120 height=15 title='test' style="box-shadow: 0px 0px 5px rgba(0,0,0,0.5)"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class='row x_block'>
+        <input type="range" min='0' max='4000' step='1' value="0" id="video_scroll" class='xscroll' style='margin:10px'>
+    </div>
+    <div class='row'>
+        <div class='col-sm-3' style='border-right: 2px solid #E6E9ED; padding-right: 15px'>
+            <div class='row x_title'>
+                <h1 class='col-sm-12'>显示设置</h1>
+            </div>
+            <div class='row x_block'>
+                <div class='col-sm-6'>
+                    先手玩家颜色:
+                </div>
+                <div class='col-sm-6'>
+                    <input type="color" value="#FDA761" id="color1">
+                    <input type="color" value="#fc7b12" id="color1_1">
+                </div>
+                <div class='col-sm-6'>
+                    后手玩家颜色:
+                </div>
+                <div class='col-sm-6'>
+                    <input type="color" value="#80D1FF" id="color2">
+                    <input type="color" value="#06a8ff" id="color2_1">
+                </div>
+            </div>
+            <div class='row x_block'>
+                <div class='col-sm-6'>
+                    网格大小 (<label id="grid_size_val">5</label>)
+                </div>
+                <div class='col-sm-6'>
+                    <input type="range" min='1' max='10' step='1' value="5" id="grid_size" class='xscroll'>
+                </div>
+                <div class='col-sm-6'>
+                    纸带宽度 (<label id="band_width_val">3</label>)
+                </div>
+                <div class='col-sm-6'>
+                    <input type="range" min='1' max='10' step='1' value="3" id="band_width" class='xscroll'>
+                </div>
+                <div class='col-sm-6'>
+                    玩家尺寸
+                </div>
+                <div class='col-sm-6'>
+                    <select id="player_size" class='form-control-sm'>
+                        <option value="0">小</option>
+                        <option value="1">大</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class='screen-pool ml-auto mr-auto'>
+            <canvas id='screen'></canvas>
+        </div>
+    </div>
+</div>
+<div id='record_receiver' style="display:none">{{record_content}}</div>
+<!-- <script src='test1.js'></script> -->
+
+<script>
+    record_obj = JSON.parse(document.getElementById('record_receiver').innerHTML)
+
+    // storage structure
+    class MySet {
+        constructor() {
+            this.pool = []
+            this.size = 0
+        }
+        get(x, y) {
+            if (x < 0 || x >= WIDTH) return undefined
+            return this.pool[x + y * WIDTH]
+        }
+        set(x, y, val) {
+            if (x < 0 || x >= WIDTH) return
+            if (this.pool[x + y * WIDTH] == undefined) this.size++
+            this.pool[x + y * WIDTH] = val
+        }
+        has(x, y) {
+            if (x < 0 || x >= WIDTH) return false
+            return this.pool[x + y * WIDTH] != undefined
+        }
+        del(x, y) {
+            if (x < 0 || x >= WIDTH || this.pool[x + y * WIDTH] == undefined) return
+            delete this.pool[x + y * WIDTH]
+            this.size--
+        }
+        copy() {
+            var res = new MySet()
+            res.pool = this.pool.concat()
+            res.size = this.size
+            return res
+        }
+    }
+
+    // initialize field
+    {
+        WIDTH = record_obj.size[0]
+        HEIGHT = record_obj.size[1]
+        FIELDS = new MySet()// index=x+y*WIDTH
+        EXPAND = 1// initial field expanding
+
+        // canvas vars
+        RENDER_RAW = []
+        FRAME_DISPLAY = 0
+        FRAME_BUFFER = []
+        TOTAL_FRAMES = record_obj.timeleft[0].length
+        document.getElementById('num_frame_total').innerHTML = TOTAL_FRAMES
+    }
+
+    // define player functions
+    {
+        PLAYERS = record_obj.init
+        PLR_TRACES = record_obj.traces
+        for (var id = 0; id < 2; id++) {
+            // set initial field
+            PLAYERS[id].field_border = [
+                Math.max(0, PLAYERS[id].x - EXPAND),
+                Math.min(WIDTH - 1, PLAYERS[id].x + EXPAND),
+                Math.max(0, PLAYERS[id].y - EXPAND),
+                Math.min(HEIGHT - 1, PLAYERS[id].y + EXPAND)
+            ]
+            var tmp = PLAYERS[id].field_border
+            for (var x = tmp[0]; x <= tmp[1]; x++) {
+                for (var y = tmp[2]; y <= tmp[3]; y++) {
+                    FIELDS.set(x, y, id)
+                }
+            }
+
+            // recorders
+            PLAYERS[id].id = id
+            PLAYERS[id].index = 1
+            PLAYERS[id].bands = []
+        }
+
+        PLR_DIR_MAP = [[1, 0], [0, 1], [-1, 0], [0, -1]]
+        function forward(id) {
+
+            // move player
+            var self = PLAYERS[id]
+            var cur_direction = PLR_TRACES[id][self.index]
+            var tmp = PLR_DIR_MAP[cur_direction]
+            self.x += tmp[0]
+            self.y += tmp[1]
+
+            // update MBR
+            self.field_border[0] = Math.min(self.x, self.field_border[0])
+            self.field_border[1] = Math.max(self.x, self.field_border[1])
+            self.field_border[2] = Math.min(self.y, self.field_border[2])
+            self.field_border[3] = Math.max(self.y, self.field_border[3])
+
+            // update field
+            if (FIELDS.get(self.x, self.y) == id) {
+                if (self.bands.length > 0) update_fill(self)
+            }
+            else self.bands.push([self.x, self.y, cur_direction])// band: x,y,direction
+            self.index += 1
+        }
+
+        function update_fill(self) {
+            // band to field
+            self.bands.forEach(band => {
+                FIELDS.set(band[0], band[1], self.id)
+            })
+            self.bands = []
+
+            // floodfill
+            var targets = new MySet()
+            for (var x = self.field_border[0]; x <= self.field_border[1]; x++) {
+                for (var y = self.field_border[2]; y <= self.field_border[3]; y++) {
+                    if (FIELDS.get(x, y) != self.id) targets.set(x, y, 1)
+                }
+            }
+            for (var x = self.field_border[0]; x <= self.field_border[1]; x++) {
+                for (var y = self.field_border[2]; y <= self.field_border[3]; y++) {
+                    if (!targets.get(x, y)) continue
+
+                    // start fill
+                    targets.del(x, y)
+                    var iter = [[x, y]]
+                    var in_bound = true
+                    var to_fill = []
+                    while (iter.length > 0) {
+                        var curr = iter.pop()
+
+                        //floodfill
+                        for (var i = 0; i < 4; i++) {
+                            var next_step = [curr[0] + PLR_DIR_MAP[i][0], curr[1] + PLR_DIR_MAP[i][1]]
+                            if (!targets.get(next_step[0], next_step[1])) continue
+                            targets.del(next_step[0], next_step[1])
+                            iter.push(next_step)
+                        }
+
+                        //check current point
+                        if (in_bound) {
+                            if (curr[0] <= self.field_border[0] || curr[0] >= self.field_border[1] || curr[1] <= self.field_border[2] || curr[1] >= self.field_border[3])
+                                in_bound = false
+                            else
+                                to_fill.push(curr)
+                        }
+                    }
+                    if (in_bound) {
+                        to_fill.forEach(pt => {
+                            FIELDS.set(pt[0], pt[1], self.id)
+                        })
+                    }
+                }
+            }
+        }
+    }
+
+    // define logging functions
+    {
+        function copy_player(i) {
+            var plr = PLAYERS[i]
+            return {
+                'x': plr.x,
+                'y': plr.y,
+                'bands': plr.bands.concat()
+            }
+        }
+        function snapshot() {
+            // copy player
+            var plrs = [copy_player(0), copy_player(1)]
+            // copy field
+            var f1 = FIELDS.copy()
+            return [plrs, f1]
+        }
+    }
+
+    // define canvas functions
+    {
+        widgets = ['color1', 'color2', 'color1_1', 'color2_1', 'grid_size', 'band_width', 'player_size']
+
+        cv = document.getElementById('screen')
+        pen = cv.getContext('2d')
+        cv_s = document.getElementById('field_counter')
+        pen_s = cv_s.getContext('2d')
+        grab = s => document.getElementById(s).value
+
+        function draw_frame() {
+            cv.width = cv.width
+
+            // can't be rendered
+            if (FRAME_DISPLAY >= RENDER_RAW.length) {
+                cv.style.background = '#666666'
+                return
+            }
+
+            // draw buffer
+            if (FRAME_BUFFER[FRAME_DISPLAY] == undefined) {
+                cv.style.background = '#ffffff'
+                var frame_raw = RENDER_RAW[FRAME_DISPLAY]
+                colorA = [grab("color1"), grab("color2")]
+                colorB = [grab("color1_1"), grab("color2_1")]
+                band_width = grab("band_width")
+                grid_size = grab("grid_size")
+
+                // draw fields + count scores
+                scores = [0, 0]
+                frame_raw[1].pool.forEach((val, ind) => {
+                    var x = ind % WIDTH
+                    var y = Math.floor(ind / WIDTH)
+                    pen.fillStyle = colorA[val]
+                    pen.fillRect(x * grid_size, y * grid_size, grid_size, grid_size)
+                    scores[val]++
+                })
+
+                // draw bands
+                pen.lineWidth = band_width
+                for (var i = 0; i < 2; i++) {
+                    var band_seq = frame_raw[0][i].bands
+                    if (band_seq.length == 0) continue
+                    var offset = PLR_DIR_MAP[band_seq[0][2]]
+                    var sx = (0.5 + band_seq[0][0] - offset[0] / 2) * grid_size
+                    var sy = (0.5 + band_seq[0][1] - offset[1] / 2) * grid_size
+                    pen.strokeStyle = colorB[i]
+                    pen.beginPath()
+                    pen.moveTo(sx, sy)
+                    band_seq.forEach(pt => {
+                        pen.lineTo((0.5 + pt[0]) * grid_size, (0.5 + pt[1]) * grid_size)
+                    })
+                    pen.stroke()
+                }
+
+                // draw players
+                plr_big = grab('player_size')
+                frame_raw[0].forEach((plr, id) => {
+                    pen.fillStyle = colorA[id]
+                    pen.strokeStyle = colorB[id]
+                    pen.lineWidth = 1
+                    switch (plr_big) {
+                        case '1':
+                            params = [
+                                (plr.x - 0.5) * grid_size, (plr.y - 0.5) * grid_size, grid_size * 2, grid_size * 2
+                            ]
+                            break
+                        default:
+                        case '0':
+                            params = [
+                                plr.x * grid_size, plr.y * grid_size, grid_size, grid_size
+                            ]
+                            break
+                    }
+                    pen.fillRect(params[0], params[1], params[2], params[3])
+                    pen.strokeRect(params[0], params[1], params[2], params[3])
+                })
+
+                FRAME_BUFFER[FRAME_DISPLAY] = pen.getImageData(0, 0, cv.width, cv.height)
+                FRAME_BUFFER[FRAME_DISPLAY].scores = scores
+            }
+
+            // load finished buffer
+            else pen.putImageData(FRAME_BUFFER[FRAME_DISPLAY], 0, 0)
+
+            // update UI
+            document.getElementById('num_frame_cur').innerHTML = FRAME_DISPLAY + 1
+            record_obj.timeleft.forEach((lst, i) => {
+                document.getElementById('timeleft' + i).innerHTML = Math.round(lst[FRAME_DISPLAY] * 100) / 100
+            })
+            scores = FRAME_BUFFER[FRAME_DISPLAY].scores
+            cv_s.title = scores[0] + ' : ' + scores[1]
+            cv_s.width = 120
+            var offset = 0
+            scores.forEach((n, i) => {
+                var tmp = 120 / WIDTH / HEIGHT * scores[i]
+                pen_s.fillStyle = colorA[i]
+                pen_s.fillRect(offset, 0, tmp, cv_s.height)
+                offset += tmp
+            })
+        }
+
+        function update_canvas() {
+            grid_size = grab('grid_size')
+            cv.width = WIDTH * grid_size
+            cv.height = HEIGHT * grid_size
+            FRAME_BUFFER = []
+            draw_frame()
+        }
+    }
+
+    // playing system
+    {
+        ANIMATION_HANDLE = null
+        REAL_FRAME = null
+        TIME = LAST_TIME = null
+        IS_PLAYING = false
+        PLAYING_SPEED = 1
+        function do_frame(timestamp) {
+            if (TIME == null) {
+                TIME = LAST_TIME = timestamp
+                REAL_FRAME = FRAME_DISPLAY
+            }
+            else {
+                TIME = timestamp
+                REAL_FRAME = REAL_FRAME + (TIME - LAST_TIME) * PLAYING_SPEED * 0.1
+                FRAME_DISPLAY = Math.floor(REAL_FRAME)
+                LAST_TIME = timestamp
+            }
+            scroller.value = FRAME_DISPLAY
+            if (FRAME_DISPLAY > TOTAL_FRAMES - 1) {
+                FRAME_DISPLAY = TOTAL_FRAMES - 1
+                pause()
+                draw_frame()
+            } else {
+                draw_frame()
+                ANIMATION_HANDLE = requestAnimationFrame(do_frame)
+            }
+        }
+        function play() {
+            // initialize
+            cancelAnimationFrame(ANIMATION_HANDLE)
+            REAL_FRAME = TIME = LAST_TIME = null
+
+            // run process
+            if (FRAME_DISPLAY >= TOTAL_FRAMES - 1) FRAME_DISPLAY = 0
+            ANIMATION_HANDLE = requestAnimationFrame(do_frame)
+            IS_PLAYING = true
+        }
+        function pause() {
+            cancelAnimationFrame(ANIMATION_HANDLE)
+            IS_PLAYING = false
+        }
+
+        // button functions
+        function play_pause() {
+            if (IS_PLAYING) pause()
+            else play()
+        }
+        function switch_speed() {
+            PLAYING_SPEED *= 2
+            if (PLAYING_SPEED > 8) PLAYING_SPEED = 0.25
+            document.getElementById('btn_speed').innerHTML = '播放速度: @x'.replace('@', PLAYING_SPEED)
+        }
+        document.getElementById('btn_play').addEventListener('click', play_pause)
+        document.getElementById('btn_speed').addEventListener('click', switch_speed)
+    }
+
+    // event binding
+    {
+        var scroller = document.getElementById('video_scroll')
+        // document.getElementById('video_scroll').addEventListener('change',()=>{
+        //     FRAME_DISPLAY=grab('video_scroll')
+        //     draw_frame()
+        // })
+        SCROLL_DRAGGING = false
+        function update_scroll() {
+            if (SCROLL_DRAGGING) {
+                FRAME_DISPLAY = grab('video_scroll') * 1
+                draw_frame()
+            }
+        }
+
+        scroller.addEventListener('mousedown', () => {
+            pause()
+            SCROLL_DRAGGING = true
+            update_scroll()
+        })
+        scroller.addEventListener('mouseup', () => {
+            SCROLL_DRAGGING = false
+            scroller.value = FRAME_DISPLAY
+        })
+        scroller.addEventListener('mousemove', update_scroll)
+
+        // bind update events
+        function update_widgets() {
+            // valid param inputs
+            document.getElementById('band_width').value = Math.min(grab('grid_size'), grab('band_width'))
+
+            // set text
+            document.getElementById("grid_size_val").innerHTML = grab('grid_size')
+            document.getElementById("band_width_val").innerHTML = grab('band_width')
+
+            // reset canvas
+            update_canvas()
+        }
+        widgets.forEach(s => {
+            document.getElementById(s).addEventListener('change', update_widgets)
+        })
+    }
+
+    // load page
+    {
+        document.getElementById("video_scroll").max = TOTAL_FRAMES - 1
+        RENDER_RAW.push(snapshot())
+        for (var i = 0; i < TOTAL_FRAMES - 1; i++) {
+            forward(i % 2)
+            RENDER_RAW.push(snapshot())
+        }
+        update_widgets()
+        play_pause()
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+
+{% block title %}查看代码: {{code.title}}{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" type="text/css" href="/assets/css/view_base.css">
+{% endblock %}
+
+{% block content %}
+<div class='container'>
+    <div class='row header bg-info'>
+        <span class='mr-auto'>
+            <h1>名称: {{code.name}}</h1>
+        </span>
+        <span class='ml-auto'>
+            <h1>作者: {{code.author.username}}</h1>
+        </span>
+    </div>
+    <div class='row x_block'>
+        test
+    </div>
+    <div class='row'>
+        <!-- 作为发起者 -->
+        <div class='col-sm-6'>
+            <div class="x_title">
+                <h1>发起的比赛：</h1>
+            </div>
+            {% with match_list=match_pool1 %}
+            {% include "sub/code_match_table.html" %}
+            {% endwith %}
+        </div>
+        <!-- 作为接受者 -->
+        <div class='col-sm-6'>
+            <div class="x_title">
+                <h1>收到的比赛：</h1>
+            </div>
+            {% with match_list=match_pool2 %}
+            {% with receive=1 %}
+            {% include "sub/code_match_table.html" %}
+            {% endwith %}
+            {% endwith %}
+        </div>
+    </div>
+</div>
+<script>
+    window.addEventListener('load',()=>{
+        setTimeout(()=>{
+            window.location.href+=''
+        },10000)
+    })
+</script>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+
+{% block css %}
+<link rel="stylesheet" type="text/css" href="/assets/css/view_base.css">
+{% endblock %}
+
+{% block content %}
+<div class="container" style="width: 28em;min-width: 300px;">
+    <div class='row header bg-info'>
+        <h1><a>{% block title %}{% endblock %}</a></h1>
+    </div>
+    <div style='padding-top: 20px'>
+        <form method="post" row='form'>
+            {% csrf_token %}
+            {%for field in form%}
+            <div class="form-group">
+                <div>
+                    {{ field.label_tag }}
+                    {%if field.errors%}
+                    <label style='color:red'>{{ field.errors.as_text }}</label>
+                    {%endif%}
+                </div>
+                {{ field }}
+            </div>
+            {%endfor%}
+            <div class="form-group">
+                <input type="submit" value="{% block submit_button %}{% endblock %}" class='btn btn-primary form-control'>
+            </div>
+        </form>
+        <div class="form-group">
+            {% block footer %}{% endblock %}
+        </div>
+    </div>
+</div>
+{% endblock %}

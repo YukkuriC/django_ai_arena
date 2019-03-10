@@ -1,0 +1,36 @@
+<table class='table'>
+    <thead>
+        <tr>
+            <th>{% if receive %}发起{% else %}接收{% endif %}方代码</th>
+            <th>创建时间</th>
+            <th>对局数</th>
+            <th>状态</th>
+        </tr>
+    </thead>
+    <tbody>
+        {%with root_link="/match/"%}
+        {%for match in match_list%}
+        <tr {% with sublink=match.name %}{% include "sub/trow_link.html" %}{% endwith %}>
+            <td>
+                {% if receive %}
+                {% ifnotequal code match.code1%}
+                <a href="/code/{{match.code1.id}}/">{{match.code1.name}}</a>
+                {% else %}
+                {{match.code1.name}}
+                {% endifnotequal %}
+                {% else %}
+                {% ifnotequal code match.code2%}
+                <a href="/code/{{match.code2.id}}/">{{match.code2.name}}</a>
+                {% else %}
+                {{match.code2.name}}
+                {% endifnotequal %}
+                {% endif %}
+            </td>
+            <td>{{match.run_datetime|date:"Y/m/d f:s"}}</td>
+            <td>{{match.finished_rounds}}/{{match.rounds}}</td>
+            <td>{{match.get_status_display}}</td>
+        </tr>
+        {%endfor%}
+        {%endwith%}
+    </tbody>
+</table>

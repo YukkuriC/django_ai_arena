@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+
+{% block css %}
+<link rel="stylesheet" type="text/css" href="/assets/css/view_base.css">
+{% endblock %}
+
+{% block content %}
+<div class="container" style="width: 28em;min-width: 300px;">
+    <div class='row header bg-info'>
+        <h1 id="site-name" style='line-height: 40px'><a>{% block title %}验证电子邮件{% endblock %}</a></h1>
+    </div>
+    <div style='padding-top: 20px'>
+        <form action="{% block form %}{% endblock %}" method="post" row='form'>
+            <div class="form-group">
+                {%if checker%}
+                <p>您已于{{send_time}}发送过验证邮件</p>
+                {%if expire_delta%}
+                <p>验证邮件将在<span id='timer1'>{{expire_delta}}</span>秒后({{expire_time}})过期</p>
+                {%else%}
+                <p>验证邮件已于{{expire_time}}过期，请重新发送激活邮件</p>
+                {%endif%}
+                {%else%}
+                <p>您未发送过验证邮件</p>
+                {%endif%}
+            </div>
+            <div class="form-group">
+                {%if resend_delta%}
+                <div class='btn btn-warning form-control disabled'><span id='timer2'>{{resend_delta}}</span>秒后可再次发送验证邮件</div>
+                {%else%}
+                {% csrf_token %}
+                <input type="submit" value="发送邮件至{{user.stu_code}}@pku.edu.cn" class='btn btn-primary form-control'>
+                {%endif%}
+            </div>
+        </form>
+    </div>
+    <div class="form-group">
+    </div>
+</div>
+{%if user.usermailcheck%}
+<script>
+    c1 = "{{ expire_delta }}"
+    c2 = "{{ resend_delta }}"
+    setInterval(() => {
+        c1--
+        c2--
+        try { document.getElementById('timer1').innerHTML = c1 } catch (e) { }
+        try { document.getElementById('timer2').innerHTML = c2 } catch (e) { }
+        if (c1 == 0 || c2 == 0) window.location.href += ''
+    }, 1000)
+</script>
+{%endif%}
+{% endblock %}

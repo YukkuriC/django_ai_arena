@@ -1,0 +1,90 @@
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" type="text/css" href="/assets/bootstrap/bootstrap.min.css">
+  <script src="/assets/jquery.min.js"></script>
+  <script src="/assets/bootstrap/bootstrap.min.js"></script>
+  <title>{% block title %}base{% endblock %} | AI对战平台</title>
+  <style>
+    body{
+        background:#f8f8f8
+    }
+    .text-nav{
+      color:rgba(255,255,255,.5)
+    }
+    a.text-nav:hover{
+      color:rgba(255,255,255,.75)
+    }
+  </style>
+  {% block css %}{% endblock %}
+</head>
+
+<body>
+  <!-- 导航栏 -->
+  <nav class="navbar navbar-expand-md navbar-dark bg-dark border">
+    <a class="navbar-brand" href="/">SESSDSA AI对战平台</a>
+    <button aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation" class="navbar-toggler"
+      data-target="#navbar" data-toggle="collapse" type="button">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbar">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item"><a class="nav-link" href="/games/">对战项目</a></li>
+        {% if request.session.userid %}
+        <li class="nav-item"><a class="nav-link" href="/home/">个人主页</a></li>
+        <li class="nav-item"><a class="nav-link" href="/upload/">代码上传</a></li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="/lobby/">对战大厅</a>
+          <div class="dropdown-menu bg-dark">
+              <a class="dropdown-item text-nav bg-dark" href="/lobby/#">大厅首页</a>
+              <a class="dropdown-item text-nav bg-dark" href="/lobby/run_match/">发起对战</a>
+              <a class="dropdown-item text-nav bg-dark" href="/lobby/match_invitation/">对战邀请</a>
+          </div>
+        </li>
+        {% endif %}
+      </ul>
+      {% if request.session.userid %}
+      <ul class="navbar-nav ml-auto">
+        <span class="navbar-text ml-auto">你好，{{request.session.username}} |</span>
+        <li class="nav-item"><a class="nav-link" href="/changepasswd/">更改密码</a></li>
+        <li class="nav-item"><a class="nav-link" href="/logout/">登出</a></li>
+      </ul>
+      {% else %}
+      <ul class="navbar-nav ml-auto">
+        <li class="nav-item"><a class="nav-link" href="/login/">登录</a></li>
+        <li class="nav-item"><a class="nav-link" href="/register/">注册</a></li>
+      </ul>
+      {% endif %}
+    </div>
+  </nav>
+
+  <!-- 消息系统 -->
+  {% for message in messages %}
+  <div class="alert alert-{{ message.tags }} alert-dismissible" role="alert">
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+      <span aria-hidden="true">&times;</span>
+    </button>
+    {{ message }}
+  </div>
+  {% endfor %}
+
+  <!-- 主内容 -->
+  {% block content %}{% endblock %}
+  <script>
+    // navbar light
+    nav_pool = document.getElementById('navbar').getElementsByTagName('a')
+    current_page = window.location.href
+    for (i = 0; i < nav_pool.length; i++) {
+      nav = nav_pool[i]
+      if (current_page.startsWith(nav.href)) {
+        nav.classList.remove('text-muted')
+        nav.classList.add('active')
+      }
+    }
+  </script>
+</body>
+
+</html>

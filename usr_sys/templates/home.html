@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}个人主页{% endblock %}
+
+{% block content %}
+<div>
+    用户名：{{user.username}}
+</div>
+<div>
+    学号：{{user.stu_code}}
+</div>
+<div>
+    真实姓名：{{user.real_name}}
+</div>
+<div>
+    注册时间：{{user.register_datetime}}
+</div>
+<div>
+    登录时间：{{user.login_datetime}}
+</div>
+<div>
+    {%for code in user.code_set.all%}
+    <div>
+        <a href="/code/{{code.id}}/">{{code.name}}</a>
+    </div>
+    {%endfor%}
+</div>
+{% endblock %}

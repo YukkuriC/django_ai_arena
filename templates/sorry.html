@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+
+{% block css %}
+<!-- <link rel="stylesheet" type="text/css" href="/assets/admin/css/login.css"> -->
+<link rel="stylesheet" type="text/css" href="/assets/css/view_base.css">
+{% endblock %}
+
+{% block title %}{{code}}{% endblock %}
+
+{% block content %}
+<div class="container" style='width:30em'>
+    <!-- Header -->
+    <div class="row header bg-info">
+        <h1><a>{{title}}</a></h1>
+    </div>
+    <div style='margin-bottom: 15px'>
+        <div class='x_block'>
+            <ul>
+                {% for line in text %}
+                <li>{{line}}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class='row' style='margin-top:15px'>
+            <div class='col-6'>
+                <a href="/home/" class='btn btn-primary form-control' role="button">返回首页</a>
+            </div>
+            <div class='col-6'>
+                <button class='btn btn-primary form-control' onclick='history.back(-1)'>返回上页</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
