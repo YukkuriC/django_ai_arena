@@ -15,6 +15,16 @@ import os
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# 自动配置环境变量
+try:
+    with open(os.path.join(BASE_DIR, '.env')) as f:
+        data = f.read().split('\n')
+    for line in data:
+        i, j = line.split('=')
+        os.environ[i.strip()] = j.strip()
+except:
+    pass
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
@@ -140,18 +150,18 @@ STORAGE_DIR = os.path.join(BASE_DIR, '_STORAGE')  # 文件存储目录
 PAIRMATCH_DIR = os.path.join(STORAGE_DIR, 'pairmatch')  # 比赛记录存储目录
 
 ### 比赛系统参数
-AI_TYPES = {# AI比赛类型
+AI_TYPES = {  # AI比赛类型
     # 0: '黑白棋',
     # 1: '漂移乒乓',
     2: '纸带圈地',
     # 3: '19期末大作业，你们考虑考虑做啥',
 }
 DEFAULT_AI = 2
-MATCH_TYPES={# 生成比赛类型
-    0:'我方先手',
-    1:'对方先手',
-    2:'双方对半先手',
-    3:'随机先后手',
+MATCH_TYPES = {  # 生成比赛类型
+    0: '我方先手',
+    1: '对方先手',
+    2: '双方对半先手',
+    3: '随机先后手',
     # 4:'Override',
 }
 MATCH_CODE_LENGTH = 10  # 比赛记录文件随机编码长度
@@ -163,5 +173,5 @@ PAIRMATCH_STATUS = {  # 比赛状态码
     2: '已完成',
     3: '已中止',
 }
-MAX_MONITOR_IDLE_SEC=20# 监控进程最大闲置秒数
+MAX_MONITOR_IDLE_SEC = 20  # 监控进程最大闲置秒数
 DEFAULT_MAX_RUNNING_SEC = 2  # 获取计时函数缺省时每局最大运行{}秒
