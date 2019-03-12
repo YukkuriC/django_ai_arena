@@ -11,7 +11,7 @@ if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
 class BaseProcess:
     '''
     比赛子进程维护器
-    Params:
+    params:
         codes: 参赛双方代码文件路径
         match_name: 比赛名称
         params: 比赛设置参数字典
@@ -77,16 +77,10 @@ class BaseProcess:
 
     def summary(self, timeout):
         '''
-        向match文件夹内输出总结结果
+        输出总结结果
         timeout: 是否为超时杀进程
         '''
-        # 获取match对象并写入结束时间
-        try:
-            self.match.finish_datetime = datetime.now()
-            self.match.status = 2 + bool(timeout)
-            self.match.save()
-        except:
-            pass
+        pass
 
     if 'grabbing parameters':
 
@@ -176,10 +170,20 @@ class BaseCodeLoader:
 class BaseRecordLoader:
     @classmethod
     def load_record(cls, match_dir, rec_id):
+        '''
+        读取比赛记录文件，实现时可lru_cache
+        params:
+            match_dir: 比赛对应存储文件夹
+            rec_id: 比赛记录编号
+        '''
         pass
 
     @classmethod
     def load_records(cls, match):
+        '''
+        批量读取比赛存储文件夹内所有文件
+
+        '''
         match_dir = path.join(settings.PAIRMATCH_DIR, match.name)
         res = [None] * match.finished_rounds
         for i in range(match.finished_rounds):
@@ -191,12 +195,68 @@ class BaseRecordLoader:
 
     @classmethod
     def stringfy_record(cls, record):
+        '''将比赛记录输出为字符串，以传输至前端'''
         return json.dumps(record, separators=(',', ':'))
 
     @staticmethod
     def summary_records(records):
+        '''将比赛记录汇总统计'''
         pass
 
 
 class BasePairMatch(BaseProcess, BaseCodeLoader, BaseRecordLoader):
-    pass
+    '''
+    组装功能组件
+    增加比赛记录统计与天梯分计算部分
+    '''
+
+    def summary_raw(self):
+        '''
+        抽象接口
+        将队列输出结果result_raw内容汇总为统计字典
+        {0: code1获胜, 1: code2获胜, None: 平局}
+        '''
+        return {0: 0, 1: 0, None: 0}
+
+    def calculate_dscore(self, code1, code2, results):
+        '''
+        计算双方代码天梯分变动
+        默认为ELO算法
+        '''
+        real_score = results[0] + 0.5 * results[None]
+        e_score = sum(results.values()) / (1 + 10**
+                                           ((code2.score - code1.score) / 400))
+        return (real_score - e_score) * settings.SCORE_FACTOR_PAIRMATCH
+
+    def summary(self, timeout):
+        '''
+        输出总结结果
+        timeout: 是否为超时杀进程
+        '''
+        result_stat = self.summary_raw()
+
+        # 计算等级分变化
+        code1 = self.match.code1
+        code2 = self.match.code2
+        dscore = self.calculate_dscore(code1, code2, result_stat)
+
+        # 写入双方代码统计
+        if code1 != code2:
+            code1.score += dscore
+            code1.num_matches += 1
+            code1.num_wins += result_stat[0]
+            code1.num_loses += result_stat[1]
+            code1.num_draws += result_stat[None]
+            code1.save()
+            code2.score -= dscore
+            code2.num_matches += 1
+            code2.num_wins += result_stat[1]
+            code2.num_loses += result_stat[0]
+            code2.num_draws += result_stat[None]
+            code2.save()
+
+        # 写入match信息
+        self.match.finish_datetime = datetime.now()
+        self.match.status = 2 + bool(timeout)
+        self.match.delta_score = dscore
+        self.match.save()

@@ -107,6 +107,7 @@ if 'user system':
         link = '%s://%s/activate/?code=%s' % (http, host, checker.check_hash)
         html_content = loader.render_to_string('email/activation.html',
                                                locals())
+        print(settings.EMAIL_HOST_USER,settings.EMAIL_HOST_PASSWORD)
         mail.send_mail(
             'AI对战平台激活邮件',
             html_content,

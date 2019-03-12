@@ -1,3 +1,13 @@
+body{
+    background:#f8f8f8
+}
+.text-nav{
+    color:rgba(255,255,255,.5)
+}
+a.text-nav:hover{
+    color:rgba(255,255,255,.75)
+}
+
 .container {
     background: #fff;
     border: 1px solid #eaeaea;
@@ -5,43 +15,35 @@
     overflow: hidden;
     margin: 100px auto;
 }
-
 .header {
     min-height: 40px;
     padding: 5px 16px 0px;
 }
-
 .header h1{
     font-size: 18px;
     line-height: 40px;
     color: #fff;
 }
-
 .header a{
     text-decoration:none;
     color: #fff;
 }
-
 .header a:hover{
     color: #eee;
 }
-
 .x_title {
     border-bottom: 2px solid #E6E9ED;
     padding-top: 10px
 }
-
 .x_title h1 {
     font-size: 18px;
     line-height: 30px;
 }
-
 .x_block {
     border-bottom: 1px solid #E6E9ED;
     padding-top: 10px;
     padding-bottom: 10px;
 }
-
 .row-hover{
     background-color:rgba(15,155,255,0.2)!important
 }

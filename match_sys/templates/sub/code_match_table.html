@@ -13,20 +13,16 @@
         <tr {% with sublink=match.name %}{% include "sub/trow_link.html" %}{% endwith %}>
             <td>
                 {% if receive %}
-                {% ifnotequal code match.code1%}
-                <a href="/code/{{match.code1.id}}/">{{match.code1.name}}</a>
+                {% if code == match.code1%} {{match.code1.name}}
+                {% else %} <a href="/code/{{match.code1.id}}/">{{match.code1.name}}</a>
+                {% endif %}
                 {% else %}
-                {{match.code1.name}}
-                {% endifnotequal %}
-                {% else %}
-                {% ifnotequal code match.code2%}
-                <a href="/code/{{match.code2.id}}/">{{match.code2.name}}</a>
-                {% else %}
-                {{match.code2.name}}
-                {% endifnotequal %}
+                {% if code == match.code2%} {{match.code2.name}}
+                {% else %} <a href="/code/{{match.code2.id}}/">{{match.code2.name}}</a>
+                {% endif %}
                 {% endif %}
             </td>
-            <td>{{match.run_datetime|date:"Y/m/d f:s"}}</td>
+            <td>{{match.run_datetime|date:"Y/m/d H:i:s"}}</td>
             <td>{{match.finished_rounds}}/{{match.rounds}}</td>
             <td>{{match.get_status_display}}</td>
         </tr>

@@ -1,77 +1,56 @@
-{% extends 'base.html' %}
+{% extends 'form_base.html' %}
 {% load staticfiles %}
 
-{% block title %}发起比赛{% endblock %}
+{% block title %}发起比赛 - {{title}}{% endblock %}
 
-{% block css %}
-<link rel="stylesheet" type="text/css" href="/assets/css/view_base.css">
+{% block form_override %}
+<div class="form-group">
+    <div>
+        <label for="id_code1">我方代码:</label>
+        {%if form.errors.code1%}
+        <label style='color:red'>{{form.errors.code1}}</label>
+        {%endif%}
+    </div>
+    <select name="code1" class="form-control" id="id_code1" required>
+        <option value="">---------</option>
+        {%for i in my_codes%}
+        <option value={{i.id}} title="{{i.author.username}}">{{i.name}}</option>
+        {%endfor%}
+    </select>
+</div>
+<div class="form-group">
+    <div>
+        <label for="id_code1">对方代码:</label>
+        {%if form.errors.code2%}
+        <label style='color:red'>{{form.errors.code2}}</label>
+        {%endif%}
+    </div>
+    <select name="code2" class="form-control" id="id_code2" required>
+        <option value="">---------</option>
+        {%for i in target_codes%}
+        <option value={{i.id}} title="{{i.author.username}}">{{i.author.username}} - {{i.name}}</option>
+        {%endfor%}
+    </select>
+</div>
+
+<div class='row x_block'>
+    {%for elem in form%}
+    <div class="form-group col-sm-6">
+        {% include "sub/form_element.html" %}
+    </div>
+    {%if forloop.counter == 2 or forloop.last%}
+</div>
+<div class='row x_block'>
+    {%endif%}
+    {%endfor%}
+</div>
+
+<div class="form-group">
+    <input type="submit" value="发起比赛" class='btn btn-primary form-control'>
+</div>
 {% endblock %}
 
-{% block content %}
-<div class="container" style="width: 28em;min-width: 300px;">
-    <div class='row header bg-info'>
-        <h1><a>发起比赛 - {{title}}</a></h1>
-    </div>
-    <div style='padding-top: 20px'>
-        <form method="post" row='form'>
-            {% csrf_token %}
-            <div class="form-group">
-                <div>
-                    <label for="id_code1">我方代码:</label>
-                    {%if form.errors.code1%}
-                    <label style='color:red'>{{form.errors.code1}}</label>
-                    {%endif%}
-                </div>
-                <select name="code1" class="form-control" id="id_code1" required>
-                    <option value="">---------</option>
-                    {%for i in my_codes%}
-                    <option value={{i.id}} title="{{i.author.username}}">{{i.name}}</option>
-                    {%endfor%}
-                </select>
-            </div>
-            <div class="form-group">
-                <div>
-                    <label for="id_code1">对方代码:</label>
-                    {%if form.errors.code2%}
-                    <label style='color:red'>{{form.errors.code2}}</label>
-                    {%endif%}
-                </div>
-                <select name="code2" class="form-control" id="id_code2" required>
-                    <option value="">---------</option>
-                    {%for i in target_codes%}
-                    <option value={{i.id}} title="{{i.author.username}}">{{i.author.username}} - {{i.name}}</option>
-                    {%endfor%}
-                </select>
-            </div>
-
-            <div class='row'>
-                {%for field in form%}
-                <div class="form-group col-sm-6">
-                    <div>
-                        {{ field.label_tag }}
-                        {%if field.errors%}
-                        <label style='color:red'>{{ field.errors.as_text }}</label>
-                        {%endif%}
-                    </div>
-                    {{ field }}
-                </div>
-                {%ifequal forloop.counter 2%}
-                <ul class="nav nav-list">
-                    <li class="divider"></li>
-                </ul>
-                {%endifequal%}
-                {%endfor%}
-            </div>
-
-            <div class="form-group">
-                <input type="submit" value="发起比赛" class='btn btn-primary form-control'>
-            </div>
-        </form>
-        <div class="form-group">
-            {% block footer %}{% endblock %}
-        </div>
-    </div>
-</div>
+{% block script %}
 <script>
     window.addEventListener('load', () => {
         document.getElementById('id_code1').value = "{{my_code}}"

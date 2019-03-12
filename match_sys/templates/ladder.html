@@ -1,0 +1,66 @@
+{% extends 'layout0.html' %}
+{% load staticfiles %}
+
+{% block title %}天梯排行 - {{title}}{% endblock %}
+
+{% block body%}
+<div class='x_title'>
+    <h1>代码天梯</h1>
+</div>
+<table class='table'>
+    <thead>
+        <tr>
+            <th>代码名称</th>
+            <th>作者</th>
+            <th>战绩</th>
+            <th>天梯积分</th>
+            <th>传送门</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% with root_link="/code/" %}
+        {% for code in codes%}
+        {% with sublink=code.id %}
+        <tr {% include "sub/trow_link.html" %}{%endwith%}>
+            <td>{{code.name}}</td>
+            <td><a href="/user/{{code.author.id}}">{{code.author.username}}</a></td>
+            <td>
+                {{code.num_matches}}赛{{code.num_records}}战- {{code.num_wins}}胜{{code.num_loses}}负{{code.num_draws}}平
+            </td>
+            <td>
+                {{code.score_show}}
+            </td>
+            <td>
+                <a class='btn-sm btn-info' href='/lobby/run_match/{{code.ai_type}}/?code2={{code.id}}'>发起对战</a>
+            </td>
+        </tr>
+        {% endfor %}{% endwith %}
+    </tbody>
+</table>
+<div class='x_title'>
+    <h1>用户天梯</h1>
+</div>
+<table class='table'>
+    <thead>
+        <tr>
+            <th>作者</th>
+            <th>代码数</th>
+            <th>平均积分</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% with root_link="/user/" %}
+        {% for user in users%}
+        {% with sublink=user.author_id %}
+        <tr {% include "sub/trow_link.html" %}{%endwith%}>
+            <td>{{user.author__username}}</td>
+            <td>{{user.count}}</td>
+            <td>{{user.avg}}</td>
+            <td>
+                <a class='btn-sm btn-info' href='/lobby/run_match/{{codes.first.ai_type}}/?user2={{user.author_id}}'>发起对战</a>
+            </td>
+        </tr>
+        {% endfor %}{% endwith %}
+    </tbody>
+</table>
+{% endblock %}

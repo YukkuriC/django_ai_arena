@@ -7,9 +7,9 @@ import os, shutil
 
 
 def get_path(self, filename):
-    '''按绝对路径记录代码存储路径'''
+    '''记录代码存储路径'''
     return '%s/code/%03d/%s_%s' % (settings.STORAGE_DIR, self.ai_type,
-                                   self.author.stu_code, filename)
+                                   self.author.id, filename)
 
 
 class Code(models.Model):
@@ -18,7 +18,7 @@ class Code(models.Model):
         usr_models.User, models.CASCADE, verbose_name='发布者')
     ai_type = models.IntegerField('AI类型', choices=settings.AI_TYPES.items())
     content = models.FileField('上传代码', upload_to=get_path)
-    public = models.BooleanField('是否公开', default=True)
+    public = models.BooleanField('是否公开', default=False)
     edit_datetime = models.DateTimeField('最后修改时间')
 
     if 'records':
@@ -32,11 +32,12 @@ class Code(models.Model):
         def num_records(self):
             return self.num_wins + self.num_loses + self.num_draws
 
+        @property
+        def score_show(self):
+            return round(self.score, 2)
+
     def __str__(self):
         return '%s (%s)' % (self.name, self.author.username)
-
-    def available(self, user):
-        return self.author == user or self.public
 
     class Meta:
         verbose_name = "AI脚本"
@@ -69,12 +70,10 @@ class PairMatch(models.Model):
     status = models.IntegerField(
         '状态', default=0, choices=settings.PAIRMATCH_STATUS.items())
 
+    delta_score = models.FloatField('等级分变化', null=1)
+
     def __str__(self):
         return '%s - %s vs. %s' % (self.run_datetime, self.code1, self.code2)
-
-    def available(self, user):
-        return self.code1.author == user or self.code2.author == user or (
-            self.code1.public and self.code2.public)
 
     class Meta:
         ordering = ["-id"]

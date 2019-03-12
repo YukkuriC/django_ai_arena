@@ -3,6 +3,8 @@ from sys import modules
 from external._base import BasePairMatch
 from functools import lru_cache
 from . import match_core, match_interface
+if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
+    from django.conf import settings
 
 
 class PaperIOMatch(BasePairMatch):
@@ -53,14 +55,14 @@ class PaperIOMatch(BasePairMatch):
             log_name = path.join(match_dir, 'logs/%02d.clog' % rid)
             match_interface.save_compact_log(match_log, log_name)
 
-    def summary(self, timeout):
-        super().summary(timeout)
+    def summary_raw(self):
         result_stat = {0: 0, 1: 0, None: 0}
         for result in self.result_raw:
             winner = result[1]
             if winner != None and result[0]:
                 winner = 1 - winner
             result_stat[winner] += 1
+        return result_stat
 
     # class Meta(BasePairMatch.Meta):
     #     required_functions = ['play']
@@ -75,6 +77,13 @@ class PaperIOMatch(BasePairMatch):
     def stringfy_record(cls, record):
         record['traces'] = list(map(list, record['traces']))
         record['timeleft'] = list(map(list, record['timeleft']))
+        if record['result'][1] == -1:  # 将Exception转换为str
+            record['result'] = list(record['result'])
+            e = record['result'][2]
+            tmp = '%s: %s' % (type(e).__name__, e)
+            if e.__traceback__:
+                tmp = '第%s行 - ' % e.__traceback__.tb_lineno + tmp
+            record['result'][2] = tmp
         return super().stringfy_record(record)
 
     @staticmethod

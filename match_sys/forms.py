@@ -7,7 +7,7 @@ from .models import Code
 class CodeUploadForm(forms.ModelForm):
     class Meta:
         model = Code
-        exclude = ['author', 'edit_datetime']
+        fields = ['name', 'ai_type','content','public']
         widgets = {
             'name': forms.TextInput({
                 'class': 'form-control'
@@ -41,7 +41,6 @@ class PairMatch_Base(forms.Form):
         choices=settings.MATCH_TYPES.items(),
         widget=forms.Select({
             'class': 'form-control',
-            'checked': 1
         }))
 
 
@@ -87,5 +86,5 @@ class PairMatchFormFactory:
 
     @staticmethod
     def get(id, *args, **kwargs):
-        form_class = PairMatchFormFactory.mapper.get(id, forms.Form)
+        form_class = PairMatchFormFactory.mapper.get(id, PairMatch_Base)
         return form_class(*args, **kwargs)

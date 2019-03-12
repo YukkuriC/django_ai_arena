@@ -1,8 +1,8 @@
-{% extends 'base.html' %}
+{% extends 'layout0.html' %}
 
 {% block title %}个人主页{% endblock %}
 
-{% block content %}
+{% block body %}
 <div>
     用户名：{{user.username}}
 </div>
@@ -18,11 +18,30 @@
 <div>
     登录时间：{{user.login_datetime}}
 </div>
-<div>
-    {%for code in user.code_set.all%}
-    <div>
-        <a href="/code/{{code.id}}/">{{code.name}}</a>
-    </div>
-    {%endfor%}
-</div>
+<table class='table'>
+    <thead>
+        <tr>
+            <th>名称</th>
+            <th>类型</th>
+            <th>战绩</th>
+            <th>等级分</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% with root_link="/code/" %}
+        {% for code in user.code_set.all %}
+        {% with sublink=code.id %}
+        <tr {% include "sub/trow_link.html" %}{%endwith%}>
+            <td>{{code.name}}</td>
+            <td>{{code.get_ai_type_display}}</td>
+            <td>
+                {{code.num_matches}}赛{{code.num_records}}战- {{code.num_wins}}胜{{code.num_loses}}负{{code.num_draws}}平
+            </td>
+            <td>
+                {{code.score_show}}
+            </td>
+        </tr>
+        {% endfor %}{% endwith %}
+    </tbody>
+</table>
 {% endblock %}

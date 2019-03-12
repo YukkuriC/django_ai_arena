@@ -8,17 +8,7 @@
   <script src="/assets/jquery.min.js"></script>
   <script src="/assets/bootstrap/bootstrap.min.js"></script>
   <title>{% block title %}base{% endblock %} | AI对战平台</title>
-  <style>
-    body{
-        background:#f8f8f8
-    }
-    .text-nav{
-      color:rgba(255,255,255,.5)
-    }
-    a.text-nav:hover{
-      color:rgba(255,255,255,.75)
-    }
-  </style>
+  <link rel="stylesheet" type="text/css" href="/assets/css/view_base.css">
   {% block css %}{% endblock %}
 </head>
 
@@ -39,9 +29,14 @@
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="/lobby/">对战大厅</a>
           <div class="dropdown-menu bg-dark">
-              <a class="dropdown-item text-nav bg-dark" href="/lobby/#">大厅首页</a>
-              <a class="dropdown-item text-nav bg-dark" href="/lobby/run_match/">发起对战</a>
-              <a class="dropdown-item text-nav bg-dark" href="/lobby/match_invitation/">对战邀请</a>
+            <a class="dropdown-item text-nav bg-dark" href="/lobby/#">大厅首页</a>
+            {% if request.session.curr_game >= 0 %}
+            {% with gameid=request.session.curr_game %}
+            <a class="dropdown-item text-nav bg-dark" href="/lobby/run_match/{{gameid}}/">发起对战</a>
+            <a class="dropdown-item text-nav bg-dark" href="/lobby/ladder/{{gameid}}/">查看天梯</a>
+            <a class="dropdown-item text-nav bg-dark" href="/lobby/invitation/{{gameid}}/">对战邀请</a>
+            {% endwith %}
+            {% endif %}
           </div>
         </li>
         {% endif %}
@@ -73,8 +68,9 @@
 
   <!-- 主内容 -->
   {% block content %}{% endblock %}
+
+  <!-- navbar light -->
   <script>
-    // navbar light
     nav_pool = document.getElementById('navbar').getElementsByTagName('a')
     current_page = window.location.href
     for (i = 0; i < nav_pool.length; i++) {
@@ -85,6 +81,7 @@
       }
     }
   </script>
+  {% block script %}{% endblock %}
 </body>
 
 </html>

@@ -1,65 +1,45 @@
-{% extends 'base.html' %}
+{% extends 'form_base.html' %}
 {% load staticfiles %}
 
-{% block css %}
-<link rel="stylesheet" type="text/css" href="/assets/css/view_base.css">
-{% endblock %}
+{% block title %}上传代码{% endblock %}
 
-{% block content %}
-<div class="container" style="width: 28em;min-width: 300px;">
-    <div class='row header bg-info'>
-        <h1><a>{% block title %}上传代码{% endblock %}</a></h1>
+{% block form_override %}
+<div class="form-group">
+    {% with form.name as elem %}
+    {% include "sub/form_element.html" %}
+    {% endwith %}
+</div>
+<div class="form-group">
+    {% with form.ai_type as elem %}
+    {% include "sub/form_element.html" %}
+    {% endwith %}
+</div>
+<div class="form-group row">
+    <div class='col-sm-8'>
+        {% with form.content as elem %}
+        {% include "sub/form_element.html" %}
+        {% endwith %}
     </div>
-    <div style='padding-top: 20px'>
-        <form method="post" row='form' enctype="multipart/form-data">
-            {% csrf_token %}
-            <div class="form-group">
-                <div>
-                    {{ form.name.label_tag }}
-                    {%if form.name.errors%}
-                    <label style='color:red'>{{ form.name.errors.as_text }}</label>
-                    {%endif%}
-                </div>
-                {{ form.name }}
-            </div>
-            <div class="form-group">
-                <div>
-                    {{ form.ai_type.label_tag }}
-                    {%if form.ai_type.errors%}
-                    <label style='color:red'>{{ form.ai_type.errors.as_text }}</label>
-                    {%endif%}
-                </div>
-                {{ form.ai_type }}
-            </div>
-            <div class="form-group row">
-                <div class='col-sm-8'>
-                    <div>
-                        {{ form.content.label_tag }}
-                        {%if form.content.errors%}
-                        <label style='color:red'>{{ form.content.errors.as_text }}</label>
-                        {%endif%}
-                    </div>
-                    {{ form.content }}
-                </div>
-                <div class='col-sm-4'>
-                    <div>
-                        {{ form.public.label_tag }}
-                        {%if form.public.errors%}
-                        <label style='color:red'>{{ form.public.errors.as_text }}</label>
-                        {%endif%}
-                    </div>
-                    {{ form.public }}
-                </div>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="上传" class='btn btn-primary form-control'>
-            </div>
-        </form>
-        <div class="form-group">
-            <div id="footer">
-                <div>上传代码代表您已阅读并同意<a style='color:dodgerblue' href='#'>《假装这有一个协议》</a></div>
-            </div>
-        </div>
+    <div class='col-sm-4'>
+        {% with form.public as elem %}
+        {% include "sub/form_element.html" %}
+        {% endwith %}
     </div>
 </div>
+<div class="form-group">
+    <input type="submit" value="上传" class='btn btn-primary form-control'>
+</div>
+{% endblock %}
+
+{% block footer %}
+<div>上传代码代表您已阅读并同意<a style='color:dodgerblue' href='#'>《假装这有一个协议》</a></div>
+{% endblock %}
+
+{% block script %}
+<script>
+    aitype = '{{ai_type}}'
+    window.addEventListener('load', () => {
+        document.getElementById('id_ai_type').value = aitype
+    })
+</script>
 {% endblock %}

@@ -1,0 +1,7 @@
+<div>
+    {{ elem.label_tag }}
+    {%if elem.errors%}
+    <label style='color:red'>{{ elem.errors.as_text }}</label>
+    {%endif%}
+</div>
+{{ elem }}

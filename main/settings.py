@@ -137,31 +137,30 @@ USERNAME_CHARPOOL = set(RAND_CHARPOOL)  # 用于匹配用户名
 # 邮件bot系统
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.pku.edu.cn'
-EMAIL_PORT = 25
+EMAIL_PORT = 465
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 
 # 验证邮件配置参数
-EMAIL_VALID_RESEND_MINUTES = 5  # 每{}分钟可重发一次验证邮件
+EMAIL_VALID_RESEND_MINUTES = 5-5  # 每{}分钟可重发一次验证邮件
 EMAIL_VALID_LAST_DAYS = 5  # 每封验证邮件内链接有效期为{}天
 
 # 动态文件目录
-STORAGE_DIR = os.path.join(BASE_DIR, '_STORAGE')  # 文件存储目录
+STORAGE_DIR = '_STORAGE'# os.path.join(BASE_DIR, '_STORAGE')  # 文件存储目录
 PAIRMATCH_DIR = os.path.join(STORAGE_DIR, 'pairmatch')  # 比赛记录存储目录
 
 ### 比赛系统参数
 AI_TYPES = {  # AI比赛类型
-    # 0: '黑白棋',
-    # 1: '漂移乒乓',
+    0: '黑白棋',
+    1: '漂移乒乓',
     2: '纸带圈地',
-    # 3: '19期末大作业，你们考虑考虑做啥',
+    3: '19期末大作业',
 }
-DEFAULT_AI = 2
 MATCH_TYPES = {  # 生成比赛类型
+    3: '随机先后手',
     0: '我方先手',
     1: '对方先手',
     2: '双方对半先手',
-    3: '随机先后手',
     # 4:'Override',
 }
 MATCH_CODE_LENGTH = 10  # 比赛记录文件随机编码长度
@@ -175,3 +174,7 @@ PAIRMATCH_STATUS = {  # 比赛状态码
 }
 MAX_MONITOR_IDLE_SEC = 20  # 监控进程最大闲置秒数
 DEFAULT_MAX_RUNNING_SEC = 2  # 获取计时函数缺省时每局最大运行{}秒
+SCORE_FACTOR_PAIRMATCH = 16  # 天梯积分变化参数
+
+### 比赛系统显示参数
+MAX_PAIRMATCH_DISPLAY=5

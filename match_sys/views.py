@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.conf import settings
 from django.contrib import messages
 from django.utils import timezone
+from django.db.models import Q, Avg, Count
 from external import match_monitor
 from external.factory import Factory
 from main.helpers import login_required, get_user, sorry
@@ -13,18 +14,57 @@ import os, json
 
 def game_info(request):
     # TODO: 列出所有可用的比赛，显示其规则，引用至站内对战入口与github项目
-    return redirect('/home/')
+    return sorry(request, text='WORK IN PROGRESS')
 
 
-def lobby(request):
-    # TODO: 对战大厅，列出所有比赛类型，最近的比赛记录等
-    return redirect('/home/')
+if 'multi-view':
 
+    def lobby(request):
+        '''
+        对战大厅
+        列出所有比赛类型，最近的比赛记录等
+        '''
+        request.session['curr_game'] = ''  # 清除当前界面游戏
+        games = {i: {'name': j} for i, j in settings.AI_TYPES.items()}
 
-@login_required(1)
-def invite_match(request):
-    # TODO: 支持向其他用户发起指定参数的比赛
-    return redirect('/home/')
+        # 统计每类AI数目
+        pool = []
+        for i in games:
+            codes = Code.objects.filter(ai_type=i)
+            games[i]['size'] = len(codes)
+            games[i]['users'] = len(set(c.author for c in codes))
+
+        # 抓取最近的比赛记录
+        matches = PairMatch.objects.all()[:settings.MAX_PAIRMATCH_DISPLAY]
+
+        return render(request, 'lobby.html', locals())
+
+    def ladder(request, AI_type):
+        '''天梯'''
+
+        # 读取参数
+        try:
+            AI_type = int(AI_type)
+            assert AI_type in settings.AI_TYPES
+        except:
+            return sorry(request, text='无效的比赛编号')
+        title = settings.AI_TYPES[AI_type]
+        request.session['curr_game'] = AI_type  # 设置当前页面游戏
+
+        # 代码排序
+        all_codes = Code.objects.filter(ai_type=AI_type)
+        sorted_codes = all_codes.order_by('-score')
+
+        # 翻页筛选 TODO
+        codes = sorted_codes
+
+        # 用户均分统计
+        users = all_codes.values('author').annotate(
+            avg=Avg('score'), count=Count('id')).values(
+                'author_id', 'author__username', 'avg',
+                'count').order_by('-avg')
+
+        return render(request, 'ladder.html', locals())
 
 
 # 表单页
@@ -32,8 +72,8 @@ if 'forms':
 
     @login_required(1)
     def upload(request):
+        ai_type = request.GET.get('id', '')
         if request.method == 'POST':
-            print(request.POST)
             form = forms.CodeUploadForm(request.POST, request.FILES)
             if form.is_valid():
                 code = form.instance
@@ -43,26 +83,46 @@ if 'forms':
                 messages.info(request, '上传文件"%s"成功' % code.name)
                 return redirect('/home/')
             else:
+                print(form.errors)
                 messages.warning(request, '请检查非法输入')
                 return render(request, 'upload.html', locals())
-        return render(request, 'upload.html', {'form': forms.CodeUploadForm()})
+        form = forms.CodeUploadForm()
+        return render(request, 'upload.html', locals())
 
     @login_required(1)
-    def pairmatch(request):
+    def pairmatch(request, AI_type):
         '''启动一对一比赛'''
 
         # 读取参数
         try:
-            AI_type = int(request.GET.get('id'))
+            AI_type = int(AI_type)
+            assert AI_type in settings.AI_TYPES
         except:
-            AI_type = settings.DEFAULT_AI
-        finally:
-            title = settings.AI_TYPES[AI_type]
+            return sorry(request, text='无效的比赛编号')
+        title = settings.AI_TYPES[AI_type]
+        request.session['curr_game'] = AI_type  # 设置当前页面游戏
 
         # 获取可选AI列表
         codes = Code.objects.filter(ai_type=AI_type)
         my_codes = codes.filter(author=request.session['userid'])  # 我方所有
-        target_codes = my_codes.union(codes.filter(public=True))  # 我方所有+所有公开
+        # 筛选对方代码
+        code2_empty = True
+        try:
+            target_user = request.GET.get('user2')
+            if target_user:
+                target_codes = codes.filter(author=target_user)
+                if target_codes:
+                    code2_empty = False
+                else:
+                    messages.warning(request, '用户没有上传代码')
+        except:
+            messages.warning(request, '输入用户非法')
+        if code2_empty:
+            target_codes = codes.all()  # 所有代码
+
+        # 读取筛选条件
+        my_code = request.GET.get('code1', '')
+        target_code = request.GET.get('code2', '')
 
         if request.method == 'POST':
             form = forms.PairMatchFormFactory.get(AI_type, request.POST)
@@ -70,9 +130,7 @@ if 'forms':
             target_code = request.POST.get('code2')
             if not (my_code and my_codes.filter(id=my_code)):
                 form.errors['code1'] = '非法输入: %s' % target_code
-            if not (target_code and
-                    (my_codes.filter(id=target_code)
-                     or codes.filter(public=True, id=target_code))):
+            if not (target_code and target_codes.filter(id=target_code)):
                 form.errors['code2'] = '非法输入: %s' % target_code
             if form.is_valid():  # run match
                 match_monitor.start_match(AI_type, my_code, target_code, form)
@@ -83,6 +141,12 @@ if 'forms':
                 return render(request, 'pairmatch.html', locals())
         form = forms.PairMatchFormFactory.get(AI_type)
         return render(request, 'pairmatch.html', locals())
+
+    @login_required(1)
+    def invite_match(request, AI_type):
+        # TODO: 支持向其他用户发起指定参数的比赛
+        request.session['curr_game'] = AI_type  # 设置当前页面游戏
+        return sorry(request, text='WORK IN PROGRESS')
 
 
 # 查看比赛结果
@@ -98,16 +162,11 @@ if 'view':
 
         # 检测权限
         user = get_user(request)
-        if not code.available(user):
-            return sorry(request, 403, text='没有权限查看')
-
-        # 处理操作请求
-        if code.author==user:
-            pass
+        my_code = code.author == user
 
         # 读取可查看比赛列表
-        match_pool1 = [m for m in code.pmatch1.all() if m.available(user)]
-        match_pool2 = [m for m in code.pmatch2.all() if m.available(user)]
+        match_pool1 = code.pmatch1.all()
+        match_pool2 = code.pmatch2.all()
 
         return render(request, 'view_code.html', locals())
 
@@ -122,20 +181,24 @@ if 'view':
 
         # 检测权限
         user = get_user(request)
-        if not match.available(user):
-            return sorry(request, 403, text='没有权限查看')
+        my_match = match.code1.author == user
 
         # 处理操作请求
-        if match.code1.author==user:
-            op=request.GET.get('op')
-            if match.status==1 and op=='stop':
+        if my_match:
+            op = request.GET.get('op')
+            if match.status == 1 and op == 'stop':
                 match_monitor.kill_match(match.name)
-                messages.info(request,'比赛已中止')
-            elif match.status!=1 and op=='del':
-                upper=match.code1.id
+                messages.info(request, '比赛已中止')
+            elif match.status != 1 and op == 'del':
+                upper = match.code1.id
                 match.delete()
-                messages.info(request,'比赛记录已删除')
-                return redirect('/code/%d'%upper)
+                messages.info(request, '比赛记录已删除')
+                return redirect('/code/%d' % upper)
+
+        # 获取等级分变动
+        if match.delta_score != None:
+            delta_show = '+' if match.delta_score >= 0 else ''
+            delta_show += '%.2f' % match.delta_score
 
         # 读取比赛记录
         loader = Factory(match.ai_type)
