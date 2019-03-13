@@ -42,22 +42,46 @@
     <!-- 作为发起者 -->
     <div class='col-sm-6'>
         <div class="x_title">
-            <h1>发起的比赛：</h1>
+            <div style='float:right' id='pool1_panel'>
+            </div>
+            <div>
+                <h1>发起的比赛：</h1>
+            </div>
         </div>
-        {% with match_list=match_pool1 %}
-        {% include "sub/code_match_table.html" %}
-        {% endwith %}
+        <table class='table' id='pool1'>
+            <thead>
+                <tr>
+                    <th>接收方代码</th>
+                    <th>创建时间</th>
+                    <th>对局数</th>
+                    <th>状态</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
     </div>
     <!-- 作为接受者 -->
     <div class='col-sm-6'>
         <div class="x_title">
-            <h1>收到的比赛：</h1>
+            <div style='float:right' id='pool2_panel'>
+            </div>
+            <div>
+                <h1>收到的比赛：</h1>
+            </div>
         </div>
-        {% with match_list=match_pool2 %}
-        {% with receive=1 %}
-        {% include "sub/code_match_table.html" %}
-        {% endwith %}
-        {% endwith %}
+        <table class='table' id='pool2'>
+            <thead>
+                <tr>
+                    <th>发起方代码</th>
+                    <th>创建时间</th>
+                    <th>对局数</th>
+                    <th>状态</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
     </div>
 </div>
 {% endblock %}
@@ -65,9 +89,8 @@
 {% block script %}
 <script>
     window.addEventListener('load', () => {
-        setTimeout(() => {
-            window.location.href += ''
-        }, 10000)
+        window.table1 = new TableHolder('pool1', '/table/match/?pre=send&codeid={{code.id}}')
+        window.table2 = new TableHolder('pool2', '/table/match/?pre=send&codeid={{code.id}}')
     })
 </script>
 {% endblock %}

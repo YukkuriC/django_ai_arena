@@ -36,10 +36,16 @@
         {% endfor %}{% endwith %}
     </tbody>
 </table>
-<div class='x_title'>
-    <h1>最近发起的比赛</h1>
+
+
+<div class="x_title">
+    <div style='float:right' id='pool_panel'>
+    </div>
+    <div>
+        <h1>最近发起的比赛</h1>
+    </div>
 </div>
-<table class='table'>
+<table class='table' id='pool'>
     <thead>
         <tr>
             <th>发起时间</th>
@@ -51,22 +57,15 @@
         </tr>
     </thead>
     <tbody>
-        {% with root_link="/match/" %}
-        {% for match in matches%}
-        {% with sublink=match.name %}
-        <tr {% include "sub/trow_link.html" %}{%endwith%}>
-            <td>{{match.run_datetime|date:"Y/m/d H:i:s"}}</td>
-            <td>{{match.get_ai_type_display}}</td>
-            <td>
-                <a href="/code/{{match.code1.id}}/">{{match.code1.name}}</a>
-            </td>
-            <td>
-                <a href="/code/{{match.code2.id}}/">{{match.code2.name}}</a>
-            </td>
-            <td>{{match.finished_rounds}}/{{match.rounds}}</td>
-            <td>{{match.get_status_display}}</td>
-        </tr>
-        {% endfor %}{% endwith %}
     </tbody>
 </table>
+{% endblock %}
+
+{% block script %}
+<script src='/assets/js/table_holder.js'></script>
+<script>
+    window.addEventListener('load', () => {
+        window.table = new TableHolder('pool', '/table/match/?pre=near')
+    })
+</script>
 {% endblock %}

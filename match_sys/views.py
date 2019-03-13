@@ -25,17 +25,22 @@ if 'multi-view':
         列出所有比赛类型，最近的比赛记录等
         '''
         request.session['curr_game'] = ''  # 清除当前界面游戏
-        games = {i: {'name': j} for i, j in settings.AI_TYPES.items()}
+        games = {
+            i: {
+                'name': j,
+                'size': 0,
+                'users': 0
+            }
+            for i, j in settings.AI_TYPES.items()
+        }
 
         # 统计每类AI数目
-        pool = []
-        for i in games:
-            codes = Code.objects.filter(ai_type=i)
-            games[i]['size'] = len(codes)
-            games[i]['users'] = len(set(c.author for c in codes))
-
-        # 抓取最近的比赛记录
-        matches = PairMatch.objects.all()[:settings.MAX_PAIRMATCH_DISPLAY]
+        grps = Code.objects.values('ai_type',
+                                   'author').annotate(ncode=Count('id'))
+        for grp in grps:
+            target = games[grp['ai_type']]
+            target['size'] += grp['ncode']
+            target['users'] += 1
 
         return render(request, 'lobby.html', locals())
 
@@ -53,10 +58,6 @@ if 'multi-view':
 
         # 代码排序
         all_codes = Code.objects.filter(ai_type=AI_type)
-        sorted_codes = all_codes.order_by('-score')
-
-        # 翻页筛选 TODO
-        codes = sorted_codes
 
         # 用户均分统计
         users = all_codes.values('author').annotate(
@@ -182,10 +183,6 @@ if 'view':
         # 检测权限
         user = get_user(request)
         my_code = code.author == user
-
-        # 读取可查看比赛列表
-        match_pool1 = code.pmatch1.all()
-        match_pool2 = code.pmatch2.all()
 
         return render(request, 'view_code.html', locals())
 

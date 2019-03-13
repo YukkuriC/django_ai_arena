@@ -5,9 +5,13 @@
 
 {% block body%}
 <div class='x_title'>
-    <h1>代码天梯</h1>
+    <div style='float:right' id='pool_panel'>
+    </div>
+    <div>
+        <h1>代码天梯</h1>
+    </div>
 </div>
-<table class='table'>
+<table class='table' id='pool'>
     <thead>
         <tr>
             <th>代码名称</th>
@@ -18,23 +22,6 @@
         </tr>
     </thead>
     <tbody>
-        {% with root_link="/code/" %}
-        {% for code in codes%}
-        {% with sublink=code.id %}
-        <tr {% include "sub/trow_link.html" %}{%endwith%}>
-            <td>{{code.name}}</td>
-            <td><a href="/user/{{code.author.id}}">{{code.author.username}}</a></td>
-            <td>
-                {{code.num_matches}}赛{{code.num_records}}战- {{code.num_wins}}胜{{code.num_loses}}负{{code.num_draws}}平
-            </td>
-            <td>
-                {{code.score_show}}
-            </td>
-            <td>
-                <a class='btn-sm btn-info' href='/lobby/run_match/{{code.ai_type}}/?code2={{code.id}}'>发起对战</a>
-            </td>
-        </tr>
-        {% endfor %}{% endwith %}
     </tbody>
 </table>
 <div class='x_title'>
@@ -63,4 +50,12 @@
         {% endfor %}{% endwith %}
     </tbody>
 </table>
+{% endblock %}
+
+{% block script %}
+<script>
+    window.addEventListener('load', () => {
+        window.table = new TableHolder('pool', '/table/code/?pre=ladder&type={{AI_type}}')
+    })
+</script>
 {% endblock %}

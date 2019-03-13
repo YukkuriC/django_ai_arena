@@ -41,6 +41,7 @@ ALLOWED_HOSTS = ['*']
 INSTALLED_APPS = [
     'usr_sys',
     'match_sys',
+    'ajax_sys',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -179,4 +180,5 @@ DEFAULT_MAX_RUNNING_SEC = 2  # 获取计时函数缺省时每局最大运行{}�
 SCORE_FACTOR_PAIRMATCH = 16  # 天梯积分变化参数
 
 ### 比赛系统显示参数
-MAX_PAIRMATCH_DISPLAY = 5
+MAX_PAIRMATCH_DISPLAY = 10
+MAX_CODE_DISPLAY = 10
