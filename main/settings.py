@@ -142,12 +142,14 @@ EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 
 # 验证邮件配置参数
-EMAIL_VALID_RESEND_MINUTES = 5-5  # 每{}分钟可重发一次验证邮件
+EMAIL_VALID_RESEND_MINUTES = 5  # 每{}分钟可重发一次验证邮件
 EMAIL_VALID_LAST_DAYS = 5  # 每封验证邮件内链接有效期为{}天
 
 # 动态文件目录
-STORAGE_DIR = '_STORAGE'# os.path.join(BASE_DIR, '_STORAGE')  # 文件存储目录
+STORAGE_DIR = '_STORAGE'  # 文件存储目录
 PAIRMATCH_DIR = os.path.join(STORAGE_DIR, 'pairmatch')  # 比赛记录存储目录
+
+MAX_CODE_PER_GAME = 5  # 单用户单游戏最多保存代码数
 
 ### 比赛系统参数
 AI_TYPES = {  # AI比赛类型
@@ -177,4 +179,4 @@ DEFAULT_MAX_RUNNING_SEC = 2  # 获取计时函数缺省时每局最大运行{}�
 SCORE_FACTOR_PAIRMATCH = 16  # 天梯积分变化参数
 
 ### 比赛系统显示参数
-MAX_PAIRMATCH_DISPLAY=5
+MAX_PAIRMATCH_DISPLAY = 5

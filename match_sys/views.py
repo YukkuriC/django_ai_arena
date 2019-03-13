@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.conf import settings
 from django.contrib import messages
 from django.utils import timezone
-from django.db.models import Q, Avg, Count
+from django.db.models import Q, Count, Max
 from external import match_monitor
 from external.factory import Factory
 from main.helpers import login_required, get_user, sorry
@@ -60,9 +60,9 @@ if 'multi-view':
 
         # 用户均分统计
         users = all_codes.values('author').annotate(
-            avg=Avg('score'), count=Count('id')).values(
-                'author_id', 'author__username', 'avg',
-                'count').order_by('-avg')
+            score=Max('score'), count=Count('id')).values(
+                'author_id', 'author__username', 'score',
+                'count').order_by('-score')
 
         return render(request, 'ladder.html', locals())
 
@@ -73,9 +73,24 @@ if 'forms':
     @login_required(1)
     def upload(request):
         ai_type = request.GET.get('id', '')
+
         if request.method == 'POST':
             form = forms.CodeUploadForm(request.POST, request.FILES)
             if form.is_valid():
+                # 验证用户代码数未超标
+                if Code.objects.filter(
+                        author=request.session['userid'],
+                        ai_type=form.cleaned_data['ai_type']).count(
+                        ) >= settings.MAX_CODE_PER_GAME:
+                    return sorry(
+                        request,
+                        403,
+                        text=[
+                            '已超过最大可上传代码数',
+                            '请删除不必要的代码',
+                            '或在已有代码上进行修改',
+                        ])
+
                 code = form.instance
                 code.author = User.objects.get(id=request.session['userid'])
                 code.edit_datetime = timezone.now()
@@ -88,6 +103,10 @@ if 'forms':
                 return render(request, 'upload.html', locals())
         form = forms.CodeUploadForm()
         return render(request, 'upload.html', locals())
+
+    @login_required(1)
+    def edit_code(request, code_id):
+        return sorry(request, text='WORK IN PROGRESS')
 
     @login_required(1)
     def pairmatch(request, AI_type):
