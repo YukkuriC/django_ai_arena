@@ -1,13 +1,25 @@
 from django import forms
 from django.conf import settings
 from .models import Code
+from external.factory import Factory
 
 
 # 上传代码表单
 class CodeUploadForm(forms.ModelForm):
+    def clean_content(self):
+        ai_type = self.cleaned_data.get('ai_type', None)
+        if ai_type not in settings.AI_TYPES:
+            raise forms.ValidationError('请填写正确的AI类型')
+        file = self.cleaned_data['content']
+        try:
+            Factory(ai_type).load_code(file)  # 试加载代码内容
+        except Exception as e:
+            raise forms.ValidationError(str(e))
+        return file
+
     class Meta:
         model = Code
-        fields = ['name', 'ai_type','content','public']
+        fields = ['name', 'ai_type', 'content', 'public']
         widgets = {
             'name': forms.TextInput({
                 'class': 'form-control'

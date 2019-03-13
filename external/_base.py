@@ -123,16 +123,28 @@ class BaseCodeLoader:
         '''加载代码文件，返回其模块'''
         # 读取代码文件内容
         try:
-            with open(code_path, encoding='utf-8') as f:
-                code_raw = f.read()
+            if isinstance(code_path, str):
+                with open(code_path, encoding='utf-8') as f:
+                    code_raw = f.read()
+            else:
+                code_raw = code_path.read().decode('utf-8', 'ignore')
         except Exception as e:
             raise SyntaxError('文件读取失败: ' + str(e))
 
         # 将待导入代码转换为AST
         try:
             code_tree = ast.parse(code_raw)
-        except:
-            raise SyntaxError('解析失败')
+        except Exception as e:
+            raise SyntaxError('解析失败: ' + cls.stringfy_error(e))
+
+        # 在最底层禁止非函数定义与__doc__的节点
+        for node in code_tree.body:
+            if isinstance(node, ast.FunctionDef):
+                continue
+            if isinstance(node, (ast.Expr, ast.Assign)):
+                if isinstance(node.value, ast.Str):
+                    continue
+            raise SyntaxError('第%d行: 非法语句' % node.lineno)
 
         # 替换非法import与函数
         for node in ast.walk(code_tree):
@@ -157,10 +169,21 @@ class BaseCodeLoader:
                     func.id = 'print'
 
         # 加载模块并输出
-        class pack:
-            exec(compile(code_tree, '', 'exec'))
+        try:
+
+            class pack:
+                exec(compile(code_tree, '', 'exec'))
+        except Exception as e:
+            raise RuntimeError(cls.stringfy_error(e))
 
         return pack
+
+    @staticmethod
+    def stringfy_error(e):
+        tmp = '%s: %s' % (type(e).__name__, e)
+        if e.__traceback__:
+            tmp = '第%s行 - ' % e.__traceback__.tb_lineno + tmp
+        return tmp
 
     class Meta:
         module_blacklist = ['os', 'sys', 'builtins']  # 禁止导入的模块

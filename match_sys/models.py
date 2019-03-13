@@ -8,8 +8,8 @@ import os, shutil
 
 def get_path(self, filename):
     '''记录代码存储路径'''
-    return '%s/code/%03d/%s_%s' % (settings.STORAGE_DIR, self.ai_type,
-                                   self.author.id, filename)
+    return '%s/code/%03d/%s_%s.py' % (settings.STORAGE_DIR, self.ai_type,
+                                   self.author.username, self.id)
 
 
 class Code(models.Model):

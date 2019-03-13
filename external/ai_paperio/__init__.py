@@ -80,10 +80,7 @@ class PaperIOMatch(BasePairMatch):
         if record['result'][1] == -1:  # 将Exception转换为str
             record['result'] = list(record['result'])
             e = record['result'][2]
-            tmp = '%s: %s' % (type(e).__name__, e)
-            if e.__traceback__:
-                tmp = '第%s行 - ' % e.__traceback__.tb_lineno + tmp
-            record['result'][2] = tmp
+            record['result'][2] = cls.stringfy_error(e)
         return super().stringfy_record(record)
 
     @staticmethod
