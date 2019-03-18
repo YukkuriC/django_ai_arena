@@ -3,6 +3,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.utils import timezone
 from django.db.models import Q, Count, Max
+from django.http import JsonResponse
 from external import match_monitor
 from external.factory import Factory
 from main.helpers import login_required, get_user, sorry
@@ -107,7 +108,69 @@ if 'forms':
 
     @login_required(1)
     def edit_code(request, code_id):
-        return sorry(request, text='WORK IN PROGRESS')
+        # 获取代码对象
+        try:
+            code = Code.objects.get(id=int(code_id))
+        except:
+            return sorry(request, text='无效的代码编号')
+
+        # 检测权限
+        user = get_user(request)
+        if not code.author == user:
+            return sorry(request, 403, text='没有编辑权限')
+
+        # 处理代码更新内容
+        if request.method == 'POST':
+            res = {}
+            to_update = False
+
+            # 更新名称
+            new_name = request.POST.get('name')
+            if new_name:
+                to_update = True
+                code.name = new_name
+                res['name'] = new_name
+
+            # 验证更新代码 TODO
+            new_code = request.POST.get('code')
+            if new_code:
+                pass
+
+            if to_update:
+                code.save()
+            return JsonResponse(res)
+
+        # 输出代码至编辑器
+        code_content = code.content.read().decode('utf-8', 'ignore')
+        return render(request, 'edit_code.html', locals())
+
+    @login_required(1)
+    def delete_code(request, code_id):
+        # 获取代码对象
+        try:
+            code = Code.objects.get(id=int(code_id))
+        except:
+            return sorry(request, text='无效的代码编号')
+
+        # 检测权限
+        user = get_user(request)
+        if not code.author == user:
+            return sorry(request, 403, text='没有删除权限')
+
+        # 检测密码验证
+        if request.method == 'POST':
+            pw = request.POST.get('check_pw', '')
+
+            # 删除代码
+            if user.match_passwd(pw):
+                code.delete()
+                return redirect('/home/')
+
+            # 密码错误
+            else:
+                messages.warning(request, '密码错误')
+
+        return render(request, 'delete_code.html', locals())
 
     @login_required(1)
     def pairmatch(request, AI_type):

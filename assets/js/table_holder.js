@@ -1,6 +1,6 @@
 
 class TableHolder {
-    constructor(id, url) {
+    constructor(id, url, callback = null) {
         this.table = document.getElementById(id)
         this.tbody = this.table.getElementsByTagName('tbody')[0]
         this.panel = document.getElementById(id + '_panel')
@@ -39,9 +39,9 @@ class TableHolder {
         }
         this.panel.style.display = ''
 
-        this.refresh()
+        this.refresh(callback)
     }
-    refresh() {
+    refresh(callback = null) {
         var url = this.base_url + '&page=' + this.page
         this.panel.style.display = 'none'
         $.get(url, data => {
@@ -59,6 +59,8 @@ class TableHolder {
             this.page_noticer.innerHTML = (this.page + 1) + '/' + this.max_page
 
             this.panel.style.display = ''
+
+            if (callback != null) callback()
         })
     }
     next_page() {

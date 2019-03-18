@@ -13,7 +13,7 @@ def get_path(self, filename):
 
 
 class Code(models.Model):
-    name = models.CharField('名称', max_length=128)
+    name = models.CharField('名称', max_length=20)
     author = models.ForeignKey(
         usr_models.User, models.CASCADE, verbose_name='发布者')
     ai_type = models.IntegerField('AI类型', choices=settings.AI_TYPES.items())

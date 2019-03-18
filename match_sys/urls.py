@@ -4,6 +4,7 @@ from . import views
 urlpatterns = [
     path('code/<str:code_id>/', views.view_code),
     path('code/<str:code_id>/edit/', views.edit_code),
+    path('code/<str:code_id>/del/', views.delete_code),
     path('match/<str:match_name>/', views.view_pairmatch),
     path('match/<str:match_name>/<str:record_id>/', views.view_record),
     path('upload/', views.upload),

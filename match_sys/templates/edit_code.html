@@ -1,0 +1,145 @@
+{% extends 'layout0.html' %}
+{% load staticfiles %}
+
+{% block title %}编辑代码: {{code.name}}{% endblock %}
+
+{% block css %}
+<!-- codemirror base -->
+<link rel="stylesheet" href="/assets/codemirror/lib/codemirror.css" />
+<script src="/assets/codemirror/lib/codemirror.js"></script>
+
+<!-- codemirror python -->
+<script src="/assets/codemirror/mode/python/python.js"></script>
+
+<!-- 代码折叠 -->
+<link rel="stylesheet" href="/assets/codemirror/addon/fold/foldgutter.css" />
+<script src="/assets/codemirror/addon/fold/foldcode.js"></script>
+<script src="/assets/codemirror/addon/fold/foldgutter.js"></script>
+<script src="/assets/codemirror/addon/fold/indent-fold.js"></script>
+
+<!-- 括号 -->
+<script src="/assets/codemirror/addon/edit/closebrackets.js"></script>
+<script src="/assets/codemirror/addon/edit/matchbrackets.js"></script>
+
+<!-- 注释 -->
+<script src="/assets/codemirror/addon/comment/comment.js"></script>
+
+<style>
+    .CodeMirror {
+        height: 40em;
+        box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
+        line-height: 1em;
+        font-size: 1em;
+        font-family: "Consolas", 'Courier New', Courier, monospace
+    }
+
+    .CodeMirror-scroll {
+        overflow-y: hidden;
+        overflow-x: auto;
+    }
+</style>
+{% endblock %}
+
+{% block header %}
+<div class='col-sm-6'>
+    <h1>代码名称:
+        <span id='code_name'>{{code.name}}</span>
+        <div id='code_name_edit' style="display:none" title="注: 新名称保存后需点“更新代码”应用">
+            <input id='code_name_input' class='btn-sm' style='border:0'>
+            <button id='save_name' class='btn btn-sm btn-primary'>保存</button>
+            <button id='abandon_name' class='btn btn-sm btn-warning'>放弃</button>
+        </div>
+    </h1>
+</div>
+<div class='col-sm-6 text-right'>
+    <h1><a href="..">返回</a></h1>
+</div>
+{% endblock %}
+
+{% block body %}
+<div class='x_title'>
+    <div class='float-right'>
+        <button id='upload_code' class='btn btn-sm btn-success'>更新代码</button>
+        <a style='color:white' href='../del' id='delete_code' class='btn btn-sm btn-danger'>删除代码</a>
+    </div>
+    <div>
+        <h1>代码编辑器</h1>
+    </div>
+</div>
+<!-- 原始代码 -->
+<textarea id="code">
+{{code_content}}
+</textarea>
+{% csrf_token %}
+{% endblock %}
+
+{% block script %}
+<script>
+    // 常量
+    csrf_token = "{{csrf_token}}"
+    default_name = "{{code.name}}"
+    code_original = document.getElementById("code").textContent
+
+    // 代码名称编辑区
+    code_name = document.getElementById('code_name')
+    name_edit_region = document.getElementById('code_name_edit')
+    name_edit_input = document.getElementById('code_name_input')
+    code_name.addEventListener('click', e => {
+        code_name.style.display = 'none'
+        name_edit_region.style.display = 'inline-block'
+        name_edit_input.value = code_name.textContent
+    })
+    document.getElementById('abandon_name').addEventListener('click', e => {
+        code_name.style.display = 'inline-block'
+        name_edit_region.style.display = 'none'
+    })
+    document.getElementById('save_name').addEventListener('click', e => {
+        code_name.textContent = name_edit_input.value.substr(0, 20)
+        if (!code_name.textContent) code_name.textContent = default_name
+        document.getElementById('abandon_name').click()
+    })
+
+    // 编辑器
+    var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+        readOnly: true,// TODO: 更新验证功能未完
+        mode: "python",
+        indentUnit: 4,
+        lineNumbers: true,
+        lineWrapping: true,
+        foldGutter: true,
+        gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+        autoCloseBrackets: true,
+        matchBrackets: true,
+        showTrailingSpace: true,
+    });
+
+    // 上传代码
+    document.getElementById("upload_code").addEventListener('click', e => {
+        post_content = {
+            csrfmiddlewaretoken: csrf_token,
+        }
+        to_update = false
+
+        // 姓名是否更新
+        document.getElementById('save_name').click()// 自动保存正编辑名称
+        current_name = code_name.textContent
+        if (current_name != default_name) {
+            to_update = true
+            post_content.name = current_name
+        }
+
+        // 代码是否更新
+        current_code = editor.getValue()
+        if (current_code != code_original) {
+            to_update = true
+            post_content.code = current_code
+        }
+
+        if (!to_update) return
+        $.post('.', post_content, res => {
+            console.log(res)
+            code_name.textContent = res.name || code_name.textContent
+        }, 'json')
+    })
+</script>
+{% endblock %}

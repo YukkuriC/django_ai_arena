@@ -1,14 +1,20 @@
 {% extends 'layout0.html' %}
 {% load staticfiles %}
 
-{% block title %}查看代码: {{code.title}}{% endblock %}
+{% block title %}查看代码: {{code.name}}{% endblock %}
 
 {% block header %}
 <div class='col-sm-6'>
     <h1>代码: {{code.name}}</h1>
 </div>
 <div class='col-sm-6 text-right'>
-    <h1><a href="/user/code.author.id/">作者: {{code.author.username}}</a></h1>
+    <h1>
+        {% if my_code %}
+        <a href="/home">个人主页</a>
+        {% else %}
+        <a href="/user/code.author.id/">作者: {{code.author.username}}</a>
+        {% endif %}
+    </h1>
 </div>
 {% endblock %}
 
@@ -33,7 +39,8 @@
         </p>
         <p>操作：
             {%if my_code%}
-            <a href="">删除代码</a>
+            <a href="./edit">编辑代码</a>
+            <a href="./del">删除代码</a>
             {%endif%}
         </p>
     </div>
@@ -89,8 +96,9 @@
 {% block script %}
 <script>
     window.addEventListener('load', () => {
-        window.table1 = new TableHolder('pool1', '/table/match/?pre=send&codeid={{code.id}}')
-        window.table2 = new TableHolder('pool2', '/table/match/?pre=send&codeid={{code.id}}')
+        window.table1 = new TableHolder('pool1', '/table/match/?pre=send&codeid={{code.id}}', () => {
+            window.table2 = new TableHolder('pool2', '/table/match/?pre=recv&codeid={{code.id}}')
+        })
     })
 </script>
 {% endblock %}

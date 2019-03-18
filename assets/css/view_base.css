@@ -17,7 +17,7 @@ a.text-nav:hover{
 }
 .header {
     min-height: 40px;
-    padding: 5px 16px 0px;
+    padding: 5px 0px 0px;
 }
 .header h1{
     font-size: 18px;

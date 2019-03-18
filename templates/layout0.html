@@ -6,7 +6,9 @@
     <!-- Header -->
     <div id='header' class="row header bg-info">
         {% block header %}
-        <h1><a>{% block title %}{% endblock %}</a></h1>
+        <div class='col-sm-12'>
+            <h1><a>{% block title %}{% endblock %}</a></h1>
+        </div>
         {% endblock %}
     </div>
     <!-- Body -->

@@ -1,0 +1,14 @@
+{% extends 'form_base.html' %}
+{% load staticfiles %}
+
+{% block title %}删除代码: {{code.name}}{% endblock %}
+
+{% block form_override %}
+<div class="form-group">
+    <label for="check_pw">确认密码:</label>
+    <input class='form-control' type="password" name='check_pw'>
+</div>
+<div class="form-group">
+    <input type="submit" value="确认删除" class='btn btn-danger form-control'>
+</div>
+{% endblock %}
