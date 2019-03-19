@@ -12,7 +12,7 @@ class CodeUploadForm(forms.ModelForm):
             raise forms.ValidationError('请填写正确的AI类型')
         file = self.cleaned_data['content']
         try:
-            Factory(ai_type).load_code(file)  # 试加载代码内容
+            Factory(ai_type).load_code(file.read(), True)  # 试加载代码内容
         except Exception as e:
             raise forms.ValidationError(str(e))
         return file
@@ -58,22 +58,22 @@ class PairMatch_Base(forms.Form):
 
 class PairMatch_PaperIO(PairMatch_Base):
     '''paper.io参数'''
-    k = forms.IntegerField(
-        label='场地半宽',
-        max_value=51,
-        min_value=9,
-        widget=forms.NumberInput({
-            'class': 'form-control',
-            'value': 51
-        }))
-    h = forms.IntegerField(
-        label='场地高度',
-        max_value=101,
-        min_value=9,
-        widget=forms.NumberInput({
-            'class': 'form-control',
-            'value': 101
-        }))
+    # k = forms.IntegerField(
+    #     label='场地半宽',
+    #     max_value=51,
+    #     min_value=9,
+    #     widget=forms.NumberInput({
+    #         'class': 'form-control',
+    #         'value': 51
+    #     }))
+    # h = forms.IntegerField(
+    #     label='场地高度',
+    #     max_value=101,
+    #     min_value=9,
+    #     widget=forms.NumberInput({
+    #         'class': 'form-control',
+    #         'value': 101
+    #     }))
     max_turn = forms.IntegerField(
         label='总回合数',
         max_value=2000,

@@ -59,7 +59,8 @@
 {% block body %}
 <div class='x_title'>
     <div class='float-right'>
-        <button id='upload_code' class='btn btn-sm btn-success'>更新代码</button>
+        <button id='reset_code' class='btn btn-sm btn-secondary'>重置代码</button>
+        <button id='upload_code' class='btn btn-sm btn-primary'>更新代码</button>
         <a style='color:white' href='../del' id='delete_code' class='btn btn-sm btn-danger'>删除代码</a>
     </div>
     <div>
@@ -101,7 +102,6 @@
 
     // 编辑器
     var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
-        readOnly: true,// TODO: 更新验证功能未完
         mode: "python",
         indentUnit: 4,
         lineNumbers: true,
@@ -112,6 +112,11 @@
         matchBrackets: true,
         showTrailingSpace: true,
     });
+
+    // 重置代码
+    document.getElementById("reset_code").addEventListener('click', e => {
+        editor.setValue(code_original)
+    })
 
     // 上传代码
     document.getElementById("upload_code").addEventListener('click', e => {
@@ -138,7 +143,13 @@
         if (!to_update) return
         $.post('.', post_content, res => {
             console.log(res)
+            switch (res.code_status) {
+                case 0:
+                    code_original = current_code
+                    break
+            }
             code_name.textContent = res.name || code_name.textContent
+            update_messages()
         }, 'json')
     })
 </script>

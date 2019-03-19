@@ -23,7 +23,11 @@ class PaperIOMatch(BasePairMatch):
         rounds = params['rounds']
         who_first = params['who_first']
         first_sequence = PaperIOMatch.get_first_sequence(rounds, who_first)
-        params = {k: params[k] for k in ('k', 'h', 'max_turn', 'max_time')}
+        params = {
+            k: params[k]
+            for k in (  # 'k', 'h',
+                'max_turn', 'max_time')
+        }
 
         # 初始化环境
         match_interface.clear_storage()

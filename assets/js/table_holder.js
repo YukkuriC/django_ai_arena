@@ -1,4 +1,4 @@
-
+// ajax可翻页表格
 class TableHolder {
     constructor(id, url, callback = null) {
         this.table = document.getElementById(id)

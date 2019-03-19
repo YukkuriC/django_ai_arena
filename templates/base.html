@@ -9,6 +9,7 @@
   <script src="/assets/bootstrap/bootstrap.min.js"></script>
   <link rel="stylesheet" type="text/css" href="/assets/css/view_base.css">
   <script src='/assets/js/table_holder.js'></script>
+  <script src='/assets/js/helpers.js'></script>
   <title>{% block title %}base{% endblock %} | AI对战平台</title>
   {% block css %}{% endblock %}
 </head>
@@ -58,14 +59,9 @@
   </nav>
 
   <!-- 消息系统 -->
-  {% for message in messages %}
-  <div class="alert alert-{{ message.tags }} alert-dismissible" role="alert">
-    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-      <span aria-hidden="true">&times;</span>
-    </button>
-    {{ message }}
+  <div id='message_block'>
+    {% include "sub/messages.html" %}
   </div>
-  {% endfor %}
 
   <!-- 主内容 -->
   {% block content %}{% endblock %}

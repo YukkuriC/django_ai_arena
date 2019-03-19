@@ -119,21 +119,29 @@ class BaseCodeLoader:
     '''
 
     @classmethod
-    def load_code(cls, code_path):
-        '''加载代码文件，返回其模块'''
+    def load_code(cls, code_raw, raw=False):
+        '''
+        加载代码文件，返回其模块
+        params:
+            code_raw: 代码文件路径或代码整体字符串
+            raw: 是否为直接的代码字串
+        '''
+        # 直接读取字符串
+        if raw:
+            if isinstance(code_raw, bytes):
+                code_raw = code_raw.decode('utf-8', 'ignore')
+
         # 读取代码文件内容
-        try:
-            if isinstance(code_path, str):
-                with open(code_path, encoding='utf-8') as f:
+        else:
+            try:
+                with open(code_raw, encoding='utf-8', errors='ignore') as f:
                     code_raw = f.read()
-            else:
-                code_raw = code_path.read().decode('utf-8', 'ignore')
-        except Exception as e:
-            raise SyntaxError('文件读取失败: ' + str(e))
+            except Exception as e:
+                raise SyntaxError('文件读取失败: ' + str(e))
 
         # 将待导入代码转换为AST
         try:
-            code_tree = ast.parse(code_raw)
+            code_tree = ast.parse(code_raw, '<qwq>')
         except Exception as e:
             raise SyntaxError('解析失败: ' + cls.stringfy_error(e))
 
@@ -180,10 +188,7 @@ class BaseCodeLoader:
 
     @staticmethod
     def stringfy_error(e):
-        tmp = '%s: %s' % (type(e).__name__, e)
-        if e.__traceback__:
-            tmp = '第%s行 - ' % e.__traceback__.tb_lineno + tmp
-        return tmp
+        return '%s: %s' % (type(e).__name__, e)
 
     class Meta:
         module_blacklist = ['os', 'sys', 'builtins']  # 禁止导入的模块

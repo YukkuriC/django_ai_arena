@@ -10,7 +10,7 @@ from main.helpers import login_required, get_user, sorry
 from usr_sys.models import User
 from . import forms
 from .models import Code, PairMatch
-import os, json
+import os, json, shutil
 
 
 def game_info(request):
@@ -100,7 +100,6 @@ if 'forms':
                 messages.info(request, '上传文件"%s"成功' % code.name)
                 return redirect('/home/')
             else:
-                print(form.errors)
                 messages.warning(request, '请检查非法输入')
                 return render(request, 'upload.html', locals())
         form = forms.CodeUploadForm()
@@ -127,6 +126,7 @@ if 'forms':
             # 更新名称
             new_name = request.POST.get('name')
             if new_name:
+                new_name = new_name[:20]
                 to_update = True
                 code.name = new_name
                 res['name'] = new_name
@@ -134,7 +134,29 @@ if 'forms':
             # 验证更新代码 TODO
             new_code = request.POST.get('code')
             if new_code:
-                pass
+                loader = Factory(code.ai_type)
+                validated = False
+
+                # 尝试读取代码
+                try:
+                    loader.load_code(new_code, True)
+                    validated = True
+                    res['code_status'] = 0
+                    messages.info(request, '更新代码"%s"成功' % code.name)
+                except Exception as e:
+                    messages.warning(request, '代码有误: ' + str(e))
+                    res['code_status'] = 1
+
+                # 保存代码
+                if validated:
+                    code_path = str(code.content)
+                    shutil.copyfile(code_path, code_path + '.bak')
+                    with open(code_path, 'w', encoding='utf-8') as f:
+                        f.write(new_code)
+                    try:
+                        os.remove(code_path + '.bak')
+                    except:
+                        pass
 
             if to_update:
                 code.save()
