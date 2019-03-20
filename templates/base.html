@@ -24,7 +24,15 @@
     </button>
     <div class="collapse navbar-collapse" id="navbar">
       <ul class="navbar-nav mr-auto">
-        <li class="nav-item"><a class="nav-link" href="/games/">对战项目</a></li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="/game/">对战项目</a>
+          <div class="dropdown-menu bg-dark">
+            <a class="dropdown-item text-nav bg-dark" href="/game/0/">黑白棋</a>
+            <a class="dropdown-item text-nav bg-dark" href="/game/1/">漂移乒乓</a>
+            <a class="dropdown-item text-nav bg-dark" href="/game/2/">纸带圈地</a>
+            <a class="dropdown-item text-nav bg-dark" href="/game/3/">19期末大作业</a>
+          </div>
+        </li>
         {% if request.session.userid %}
         <li class="nav-item"><a class="nav-link" href="/home/">个人主页</a></li>
         <li class="nav-item"><a class="nav-link" href="/upload/">代码上传</a></li>
@@ -36,7 +44,7 @@
             {% with gameid=request.session.curr_game %}
             <a class="dropdown-item text-nav bg-dark" href="/lobby/run_match/{{gameid}}/">发起对战</a>
             <a class="dropdown-item text-nav bg-dark" href="/lobby/ladder/{{gameid}}/">查看天梯</a>
-            <a class="dropdown-item text-nav bg-dark" href="/lobby/invitation/{{gameid}}/">对战邀请</a>
+            <!-- <a class="dropdown-item text-nav bg-dark" href="/lobby/invitation/{{gameid}}/">对战邀请</a> -->
             {% endwith %}
             {% endif %}
           </div>

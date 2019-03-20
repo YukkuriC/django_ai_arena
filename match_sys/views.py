@@ -13,9 +13,21 @@ from .models import Code, PairMatch
 import os, json, shutil
 
 
-def game_info(request):
-    # TODO: 列出所有可用的比赛，显示其规则，引用至站内对战入口与github项目
-    return sorry(request, text='WORK IN PROGRESS')
+def game_info(request, AI_type):
+    """列出所有可用的比赛，显示其规则，引用至站内对战入口与github项目"""
+    # 验证游戏ID存在
+    try:
+        AI_type = int(AI_type)
+        assert AI_type in settings.AI_TYPES
+    except:
+        return sorry(request, text='无效的游戏类型')
+    title = settings.AI_TYPES[AI_type]
+    request.session['curr_game'] = AI_type  # 设置当前页面游戏
+
+    try:
+        return render(request, 'game_info/%s.html' % AI_type, locals())
+    except:
+        return sorry(request, text='WORK IN PROGRESS')
 
 
 if 'multi-view':

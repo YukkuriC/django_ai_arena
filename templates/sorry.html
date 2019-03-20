@@ -1,9 +1,7 @@
 {% extends 'form_base.html' %}
 {% load staticfiles %}
 
-{% block header %}
-<h1><a>{% block title %}{{code}}{% endblock %} - {{title}}</a></h1>
-{% endblock %}
+{% block title %}{{code}} - {{title}}{% endblock %}
 
 {% block body %}
 <div class='x_block'>
