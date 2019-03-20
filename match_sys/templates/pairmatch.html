@@ -20,7 +20,10 @@
 </div>
 <div class="form-group">
     <div>
-        <label for="id_code1">对方代码:</label>
+        <div>
+            <label for="id_code1">对方代码:</label>
+            <a class='float-right' href='#' id='random_roll'>手气不错</a>
+        </div>
         {%if form.errors.code2%}
         <label style='color:red'>{{form.errors.code2}}</label>
         {%endif%}
@@ -55,6 +58,16 @@
     window.addEventListener('load', () => {
         document.getElementById('id_code1').value = "{{my_code}}"
         document.getElementById('id_code2').value = "{{target_code}}"
+        var tmp = document.getElementById('id_code2').children
+        var rand_picker = []
+        for (var i = 1; i < tmp.length; i++) {
+            rand_picker.push(tmp[i].value)
+        }
+        document.getElementById('random_roll').addEventListener('click', e => {
+            e.preventDefault()
+            var randid = randrange(rand_picker.length)
+            document.getElementById('id_code2').value = rand_picker[randid]
+        })
     })
 </script>
 {% endblock %}
