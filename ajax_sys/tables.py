@@ -5,186 +5,153 @@ from functools import lru_cache, partial
 from main.helpers import sorry
 from match_sys.models import PairMatch, Code
 
-
-@lru_cache()
-def get_template(TEMPLATE, FIELDS, fields):
-    '''获取比赛记录表格模板字符串'''
-    content = ''.join(globals().get(FIELDS).get(key, '') for key in fields)
-    return Template(globals().get(TEMPLATE) % content)
-
-
-MATCH_TEMPLATE_BASE = '''{{max_page}}|
-{%%with root_link="/match/"%%}
-{%%for match in match_list%%}
-<tr {%% with sublink=match.name %%}{%% include "sub/trow_link.html" %%}{%% endwith %%}>
-%s
+# 设置页
+template_base = '''{{{{max_page}}}}|
+{{%with root_link="{root}"%}}
+{{%for item in item_list%}}
+<tr {{% with sublink={sub} %}}{{% include "sub/trow_link.html" %}}{{% endwith %}}>
+{content}
 </tr>
-{%%endfor%%}
-{%%endwith%%}
+{{%endfor%}}
+{{%endwith%}}
 '''
 
-MATCH_FIELDS = {
-    'code1':
-    '''<td>
-{% if code == match.code1%} {{match.code1.name}}
-{% else %} <a href="/code/{{match.code1.id}}/">{{match.code1.name}}</a>
-{% endif %}
-</td>''',
-    'code2':
-    '''<td>
-{% if code == match.code2%} {{match.code2.name}}
-{% else %} <a href="/code/{{match.code2.id}}/">{{match.code2.name}}</a>
-{% endif %}
-</td>''',
-    'time':
-    '''<td>{{match.run_datetime|date:"Y/m/d H:i:s"}}</td>''',
-    'rounds':
-    '''<td>{{match.finished_rounds}}/{{match.rounds}}</td>''',
-    'status':
-    '''<td>{{match.get_status_display}}</td>''',
-    'type':
-    '''<td>{{match.get_ai_type_display}}</td>'''
-}
 
+class TablePageBase:
+    root_link = NotImplemented
+    sub_link = NotImplemented
+    prefab_setter = []
+    row_items = {}
+    max_page_size = 10
 
-def match_template(fields):
-    return get_template('MATCH_TEMPLATE_BASE', 'MATCH_FIELDS', fields)
+    @classmethod
+    def set_templates(cls):
+        cls.template_prefabs = {}  # 模板缓存
 
+        # 提前组装模板
+        for name, fields in cls.prefab_setter:
+            content = ''.join(
+                cls.row_items.get(key, '') for key in fields.split())
+            template_str = template_base.format(
+                root=cls.root_link, sub=cls.sub_link, content=content)
+            cls.template_prefabs[name] = Template(template_str)
 
-MATCH_PREFABS = {
-    'send':
-    match_template((
-        'code2',
-        'time',
-        'rounds',
-        'status',
-    )),
-    'recv':
-    match_template((
-        'code1',
-        'time',
-        'rounds',
-        'status',
-    )),
-    'near':
-    match_template((
-        'time',
-        'type',
-        'code1',
-        'code2',
-        'rounds',
-        'status',
-    )),
-}
+    @classmethod
+    def grab_content(cls, request, prefab):
+        '''从ORM获取列表与额外参数'''
+        return [], {}
 
+    def __new__(cls, request):
+        '''页面访问接口'''
 
-def match_table_content(request):
-    '''从ajax获取match表格内容'''
+        # 获取模板
+        prefab = request.GET.get('pre')
+        if not prefab in cls.template_prefabs:
+            return HttpResponse('0|参数错误')
+        template = cls.template_prefabs[prefab]
 
-    # 获取模板
-    prefab = request.GET.get('pre')
-    if not prefab in MATCH_PREFABS:
-        return HttpResponse('0|参数错误')
-    template = MATCH_PREFABS[prefab]
-
-    # 获取内容列表
-    if prefab in ('send', 'recv'):
+        # 获取内容列表
         try:
-            code = Code.objects.get(id=request.GET.get('codeid'))
+            item_list, params = cls.grab_content(request, prefab)
+        except Exception as e:
+            return HttpResponse('0|内容读取错误(%s: %s)' % (type(e).__name__, e))
+
+        # 翻页功能
+        page_size = cls.max_page_size  # 先不考虑可变页长
+        max_page = (len(item_list) - 1) // page_size + 1
+        page = request.GET.get('page')
+        try:
+            page = max(int(page), 0)
         except:
-            return HttpResponse('0|代码读取错误')
-        if prefab == 'send':
-            match_list = code.pmatch1.all()
-        else:
-            match_list = code.pmatch2.all()
-    elif prefab == 'near':
-        match_list = PairMatch.objects.all()[:100]
+            page = 0
+        item_list = item_list[page * page_size:(page + 1) * page_size]
 
-    # 翻页功能
-    page_size = settings.MAX_PAIRMATCH_DISPLAY  # 先不考虑可变页长
-    max_page = (len(match_list) - 1) // page_size + 1
-    page = request.GET.get('page')
-    try:
-        page = max(int(page), 0)
-    except:
-        page = 0
-    match_list = match_list[page * page_size:(page + 1) * page_size]
-
-    # 渲染内容
-    content = template.render(Context(locals()))
-    return HttpResponse(content)
+        # 渲染内容
+        content = template.render(Context(locals()))
+        return HttpResponse(content)
 
 
-CODE_TEMPLATE_BASE = '''{{max_page}}|
-{%%with root_link="/code/"%%}
-{%%for code in code_list%%}
-<tr {%% with sublink=code.id %%}{%% include "sub/trow_link.html" %%}{%% endwith %%}>
-%s
-</tr>
-{%%endfor%%}
-{%%endwith%%}
-'''
-
-CODE_FIELDS = {
-    'name':
-    '<td>{{code.name}}</td>'
-    '',
-    'author':
-    '<td><a href="/user/{{code.author.id}}">{{code.author.username}}</a></td>'
-    '',
-    'records':
-    '''<td>
-{{code.num_matches}}赛{{code.num_records}}战- {{code.num_wins}}胜{{code.num_loses}}负{{code.num_draws}}平
+class MatchTablePage(TablePageBase):
+    root_link = '/match/'
+    sub_link = 'item.name'
+    prefab_setter = (
+        ('send', 'code2 time rounds status'),
+        ('recv', 'code1 time rounds status'),
+        ('near', 'time type code1 code2 rounds status'),
+    )
+    row_items = {
+        'code1':
+        '''<td>
+{% if params.code == item.code1%} {{item.code1.name}}
+{% else %} <a href="/code/{{item.code1.id}}/">{{item.code1.name}}</a>
+{% endif %}
 </td>''',
-    'score':
-    '''<td>{{code.score_show}}</td>''',
-    'tools':
-    '''<td>
-<a class='btn-sm btn-info' href='/lobby/run_match/{{code.ai_type}}/?code2={{code.id}}'>发起对战</a>
+        'code2':
+        '''<td>
+{% if params.code == item.code2%} {{item.code2.name}}
+{% else %} <a href="/code/{{item.code2.id}}/">{{item.code2.name}}</a>
+{% endif %}
 </td>''',
-}
+        'time':
+        '''<td>{{item.run_datetime|date:"Y/m/d H:i:s"}}</td>''',
+        'rounds':
+        '''<td>{{item.finished_rounds}}/{{item.rounds}}</td>''',
+        'status':
+        '''<td>{{item.get_status_display}}</td>''',
+        'type':
+        '''<td>{{item.get_ai_type_display}}</td>'''
+    }
+
+    @classmethod
+    def grab_content(cls, request, prefab):
+        params = {}
+        if prefab in ('send', 'recv'):
+            code = Code.objects.get(id=request.GET.get('codeid'))
+            params['code'] = code
+            if prefab == 'send':
+                match_list = code.pmatch1.all()
+            else:
+                match_list = code.pmatch2.all()
+        elif prefab == 'near':
+            match_list = PairMatch.objects.all()[:100]
+
+        return match_list, params
 
 
-def code_template(fields):
-    return get_template('CODE_TEMPLATE_BASE', 'CODE_FIELDS', fields)
+class CodeTablePage(TablePageBase):
+    root_link = '/code/'
+    sub_link = 'item.id'
+    prefab_setter = (
+        ('ladder', 'name author records score tools'),
+        ('home', 'name author records score'),
+    )
+    row_items = {
+        'name':
+        '<td>{{item.name}}</td>',
+        'author':
+        '<td><a href="/user/{{item.author.id}}">{{item.author.username}}</a></td>',
+        'records':
+        '''<td>
+{{item.num_matches}}赛{{item.num_records}}战- {{item.num_wins}}胜{{item.num_loses}}负{{item.num_draws}}平
+</td>''',
+        'score':
+        '<td>{{item.score_show}}</td>',
+        'tools':
+        '''<td>
+<a class='btn-sm btn-info' href='/lobby/run_match/{{item.ai_type}}/?code2={{item.id}}'>发起对战</a>
+</td>''',
+    }
 
-
-CODE_PREFABS = {
-    'ladder': code_template(('name', 'author', 'records', 'score', 'tools')),
-    'home': code_template(('name', 'author', 'records', 'score'))
-}
-
-
-def code_table_content(request):
-    '''从ajax获取code表格内容'''
-
-    # 获取模板
-    prefab = request.GET.get('pre')
-    if not prefab in CODE_PREFABS:
-        return HttpResponse('0|参数错误')
-    template = CODE_PREFABS[prefab]
-
-    # 获取内容列表
-    if prefab == 'ladder':
-        try:
+    @classmethod
+    def grab_content(cls, request, prefab):
+        if prefab == 'ladder':
             AI_type = int(request.GET['type'])
             assert AI_type in settings.AI_TYPES
-        except:
-            return HttpResponse('0|参数错误')
-        code_list = Code.objects.filter(ai_type=AI_type).order_by('-score')
-    else:
-        code_list = Code.objects.all()
+            code_list = Code.objects.filter(ai_type=AI_type).order_by('-score')
+        else:
+            code_list = Code.objects.all()
+        return code_list, {}
 
-    # 翻页功能
-    page_size = settings.MAX_CODE_DISPLAY  # 先不考虑可变页长
-    max_page = (len(code_list) - 1) // page_size + 1
-    page = request.GET.get('page')
-    try:
-        page = max(int(page), 0)
-    except:
-        page = 0
-    code_list = code_list[page * page_size:(page + 1) * page_size]
 
-    # 渲染内容
-    content = template.render(Context(locals()))
-    return HttpResponse(content)
+MatchTablePage.set_templates()
+CodeTablePage.set_templates()

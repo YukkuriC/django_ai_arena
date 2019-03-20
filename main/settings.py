@@ -178,7 +178,3 @@ PAIRMATCH_STATUS = {  # 比赛状态码
 MAX_MONITOR_IDLE_SEC = 20  # 监控进程最大闲置秒数
 DEFAULT_MAX_RUNNING_SEC = 2  # 获取计时函数缺省时每局最大运行{}秒
 SCORE_FACTOR_PAIRMATCH = 16  # 天梯积分变化参数
-
-### 比赛系统显示参数
-MAX_PAIRMATCH_DISPLAY = 10
-MAX_CODE_DISPLAY = 10
