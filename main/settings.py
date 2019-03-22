@@ -91,6 +91,10 @@ if os.sys.platform == 'win32':
         }
     }
 else:
+    # 替换数据库后端
+    import pymysql
+    pymysql.install_as_MySQLdb()
+
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
@@ -142,7 +146,7 @@ USE_TZ = False
 
 STATIC_URL = '/assets/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'assets')
-STATICFILES_DIRS = [STATIC_ROOT]
+# STATICFILES_DIRS = [STATIC_ROOT]
 
 # 合法字符集合
 RAND_CHARPOOL = 'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz0123456789_'  # 用于生成随机字符串
@@ -151,7 +155,7 @@ USERNAME_CHARPOOL = set(RAND_CHARPOOL)  # 用于匹配用户名
 # 邮件bot系统
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.pku.edu.cn'
-EMAIL_PORT = 465
+EMAIL_PORT = 25
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 
