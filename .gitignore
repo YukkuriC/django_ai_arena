@@ -4,3 +4,5 @@
 /.vscode
 */migrations
 db.sqlite3
+.apache_files
+*.lnk
