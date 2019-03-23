@@ -44,11 +44,13 @@
 <div class='col-sm-6'>
     <h1>代码名称:
         <span id='code_name'>{{code.name}}</span>
+        {%if my_code%}
         <div id='code_name_edit' style="display:none" title="注: 新名称保存后需点“更新代码”应用">
             <input id='code_name_input' class='btn-sm' style='border:0'>
             <button id='save_name' class='btn btn-sm btn-primary'>保存</button>
             <button id='abandon_name' class='btn btn-sm btn-warning'>放弃</button>
         </div>
+        {%endif%}
     </h1>
 </div>
 <div class='col-sm-6 text-right'>
@@ -59,9 +61,14 @@
 {% block body %}
 <div class='x_title'>
     <div class='float-right'>
+        {%if my_code%}
         <button id='reset_code' class='btn btn-sm btn-secondary'>重置代码</button>
         <button id='upload_code' class='btn btn-sm btn-primary'>更新代码</button>
+        {%endif%}
+        <a style='color:white' href='../fork' id='fork_code' class='btn btn-sm btn-primary'>创建副本</a>
+        {%if my_code%}
         <a style='color:white' href='../del' id='delete_code' class='btn btn-sm btn-danger'>删除代码</a>
+        {%endif%}
     </div>
     <div>
         <h1>代码编辑器</h1>
@@ -81,6 +88,23 @@
     default_name = "{{code.name}}"
     code_original = document.getElementById("code").textContent
 
+    // 编辑器
+    var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+        readOnly: true,
+        mode: "python",
+        indentUnit: 4,
+        lineNumbers: true,
+        lineWrapping: true,
+        foldGutter: true,
+        gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+        autoCloseBrackets: true,
+        matchBrackets: true,
+        showTrailingSpace: true,
+    });
+
+    // {%if my_code%}启用编辑
+    editor.setOption('readOnly', false)
+
     // 代码名称编辑区
     code_name = document.getElementById('code_name')
     name_edit_region = document.getElementById('code_name_edit')
@@ -99,19 +123,6 @@
         if (!code_name.textContent) code_name.textContent = default_name
         document.getElementById('abandon_name').click()
     })
-
-    // 编辑器
-    var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
-        mode: "python",
-        indentUnit: 4,
-        lineNumbers: true,
-        lineWrapping: true,
-        foldGutter: true,
-        gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
-        autoCloseBrackets: true,
-        matchBrackets: true,
-        showTrailingSpace: true,
-    });
 
     // 重置代码
     document.getElementById("reset_code").addEventListener('click', e => {
@@ -152,5 +163,6 @@
             update_messages()
         }, 'json')
     })
+    // {%endif%}
 </script>
 {% endblock %}

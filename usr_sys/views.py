@@ -154,6 +154,7 @@ def changepasswd(request):
             form.add_error('new_pw2', '两次密码输入不同')
 
         if form.is_valid():
+            user.set_passwd(form.cleaned_data['new_passwd'])
             messages.info(request, '修改密码成功')
             return redirect('/home/')
         else:

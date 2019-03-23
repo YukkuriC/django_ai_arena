@@ -8,8 +8,9 @@ import os, shutil
 
 def get_path(self, filename):
     '''记录代码存储路径'''
-    return '%s/code/%03d/%s_%s.py' % (settings.STORAGE_DIR, self.ai_type,
-                                   self.author.username, self.id)
+    unique_string = self.edit_datetime.strftime('%y%m%d_%H%M%S')
+    return '%s/%03d/%s_%s.py' % (settings.CODE_DIR, self.ai_type,
+                                 self.author.username, unique_string)
 
 
 class Code(models.Model):

@@ -31,18 +31,24 @@
         <p>战绩: {{code.num_wins}}胜; {{code.num_loses}}负; {{code.num_draws}}平</p>
     </div>
     <div class='col-sm-4'>
+        <p>最后修改时间: {{code.edit_datetime|date:"Y/m/d H:i:s"}}</p>
         <p>对战：
             {%if my_code%}
             <a href="/lobby/run_match/{{code.ai_type}}/?code1={{code.id}}">发起对战</a>
             {%endif%}
             <a href="/lobby/run_match/{{code.ai_type}}/?code2={{code.id}}">挑战该代码</a>
         </p>
+        {%if my_code or code.public%}
         <p>操作：
             {%if my_code%}
             <a href="./edit">编辑代码</a>
             <a href="./del">删除代码</a>
+            {%else%}
+            <a href="./view">查看代码</a>
+            <a href="./fork">创建副本</a>
             {%endif%}
         </p>
+        {%endif%}
     </div>
 </div>
 <div class='row'>

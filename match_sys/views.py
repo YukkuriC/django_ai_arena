@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.conf import settings
 from django.contrib import messages
+from django.core.files.base import ContentFile
 from django.utils import timezone
 from django.db.models import Q, Count, Max
 from django.http import JsonResponse
@@ -87,13 +88,13 @@ if 'forms':
     @login_required(1)
     def upload(request):
         ai_type = request.GET.get('id', '')
+        user = get_user(request)
 
         if request.method == 'POST':
             form = forms.CodeUploadForm(request.POST, request.FILES)
             if form.is_valid():
                 # 验证用户代码数未超标
-                if Code.objects.filter(
-                        author=request.session['userid'],
+                if user.code_set.filter(
                         ai_type=form.cleaned_data['ai_type']).count(
                         ) >= settings.MAX_CODE_PER_GAME:
                     return sorry(
@@ -106,7 +107,7 @@ if 'forms':
                         ])
 
                 code = form.instance
-                code.author = User.objects.get(id=request.session['userid'])
+                code.author = user
                 code.edit_datetime = timezone.now()
                 form.save()
                 messages.info(request, '上传文件"%s"成功' % code.name)
@@ -116,95 +117,6 @@ if 'forms':
                 return render(request, 'upload.html', locals())
         form = forms.CodeUploadForm()
         return render(request, 'upload.html', locals())
-
-    @login_required(1)
-    def edit_code(request, code_id):
-        # 获取代码对象
-        try:
-            code = Code.objects.get(id=int(code_id))
-        except:
-            return sorry(request, text='无效的代码编号')
-
-        # 检测权限
-        user = get_user(request)
-        if not code.author == user:
-            return sorry(request, 403, text='没有编辑权限')
-
-        # 处理代码更新内容
-        if request.method == 'POST':
-            res = {}
-            to_update = False
-
-            # 更新名称
-            new_name = request.POST.get('name')
-            if new_name:
-                new_name = new_name[:20]
-                to_update = True
-                code.name = new_name
-                res['name'] = new_name
-
-            # 验证更新代码 TODO
-            new_code = request.POST.get('code')
-            if new_code:
-                loader = Factory(code.ai_type)
-                validated = False
-
-                # 尝试读取代码
-                try:
-                    loader.load_code(new_code, True)
-                    validated = True
-                    res['code_status'] = 0
-                    messages.info(request, '更新代码"%s"成功' % code.name)
-                except Exception as e:
-                    messages.warning(request, '代码有误: ' + str(e))
-                    res['code_status'] = 1
-
-                # 保存代码
-                if validated:
-                    code_path = str(code.content)
-                    shutil.copyfile(code_path, code_path + '.bak')
-                    with open(code_path, 'w', encoding='utf-8') as f:
-                        f.write(new_code)
-                    try:
-                        os.remove(code_path + '.bak')
-                    except:
-                        pass
-
-            if to_update:
-                code.save()
-            return JsonResponse(res)
-
-        # 输出代码至编辑器
-        code_content = code.content.read().decode('utf-8', 'ignore')
-        return render(request, 'edit_code.html', locals())
-
-    @login_required(1)
-    def delete_code(request, code_id):
-        # 获取代码对象
-        try:
-            code = Code.objects.get(id=int(code_id))
-        except:
-            return sorry(request, text='无效的代码编号')
-
-        # 检测权限
-        user = get_user(request)
-        if not code.author == user:
-            return sorry(request, 403, text='没有删除权限')
-
-        # 检测密码验证
-        if request.method == 'POST':
-            pw = request.POST.get('check_pw', '')
-
-            # 删除代码
-            if user.match_passwd(pw):
-                code.delete()
-                return redirect('/home/')
-
-            # 密码错误
-            else:
-                messages.warning(request, '密码错误')
-
-        return render(request, 'delete_code.html', locals())
 
     @login_required(1)
     def pairmatch(request, AI_type):
@@ -266,11 +178,13 @@ if 'forms':
         return sorry(request, text='WORK IN PROGRESS')
 
 
-# 查看比赛结果
-if 'view':
+# 查看、编辑代码等
+if 'view code':
 
     @login_required(1)
-    def view_code(request, code_id):
+    def view_code(request, code_id, code_op=None):
+        '''查看代码对象、分发下级命令'''
+
         # 获取代码对象
         try:
             code = Code.objects.get(id=int(code_id))
@@ -281,7 +195,151 @@ if 'view':
         user = get_user(request)
         my_code = code.author == user
 
-        return render(request, 'view_code.html', locals())
+        # 代码主页
+        if code_op == None:
+            return render(request, 'view_code.html', locals())
+
+        # 代码编辑页
+        elif code_op == 'edit':
+            return _code_editor(request, code, user, True)
+
+        # 代码删除页
+        elif code_op == 'del':
+            return _code_del(request, code, user)
+
+        # 查看公开代码
+        elif code_op == 'view':
+            return _code_editor(request, code, user, False)
+
+        # 复制公开代码
+        elif code_op == 'fork':
+            return _code_fork(request, code, user)
+
+        return sorry(request, text=['亲亲', '"%s"这样的命令' % code_op, '是不存在的呢'])
+
+    def _code_editor(request, code, user, is_edit):
+        '''
+        CodeMirror代码编辑器页
+        提供编辑自己代码+查看公开代码功能
+        '''
+
+        # 检测权限及重定向
+        my_code = code.author == user
+
+        if is_edit:
+            if not my_code:  # 非本人进入编辑模式
+                return redirect('/code/%s/view/' % code.id)
+        else:
+            if my_code:  # 本人进入查看模式
+                return redirect('/code/%s/edit/' % code.id)
+            elif not code.public:  # 查看非公开代码
+                return sorry(request, 403, text='没有编辑权限')
+
+        # GET请求输出代码至编辑器
+        if request.method == 'GET':
+            code_content = code.content.read().decode('utf-8', 'ignore')
+            return render(request, 'edit_code.html', locals())
+
+        # 非编辑模式拒绝POST
+        elif not is_edit:
+            return JsonResponse({})
+
+        # POST请求ajax
+        res = {}
+        to_update = False
+
+        # 更新名称
+        new_name = request.POST.get('name')
+        if new_name:
+            new_name = new_name[:20]
+            to_update = True
+            code.name = new_name
+            res['name'] = new_name
+
+        # 验证更新代码
+        new_code = request.POST.get('code')
+        if new_code:
+            loader = Factory(code.ai_type)
+            validated = False
+
+            # 尝试读取代码
+            try:
+                loader.load_code(new_code, True)
+                validated = True
+                res['code_status'] = 0
+                messages.info(request, '更新代码"%s"成功' % code.name)
+            except Exception as e:
+                messages.warning(request, '代码有误: ' + str(e))
+                res['code_status'] = 1
+
+            # 保存代码
+            if validated:
+                code_path = str(code.content)
+                shutil.copyfile(code_path, code_path + '.bak')
+                with open(code_path, 'w', encoding='utf-8') as f:
+                    f.write(new_code)
+                to_update = True
+                code.edit_datetime = timezone.now()
+                try:
+                    os.remove(code_path + '.bak')
+                except:
+                    pass
+
+        if to_update:
+            code.save()
+        return JsonResponse(res)
+
+    def _code_del(request, code, user):
+        '''验证密码删除代码'''
+
+        # 权限检测
+        if not code.author == user:
+            return sorry(request, 403, text='没有删除权限')
+
+        # 检测密码验证
+        if request.method == 'POST':
+            pw = request.POST.get('check_pw', '')
+
+            # 删除代码
+            if user.match_passwd(pw):
+                code.delete()
+                return redirect('/home/')
+
+            # 密码错误
+            else:
+                messages.warning(request, '密码错误')
+
+        return render(request, 'delete_code.html', locals())
+
+    def _code_fork(request, code, user):
+        '''复制已有公开代码'''
+
+        # 权限检测
+        if not (code.author == user or code.public):
+            return sorry(request, 403, text='没有复制权限')
+
+        # 验证用户代码数未超标
+        if user.code_set.filter(
+                ai_type=code.ai_type).count() >= settings.MAX_CODE_PER_GAME:
+            return sorry(request, 403, text='已超过最大可保留代码数')
+
+        # 生成新代码
+        new_code = Code(ai_type=code.ai_type, author=user)
+        new_code.edit_datetime = timezone.now()
+        new_code.public = code.public
+        new_code.name = ('副本-' + code.name)[:20]
+
+        # 保存副本代码
+        new_content = ContentFile(code.content.read())
+        new_code.content.save('test', new_content)
+
+        new_code.save()
+        messages.info(request, '创建副本"%s"成功' % new_code.name)
+        return redirect('/home/')
+
+
+# 查看比赛结果
+if 'view':
 
     @login_required(1)
     def view_pairmatch(request, match_name):

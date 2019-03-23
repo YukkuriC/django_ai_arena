@@ -28,7 +28,8 @@ class CodeUploadForm(forms.ModelForm):
                 'class': 'form-control'
             }),
             'public': forms.CheckboxInput({
-                'class': 'form-control'
+                'class': 'form-control',
+                'title': '是否可以被其他人查看代码及复制'
             }),
             'ai_type': forms.Select({
                 'class': 'form-control'
