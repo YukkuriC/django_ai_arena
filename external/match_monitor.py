@@ -18,6 +18,8 @@ def run_process(logger_module=sys.modules[__name__]):
     logger_module默认为自身模块(match_monitor)
     每次传参前来一句
     '''
+    from django.db import connections
+    connections.close_all()
     flag = hasattr(logger_module, 'process')  # 是否重启进程
     if flag and not logger_module.process.is_alive():
         logger_module.process.join()  # 防止linux僵尸
@@ -70,6 +72,7 @@ def monitor(dataq):
 
             # 结束比赛
             if isinstance(data, str):
+                print('TESTTESTTEST123')
                 for match in match_pool:
                     if match.match_name == data:
                         match.timeout = -1
