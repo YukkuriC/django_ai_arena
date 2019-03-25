@@ -5,12 +5,13 @@
 
 {% block css %}
 <style>
-    .screen-pool{
-        box-shadow: 0px 0px 5px rgba(0,0,0,0.5);
-        margin:15px;
+    .screen-pool {
+        box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
+        margin: 15px;
     }
-    .xscroll{
-        width:100%
+
+    .xscroll {
+        width: 100%
     }
 </style>
 {% endblock %}
@@ -65,8 +66,14 @@
     <div class='col-sm-4 text-right'>
         <div>
             双方占地面积:
-            <canvas id='field_counter' width=120 height=15 title='test' style="box-shadow: 0px 0px 5px rgba(0,0,0,0.5)"></canvas>
+            <canvas id='field_counter' width=120 height=15 title='test'
+                style="box-shadow: 0px 0px 5px rgba(0,0,0,0.5)"></canvas>
         </div>
+    </div>
+</div>
+<div class='row x_block'>
+    <div class='col-sm-12'>
+        <span id='description'>我是比赛描述</span>
     </div>
 </div>
 <div class='row x_block'>
@@ -294,6 +301,60 @@
         }
     }
 
+    // match description
+    {
+        function end_text(result) {
+            var rtype = result[1]
+            if (result[0]) {
+                var f = names[0], s = names[1]
+            } else {
+                var s = names[0], f = names[1]
+            }
+            switch (rtype) {
+                case 0:
+                    return '由于' + f + '撞墙, ' + s + '获得胜利'
+                case 1:
+                    if (result[0] == result[2])
+                        return s + '撞击对手纸带, 获得胜利'
+                    return '由于' + f + '撞纸带自杀, ' + s + '获得胜利' % (f, s)
+                case 2:
+                    return s + '侧面撞击对手, 获得胜利'
+                case 4:
+                    var desc = result[2] ? '撞击对手' : '被对手撞击'
+                    return s + '%s在领地内' + desc + ', 获得胜利' % s
+                case -1:
+                    return '由于' + f + '函数报错 (' + result[2] + '), ' + s + '获得胜利'
+                case -2:
+                    return '由于' + f + '决策时间耗尽, ' + s + '获得胜利'
+            }
+            var scores = FRAME_BUFFER[FRAME_BUFFER.length - 1].scores
+            var pre = rtype == 3 ? '双方正碰' : '回合数耗尽'
+            var res = result[0] == 'None' ? '平局' : (s + '获胜')
+            return pre + ', 比分为 ' + scores[0] + ' : ' + scores[1] + ', ' + res
+        }
+
+        function round_text(ind) {
+            var plr_ind = 1 - ind % 2
+            var text = ' 先手玩家朝' + '东南西北'[record_obj.traces[0][Math.floor((ind + 1) / 2)]]
+            text += ', 后手玩家朝' + '东南西北'[record_obj.traces[1][Math.floor(ind / 2)]]
+            text += ', ' + '先后'[plr_ind] + '手玩家移动, '
+            var scores = FRAME_BUFFER[ind].scores
+            if (scores[0] == scores[1]) text += '平局'
+            else text += ('先后'[(scores[0] < scores[1]) + 0]) + '手玩家领先' + Math.abs(scores[0] - scores[1]) + '分'
+            return text
+        }
+
+        var names = ['先手玩家', '后手玩家']
+
+        function update_description() {
+            var text = '我是比赛描述'
+            if (FRAME_DISPLAY <= 0);
+            else if (FRAME_DISPLAY >= TOTAL_FRAMES - 1) text = end_text(record_obj.result)
+            else text = round_text(FRAME_DISPLAY)
+            document.getElementById('description').textContent = text
+        }
+    }
+
     // define canvas functions
     {
         widgets = ['color1', 'color2', 'color1_1', 'color2_1', 'grid_size', 'band_width', 'player_size']
@@ -394,6 +455,8 @@
                 pen_s.fillRect(offset, 0, tmp, cv_s.height)
                 offset += tmp
             })
+
+            update_description()
         }
 
         function update_canvas() {
