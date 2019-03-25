@@ -44,7 +44,7 @@
             <td>{{user.count}}</td>
             <td>{{user.score}}</td>
             <td>
-                <a class='btn-sm btn-info' href='/lobby/run_match/{{codes.first.ai_type}}/?user2={{user.author_id}}'>发起对战</a>
+                <a class='btn-sm btn-info' href='/lobby/run_match/{{AI_type}}/?user2={{user.author_id}}'>发起对战</a>
             </td>
         </tr>
         {% endfor %}{% endwith %}
