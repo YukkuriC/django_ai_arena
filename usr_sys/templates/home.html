@@ -1,22 +1,35 @@
 {% extends 'layout0.html' %}
 
-{% block title %}个人主页{% endblock %}
+{% block title %}
+{% if user.id == request.session.userid %}
+个人主页
+{% else %}
+查看用户: {{user.username}}
+{% endif %}
+{% endblock %}
 
 {% block body %}
-<div>
-    用户名：{{user.username}}
+<div class='row x_block'>
+    <div class='col-sm-4'>
+        <p>用户名：{{user.username}}</p>
+    </div>
+    {% if user.id == request.session.userid %}
+    <div class='col-sm-4'>
+        <p>学号：{{user.stu_code}}</p>
+    </div>
+    <div class='col-sm-4'>
+        <p>真实姓名：{{user.real_name}}</p>
+    </div>
+    <div class='col-sm-4'>
+        <p>注册时间：{{user.register_datetime}}</p>
+    </div>
+    <div class='col-sm-4'>
+        <p>登录时间：{{user.login_datetime}}</p>
+    </div>
+    {% endif %}
 </div>
-<div>
-    学号：{{user.stu_code}}
-</div>
-<div>
-    真实姓名：{{user.real_name}}
-</div>
-<div>
-    注册时间：{{user.register_datetime}}
-</div>
-<div>
-    登录时间：{{user.login_datetime}}
+<div class='x_title'>
+    <h1>所有代码</h1>
 </div>
 <table class='table'>
     <thead>

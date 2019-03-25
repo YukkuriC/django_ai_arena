@@ -5,8 +5,9 @@ from django.template import loader
 from django.conf import settings
 from django.contrib import messages
 from . import forms
-from main.helpers import login_required,get_user,set_user,send_valid_email
-from .models import User,UserMailCheck
+from main.helpers import login_required, get_user, set_user, send_valid_email, sorry
+from .models import User, UserMailCheck
+
 
 def index(request):
     return redirect('/home/')
@@ -114,8 +115,7 @@ def activate(request):
     激活电子邮件指向
     '''
     try:
-        checker = UserMailCheck.objects.get(
-            check_hash=request.GET.get('code'))
+        checker = UserMailCheck.objects.get(check_hash=request.GET.get('code'))
         if timezone.now() > checker.send_time + timezone.timedelta(
                 settings.EMAIL_VALID_LAST_DAYS):
             raise ValueError
@@ -130,13 +130,18 @@ def activate(request):
 
 
 @login_required(1)
-def home(request):
+def home(request, user_override=None):
     '''
     个人主页
+    user_override参数用于显示其他用户主页
     '''
-    user = get_user(request)
-    user.login_datetime = timezone.now()
-    user.save()
+    if user_override==None:
+        user = get_user(request)
+        user.login_datetime = timezone.now()
+        user.save()
+    else:
+        user=user_override
+
     return render(request, 'home.html', locals())
 
 
@@ -170,7 +175,22 @@ def misc(request):
     '''
     return JsonResponse(request.GET)
 
+
 @login_required(1)
-def view_user(request,userid):
-    # TODO: 其它用户主页，快速访问对战页面
-    return redirect('/home/')
+def view_user(request, userid):
+    '''其它用户主页，快速访问对战页面'''
+    
+    # 验证用户
+    try:
+        user=User.objects.get(id=userid)
+    except:
+        try:
+            user=User.objects.get(username=userid)
+        except:
+            return sorry('该用户不存在')
+
+    # 本用户主页
+    if user.id == request.session.get('userid'):
+        return redirect('/home/')
+
+    return home(request,user)

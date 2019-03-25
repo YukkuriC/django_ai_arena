@@ -23,6 +23,7 @@
 
 <!-- 注释 -->
 <script src="/assets/codemirror/addon/comment/comment.js"></script>
+<script src="/assets/codemirror/keymap/sublime.js"></script>
 
 <style>
     .CodeMirror {
@@ -100,6 +101,7 @@
         autoCloseBrackets: true,
         matchBrackets: true,
         showTrailingSpace: true,
+        keyMap: 'sublime',
     });
 
     // {%if my_code%}启用编辑

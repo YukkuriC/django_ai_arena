@@ -12,7 +12,7 @@
         {% if my_code %}
         <a href="/home">个人主页</a>
         {% else %}
-        <a href="/user/code.author.id/">作者: {{code.author.username}}</a>
+        <a href="/user/{{code.author.id}}/">作者: {{code.author.username}}</a>
         {% endif %}
     </h1>
 </div>
