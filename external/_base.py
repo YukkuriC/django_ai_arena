@@ -119,6 +119,37 @@ class BaseCodeLoader:
     '''
 
     @classmethod
+    def verify_code(cls, code_raw):
+        '''
+        通过AST检查代码合法性
+        params:
+            code_raw: 代码整体字符串
+        '''
+        if isinstance(code_raw, bytes):
+            code_raw = code_raw.decode('utf-8', 'ignore')
+
+        # 将待导入代码转换为AST
+        code_tree = ast.parse(code_raw, '<qwq>')
+
+        # 检查非法import与函数
+        for node in ast.walk(code_tree):
+            if isinstance(node, ast.Import):
+                for module in node.names:
+                    assert module.name not in cls.Meta.module_blacklist, (
+                        node.lineno, '非法import: ' + module.name)
+            if isinstance(node, ast.ImportFrom):
+                assert node.module not in cls.Meta.module_blacklist, (
+                    node.lineno, '非法import: ' + node.module)
+            if isinstance(node, ast.Call):
+                func = node.func
+                func_name = getattr(func, 'attr', getattr(func, 'id', None))
+                assert func_name not in cls.Meta.func_blacklist, (
+                    node.lineno, '非法函数调用: ' + func_name)
+
+        # 返回AST
+        return code_tree
+
+    @classmethod
     def load_code(cls, code_raw, raw=False):
         '''
         加载代码文件，返回其模块
@@ -139,42 +170,8 @@ class BaseCodeLoader:
             except Exception as e:
                 raise SyntaxError('文件读取失败: ' + str(e))
 
-        # 将待导入代码转换为AST
-        try:
-            code_tree = ast.parse(code_raw, '<qwq>')
-        except Exception as e:
-            raise SyntaxError('解析失败: ' + cls.stringfy_error(e))
-
-        # 在最底层禁止非函数定义与__doc__的节点
-        for node in code_tree.body:
-            if isinstance(node, ast.FunctionDef):
-                continue
-            if isinstance(node, (ast.Expr, ast.Assign)):
-                if isinstance(node.value, ast.Str):
-                    continue
-            raise SyntaxError('第%d行: 非法语句' % node.lineno)
-
-        # 替换非法import与函数
-        for node in ast.walk(code_tree):
-            if isinstance(node, ast.Import):
-                for module in node.names:
-                    if module.name in cls.Meta.module_blacklist:
-                        module.name = 'math'
-                        module.asname = None
-            if isinstance(node, ast.ImportFrom):
-                if node.module in cls.Meta.module_blacklist:
-                    node.module = 'math'
-                    for sub in node.names:
-                        sub.name = 'sin'
-                        sub.asname = None
-            if isinstance(node, ast.Call):
-                func = node.func
-                if isinstance(func, ast.Attribute
-                              ) and func.attr in cls.Meta.func_blacklist:
-                    func.attr = 'print'
-                elif isinstance(
-                        func, ast.Name) and func.id in cls.Meta.func_blacklist:
-                    func.id = 'print'
+        # 检查代码合法性
+        code_tree = cls.verify_code(code_raw)
 
         # 加载模块并输出
         try:
@@ -191,7 +188,7 @@ class BaseCodeLoader:
         return '%s: %s' % (type(e).__name__, e)
 
     class Meta:
-        module_blacklist = ['os', 'sys', 'builtins']  # 禁止导入的模块
+        module_blacklist = ['os', 'sys', 'builtins', 'subprocess']  # 禁止导入的模块
         func_blacklist = ['eval', 'exec', 'compile', '__import__']  # 禁止使用的函数
 
 

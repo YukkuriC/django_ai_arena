@@ -316,12 +316,12 @@
                 case 1:
                     if (result[0] == result[2])
                         return s + '撞击对手纸带, 获得胜利'
-                    return '由于' + f + '撞纸带自杀, ' + s + '获得胜利' % (f, s)
+                    return '由于' + f + '撞纸带自杀, ' + s + '获得胜利'
                 case 2:
                     return s + '侧面撞击对手, 获得胜利'
                 case 4:
                     var desc = result[2] ? '撞击对手' : '被对手撞击'
-                    return s + '%s在领地内' + desc + ', 获得胜利' % s
+                    return s + '在领地内' + desc + ', 获得胜利'
                 case -1:
                     return '由于' + f + '函数报错 (' + result[2] + '), ' + s + '获得胜利'
                 case -2:
