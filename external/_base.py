@@ -175,9 +175,8 @@ class BaseCodeLoader:
 
         # 加载模块并输出
         try:
-
-            class pack:
-                exec(compile(code_tree, '', 'exec'))
+            pack = type(ast)('code')
+            exec(compile(code_tree, '', 'exec'), pack.__dict__)
         except Exception as e:
             raise RuntimeError(cls.stringfy_error(e))
 
