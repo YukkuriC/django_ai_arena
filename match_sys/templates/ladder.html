@@ -40,7 +40,7 @@
         {% for user in users%}
         {% with sublink=user.author_id %}
         <tr {% include "sub/trow_link.html" %}{%endwith%}>
-            <td>{{user.author__username}}</td>
+            <td>{{user.author__nickname|default:user.author__username}}</td>
             <td>{{user.count}}</td>
             <td>{{user.score}}</td>
             <td>

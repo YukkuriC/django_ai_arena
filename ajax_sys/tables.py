@@ -129,7 +129,7 @@ class CodeTablePage(TablePageBase):
         'name':
         '<td>{{item.name}}</td>',
         'author':
-        '<td><a href="/user/{{item.author.id}}">{{item.author.username}}</a></td>',
+        '<td><a href="/user/{{item.author.id}}">{{item.author.name}}</a></td>',
         'records':
         '''<td>
 {{item.num_matches}}赛{{item.num_records}}战- {{item.num_wins}}胜{{item.num_loses}}负{{item.num_draws}}平

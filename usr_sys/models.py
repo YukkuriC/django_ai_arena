@@ -7,6 +7,7 @@ from main.helpers import set_autodelete
 ### models
 class User(models.Model):
     username = models.CharField('用户名', max_length=20, unique=True)
+    nickname = models.CharField('昵称', max_length=20, null=True)
     pw_hash = models.CharField('密码hash', max_length=128)
     stu_code = models.CharField('学号', max_length=10)
     real_name = models.CharField('真实姓名', max_length=32)
@@ -15,7 +16,7 @@ class User(models.Model):
     email_validated = models.BooleanField('已验证电子邮箱', default=False)
 
     def __str__(self):
-        return '%s (%s, %s)' % (self.username, self.real_name, self.stu_code)
+        return '%s (%s, %s)' % (self.username, self.name, self.stu_code)
 
     def match_passwd(self, pw):
         return check_password(pw, self.pw_hash)
@@ -23,6 +24,10 @@ class User(models.Model):
     def set_passwd(self, pw):
         self.pw_hash = make_password(pw)
         self.save()
+
+    @property
+    def name(self):
+        return self.nickname or self.username
 
     class Meta:
         ordering = ["stu_code"]

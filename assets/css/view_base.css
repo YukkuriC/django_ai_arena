@@ -13,7 +13,7 @@ a.text-nav:hover{
     border: 1px solid #eaeaea;
     border-radius: 4px;
     overflow: hidden;
-    margin: 100px auto;
+    margin: 50px auto 50px;
 }
 .header {
     min-height: 40px;

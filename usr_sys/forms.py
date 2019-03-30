@@ -1,4 +1,5 @@
 from django import forms
+from .models import User
 
 
 class RegisterForm(forms.Form):
@@ -85,3 +86,23 @@ class ChangePasswdForm(forms.Form):
         label="确认新密码",
         max_length=128,
         widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+
+
+class SettingsForm(forms.Form):
+    nickname = forms.CharField(
+        label="昵称 (不超过20字符)",
+        required=False,
+        max_length=20,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            "oninput": "value=value.substr(0,20)",
+            'title': '向其他人显示的名称'
+        }))
+    real_name = forms.CharField(
+        label="真实姓名",
+        required=True,
+        max_length=32,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            "oninput": "value=value.substr(0,32)",
+        }))

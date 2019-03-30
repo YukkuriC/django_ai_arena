@@ -76,7 +76,7 @@ if 'multi-view':
         # 用户均分统计
         users = all_codes.values('author').annotate(
             score=Max('score'), count=Count('id')).values(
-                'author_id', 'author__username', 'score',
+                'author_id', 'author__username', 'author__nickname', 'score',
                 'count').order_by('-score')
 
         return render(request, 'ladder.html', locals())
@@ -303,6 +303,7 @@ if 'view code':
             # 删除代码
             if user.match_passwd(pw):
                 code.delete()
+                messages.info(request, '代码已删除')
                 return redirect('/home/')
 
             # 密码错误

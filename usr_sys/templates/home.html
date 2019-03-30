@@ -1,19 +1,35 @@
 {% extends 'layout0.html' %}
 
-{% block title %}
+{% block header %}
+<div class='col-sm-6'>
+    <h1>
+        {% block title %}
+        {% if user.id == request.session.userid %}
+        个人主页
+        {% else %}
+        查看用户: {{user.name}}
+        {% endif %}
+        {% endblock %}
+    </h1>
+</div>
 {% if user.id == request.session.userid %}
-个人主页
-{% else %}
-查看用户: {{user.username}}
+<div class='col-sm-6 text-right'>
+    <h1>
+        <a href="/settings/">个人设置</a>
+    </h1>
+</div>
 {% endif %}
 {% endblock %}
 
 {% block body %}
 <div class='row x_block'>
+    {% if user.id == request.session.userid %}
     <div class='col-sm-4'>
         <p>用户名：{{user.username}}</p>
     </div>
-    {% if user.id == request.session.userid %}
+    <div class='col-sm-4'>
+        <p>昵称：{{user.nickname}}</p>
+    </div>
     <div class='col-sm-4'>
         <p>学号：{{user.stu_code}}</p>
     </div>
@@ -25,6 +41,10 @@
     </div>
     <div class='col-sm-4'>
         <p>登录时间：{{user.login_datetime}}</p>
+    </div>
+    {% else %}
+    <div class='col-sm-4'>
+        <p>用户名：{{user.name}}</p>
     </div>
     {% endif %}
 </div>

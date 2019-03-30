@@ -84,7 +84,7 @@ if 'user system':
 
     def set_user(request, user):
         request.session['userid'] = user.id
-        request.session['username'] = user.username
+        request.session['username'] = user.name
 
     def send_valid_email(user, request):
         # create email checker

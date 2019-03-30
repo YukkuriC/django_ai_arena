@@ -135,12 +135,12 @@ def home(request, user_override=None):
     个人主页
     user_override参数用于显示其他用户主页
     '''
-    if user_override==None:
+    if user_override == None:
         user = get_user(request)
         user.login_datetime = timezone.now()
         user.save()
     else:
-        user=user_override
+        user = user_override
 
     return render(request, 'home.html', locals())
 
@@ -148,7 +148,6 @@ def home(request, user_override=None):
 @login_required(1, 0)
 def changepasswd(request):
     if request.method == 'POST':
-        print(request.POST)
         form = forms.ChangePasswdForm(request.POST)
 
         # check old passwd
@@ -169,23 +168,39 @@ def changepasswd(request):
                   {'form': forms.ChangePasswdForm()})
 
 
-def misc(request):
+@login_required(1)
+def settings(request):
     '''
-    多种杂项请求
+    个人设置
     '''
-    return JsonResponse(request.GET)
+    user = get_user(request)
+
+    # GET请求
+    if request.method == 'GET':
+        return render(request, 'settings.html',
+                      {'form': forms.SettingsForm(user.__dict__)})
+
+    form = forms.SettingsForm(request.POST)
+    if form.is_valid():
+        user.nickname = form.cleaned_data['nickname']
+        user.real_name = form.cleaned_data['real_name']
+        user.save()
+        return redirect('/home/')
+    else:
+        messages.warning(request, '请检查非法输入')
+        return render(request, 'changepasswd.html', locals())
 
 
 @login_required(1)
 def view_user(request, userid):
     '''其它用户主页，快速访问对战页面'''
-    
+
     # 验证用户
     try:
-        user=User.objects.get(id=userid)
+        user = User.objects.get(id=userid)
     except:
         try:
-            user=User.objects.get(username=userid)
+            user = User.objects.get(username=userid)
         except:
             return sorry('该用户不存在')
 
@@ -193,4 +208,4 @@ def view_user(request, userid):
     if user.id == request.session.get('userid'):
         return redirect('/home/')
 
-    return home(request,user)
+    return home(request, user)

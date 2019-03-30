@@ -14,7 +14,7 @@
     <select name="code1" class="form-control" id="id_code1" required>
         <option value="">---------</option>
         {%for i in my_codes%}
-        <option value={{i.id}} title="{{i.author.username}}">{{i.name}}</option>
+        <option value={{i.id}} title="{{i.author.name}}">{{i.name}}</option>
         {%endfor%}
     </select>
 </div>
@@ -31,7 +31,7 @@
     <select name="code2" class="form-control" id="id_code2" required>
         <option value="">---------</option>
         {%for i in target_codes%}
-        <option value={{i.id}} title="{{i.author.username}}">{{i.author.username}} - {{i.name}}</option>
+        <option value={{i.id}} title="{{i.author.name}}">{{i.author.name}} - {{i.name}}</option>
         {%endfor%}
     </select>
 </div>
