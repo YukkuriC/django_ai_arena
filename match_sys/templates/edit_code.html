@@ -72,7 +72,17 @@
         {%endif%}
     </div>
     <div>
-        <h1>代码编辑器</h1>
+        <div>
+            <h1 class="d-inline-block">代码编辑器</h1>
+            <div class="col-sm-2 dropdown d-inline-block">
+                <a href="#" class="btn dropdown-toggle" data-toggle="dropdown">设置</a>
+                <ul class="dropdown-menu">
+                    <li>
+                        <button id='codemirror_linewrap' class='btn btn-sm form-control text-left'>自动换行: 开</button>
+                    </li>
+                </ul>
+            </div>
+        </div>
     </div>
 </div>
 <!-- 原始代码 -->
@@ -89,6 +99,16 @@
     default_name = "{{code.name}}"
     code_original = document.getElementById("code").textContent
 
+    // tab功能修正
+    function newTab(cm) {
+        if (cm.somethingSelected()) {
+            cm.indentSelection('add');
+        } else {
+            var tab_value = cm.getOption("indentWithTabs") ? "\t" : Array(cm.getOption("indentUnit") + 1).join(" ")
+            cm.replaceSelection(tab_value, "end", "+input")
+        }
+    }
+
     // 编辑器
     var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
         readOnly: true,
@@ -102,7 +122,20 @@
         matchBrackets: true,
         showTrailingSpace: true,
         keyMap: 'sublime',
+        extraKeys: { Tab: newTab },
     });
+
+    // 编辑器设置
+    {
+        document.getElementById('codemirror_linewrap').addEventListener('click', e => {
+            var self = e.path[0]
+            e.stopPropagation();
+            editor.setOption('lineWrapping', !editor.getOption('lineWrapping'))
+            self.innerHTML = '自动换行: '
+            if (editor.getOption('lineWrapping')) self.innerHTML += '开'
+            else self.innerHTML += '关'
+        })
+    }
 
     // {%if my_code%}启用编辑
     editor.setOption('readOnly', false)
