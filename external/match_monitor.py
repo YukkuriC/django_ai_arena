@@ -1,5 +1,7 @@
-from multiprocessing import Process, Queue
-import os, sys
+from multiprocessing import Process
+from threading import Thread
+from queue import Queue
+import os, sys, socket, json
 
 
 # 多进程支持
@@ -12,28 +14,38 @@ def setup_django():
     django.setup()
 
 
-def run_process(logger_module=sys.modules[__name__]):
+def send_command(cmd: str):
     '''
-    启动主进程并挂载Queue对象至logger_module
-    logger_module默认为自身模块(match_monitor)
-    每次传参前来一句
+    向监控进程传递命令
+    若监控进程不存在则创建并挂载socket
     '''
     from django.db import connections
+    from django.conf import settings
     connections.close_all()
-    flag = hasattr(logger_module, 'process')  # 是否重启进程
-    if flag and not logger_module.process.is_alive():
-        logger_module.process.join()  # 防止linux僵尸
-        flag = False
-    if not flag:
-        if not hasattr(logger_module, 'hook'):
-            logger_module.hook = Queue()
-        pc = Process(target=monitor, args=(logger_module.hook, ))
+
+    # 尝试创建监控进程
+    new_socket = False
+    try:
+        serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        serversocket.bind(("localhost", settings.MONITOR_SOCKET_PORT))
+        serversocket.listen(10)
+        new_socket = True
+    except OSError:
+        pass
+
+    # 从新socket创建监控进程
+    if new_socket:
+        pc = Process(target=monitor, args=(serversocket, ))
         pc.start()
-        logger_module.process = pc
-    return logger_module.hook
+
+    # 传递参数
+    sock = socket.create_connection(('localhost',
+                                     settings.MONITOR_SOCKET_PORT))
+    sock.sendall(cmd.encode('utf-8', 'ignore'))
+    sock.shutdown(socket.SHUT_WR)
 
 
-def monitor(dataq):
+def monitor(sock):
     '''
     主伴随进程，用于管理比赛进程数量、杀死超时进程等
     通过挂载于logger_module.hook的Queue传递参数，用于启动比赛
@@ -42,9 +54,30 @@ def monitor(dataq):
     setup_django()
     from django.conf import settings
     from time import perf_counter as pf, sleep
+    from match_sys import models
+    from . import helpers
     from .factory import Factory
-    match_pool = []
-    last_idle_then = pf()
+    print('Init match pool')
+    dataq = Queue()  # socket命令读取进程
+    match_pool = []  # 比赛进程容器
+    last_idle_then = pf()  # 闲置时间戳
+
+    # 监控socket读取内容
+    def inner_socket(sock, que):
+        while 1:
+            conn, _ = sock.accept()
+            data = b''
+            while 1:
+                new_data = conn.recv(1024)
+                if new_data:
+                    data += new_data
+                else:
+                    break
+            dataq.put(data.decode('utf-8', 'ignore'))
+
+    thr = Thread(target=inner_socket, args=(sock, dataq))
+    thr.setDaemon(True)
+    thr.start()
 
     # 监控循环
     while 1:
@@ -54,14 +87,25 @@ def monitor(dataq):
         # 在队列非空且存在空位时创建新进程
         while not dataq.empty() and len(match_pool) < settings.MATCH_POOL_SIZE:
             # 读取参数
-            data = dataq.get()
+            data = dataq.get().split()
 
-            # 创建比赛
-            if isinstance(data, tuple):
-                AI_type, code1, code2, match_name, params = data
-                print('Received: ' + match_name)
-                match_dir = os.path.join(settings.PAIRMATCH_DIR,
-                                         match_name)  # 将比赛文件夹转化为绝对路径
+            # 创建比赛(Pairmatch)
+            if data[0] == 'match':
+                AI_type, code1, code2, match_name, params = json.loads(data[1])
+
+                # 创建新比赛对象
+                new_match = models.PairMatch()
+                new_match.ai_type = AI_type
+                new_match.name = match_name
+                new_match.code1 = models.Code.objects.get(id=code1)
+                new_match.code2 = models.Code.objects.get(id=code2)
+                new_match.rounds = params['rounds']
+                new_match.save()
+
+                # 读取代码、比赛路径
+                code1 = str(new_match.code1.content)
+                code2 = str(new_match.code2.content)
+                match_dir = os.path.join(settings.PAIRMATCH_DIR, match_name)
                 os.makedirs(match_dir, exist_ok=1)
 
                 # 装载进程
@@ -69,26 +113,31 @@ def monitor(dataq):
                                     params)
                 new_match.start()
                 match_pool.append(new_match)
+                print('Received: ' + match_name, match_pool)
 
             # 结束比赛
-            if isinstance(data, str):
-                print('TESTTESTTEST123')
+            if data[0] == 'kill_match':
+                match_to_kill = data[1]
+                print([x.match_name for x in match_pool])
                 for match in match_pool:
-                    if match.match_name == data:
+                    if match.match_name == match_to_kill:
                         match.timeout = -1
-                        print('Killed: ' + data)
+                        print('Killed: ' + match_to_kill)
                         break
 
         # 移除所有超时或结束进程
-        match_pool = [x for x in match_pool if x.check_active(now)]
+        tmp = [x for x in match_pool if x.check_active(now)]
+        if tmp != match_pool:
+            print(match_pool, '->', tmp)
+            match_pool = tmp
 
         # 在仍有任务运行时更新闲置计时
-        if match_pool:
+        if match_pool or (not dataq.empty()):
             last_idle_then = now
 
         # 如果过长闲置则终止
-        sleep(settings.MATCH_MONITOR_CYCLE)
-        if now - last_idle_then > settings.MAX_MONITOR_IDLE_SEC:
+        sleep(settings.MONITOR_CYCLE)
+        if now - last_idle_then > settings.MONITOR_MAX_IDLE_SEC:
             return
 
 
@@ -96,32 +145,25 @@ def start_match(AI_type, code1, code2, param_form):
     from match_sys import models
     from . import helpers
 
-    # 获取match参数
-    params = param_form.cleaned_data
+    # 生成随机match名称
     while 1:
         match_name = helpers.gen_random_string()
         if not models.PairMatch.objects.filter(name=match_name):
             break
-    new_match = models.PairMatch()
-    new_match.ai_type = AI_type
-    new_match.name = match_name
-    new_match.code1 = models.Code.objects.get(id=code1)
-    new_match.code2 = models.Code.objects.get(id=code2)
-    new_match.rounds = params['rounds']
-    new_match.save()
+
+    # 获取match参数
+    params = param_form.cleaned_data
+    create_params = json.dumps(
+        [AI_type, code1, code2, match_name, params], separators=(',', ':'))
 
     # 传送参数至进程 (AI_type,code1,code2,match_name,params)
-    hook = run_process()  # 启动monitor进程
-    code1 = str(new_match.code1.content)
-    code2 = str(new_match.code2.content)
-    hook.put((AI_type, code1, code2, match_name, params))
+    send_command('match ' + create_params)
     print('Sent: ' + match_name)
 
-    # 返回match对象
-    return new_match
+    # 返回match对象名称
+    return match_name
 
 
 def kill_match(match_name):
-    hook = run_process()
-    hook.put(match_name)
+    send_command('kill_match ' + match_name)
     print('Killing: ' + match_name)

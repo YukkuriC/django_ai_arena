@@ -189,7 +189,6 @@ MATCH_TYPES = {  # 生成比赛类型
     # 4:'Override',
 }
 MATCH_CODE_LENGTH = 10  # 比赛记录文件随机编码长度
-MATCH_MONITOR_CYCLE = 0.5  # 每隔（秒）监测一次比赛进程状态
 MATCH_POOL_SIZE = 5  # 最大同时启动比赛数
 PAIRMATCH_STATUS = {  # 比赛状态码
     0: '未启动',
@@ -197,6 +196,10 @@ PAIRMATCH_STATUS = {  # 比赛状态码
     2: '已完成',
     3: '已中止',
 }
-MAX_MONITOR_IDLE_SEC = 20  # 监控进程最大闲置秒数
-DEFAULT_MAX_RUNNING_SEC = 2  # 获取计时函数缺省时每局最大运行{}秒
 SCORE_FACTOR_PAIRMATCH = 16  # 天梯积分变化参数
+DEFAULT_MAX_RUNNING_SEC = 2  # 获取计时函数缺省时每局最大运行{}秒
+
+# 比赛监控进程设置
+MONITOR_CYCLE = 0.5  # 每隔（秒）监测一次比赛进程状态
+MONITOR_MAX_IDLE_SEC = 20  # 监控进程最大闲置秒数
+MONITOR_SOCKET_PORT = 37037  # 数据传输socket端口
