@@ -53,6 +53,15 @@ class BaseProcess:
         获取当前比赛状态，并自动运行总结程序
         now: 传入当前时间
         '''
+        # 判断超时
+        res = True
+        if self.process.is_alive():
+            if now - self.t_start > self.timeout:  # 超时或外部中止自动杀进程
+                self.process.terminate()
+                res = self.summary(True)
+        else:
+            res = self.summary(False)
+
         # 读取进程队列输出内容
         updated = False
         while not self.output.empty():
@@ -62,13 +71,8 @@ class BaseProcess:
             self.match.finished_rounds = len(self.result_raw)
             self.match.save()
 
-        # 判断超时
-        if self.process.is_alive():
-            if now - self.t_start > self.timeout:  # 超时或外部中止自动杀进程
-                self.process.terminate()
-                return self.summary(True)
-            return True
-        return self.summary(False)
+        # 返回结果
+        return res
 
     @classmethod
     def process_run(cls, codes, match_dir, params, output):
@@ -275,10 +279,9 @@ class BasePairMatch(BaseProcess, BaseCodeLoader, BaseRecordLoader):
         rounds = params['rounds']
         who_first = params['who_first']
         first_sequence = cls.get_first_sequence(rounds, who_first)
-        d_local, d_global = locals(), globals()
 
         # 初始化环境
-        cls.init_params = cls.pre_run(d_local, d_global)
+        cls.init_params = cls.pre_run(locals(), globals())
 
         # 运行多局比赛
         last_invert = 0  # 上一局是否对方先手
@@ -288,11 +291,11 @@ class BasePairMatch(BaseProcess, BaseCodeLoader, BaseRecordLoader):
             if now_invert != last_invert:
                 players = players[::-1]
                 names = names[::-1]
-                cls.swap_fields(d_local, d_global)
+                cls.swap_fields(locals(), globals())
             last_invert = now_invert
 
             # 获取比赛记录
-            log = cls.run_once(d_local, d_global)
+            log = cls.run_once(locals(), globals())
 
             # 统计结果
             result = cls.output_queue(log)
@@ -300,7 +303,7 @@ class BasePairMatch(BaseProcess, BaseCodeLoader, BaseRecordLoader):
                 output.put((now_invert, ) + result)  # 发送至输出队列
 
             # 生成比赛记录
-            cls.save_log(rid, log, d_local, d_global)
+            cls.save_log(rid, log, locals(), globals())
 
     def summary_raw(self):
         result_stat = {0: 0, 1: 0, None: 0}
