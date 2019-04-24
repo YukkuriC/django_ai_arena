@@ -216,6 +216,7 @@ class BasePairMatch(BaseProcess, BaseCodeLoader, BaseRecordLoader):
     组装功能组件
     增加比赛记录统计与天梯分计算部分
     '''
+    init_params = None  # 用于容纳赛前准备参数
     template_dir = NotImplemented  # 前端渲染页地址
     __repr__ = __str__ = lambda self: '<%s: %s>' % (type(self).__name__, self.match_name)
 
