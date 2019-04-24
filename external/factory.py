@@ -1,7 +1,9 @@
 from ._base import BasePairMatch
+from .ai_pingpong import PingPongMatch
 from .ai_paperio import PaperIOMatch
 
 _mapper = {
+    1: PingPongMatch,
     2: PaperIOMatch,
 }
 

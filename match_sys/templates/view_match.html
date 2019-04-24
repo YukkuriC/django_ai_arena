@@ -33,7 +33,7 @@
         <p>
             对局结果:
             {%if result_stat%}
-            发起方{{result_stat.0}}胜 {{result_stat.1}}负 {{result_stat.draw}}平
+            发起方{{result_stat.0}}胜 {{result_stat.1}}负 {%if result_stat.draw%}{{result_stat.draw}}平{%endif%}
             {%if delta_show%}
             (<span style='color:#ff3333' title='发起方等级分变动'>{{delta_show}}</span>)
             {%endif%}
