@@ -80,8 +80,10 @@ class PaperIOMatch(BasePairMatch):
 
     @classmethod
     def stringfy_record(cls, record):
+        record = {**record}  # 复制一份
         record['traces'] = list(map(list, record['traces']))
-        record['timeleft'] = list(map(list, record['timeleft']))
+        record['timeleft'] = [[round(x, 3) for x in lst]
+                              for lst in record['timeleft']]
         if record['result'][1] == -1:  # 将Exception转换为str
             record['result'] = list(record['result'])
             e = record['result'][2]
