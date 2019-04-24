@@ -70,8 +70,8 @@ class BaseProcess:
             return True
         return self.summary(False)
 
-    @staticmethod
-    def process_run(codes, match_dir, params, output):
+    @classmethod
+    def process_run(cls, codes, match_dir, params, output):
         '''进程运行函数'''
         raise NotImplementedError
 
@@ -81,36 +81,6 @@ class BaseProcess:
         timeout: 是否为超时杀进程
         '''
         pass
-
-    if 'grabbing parameters':
-
-        def get_timeout(self):
-            '''默认获取超时限制'''
-            return settings.DEFAULT_MAX_RUNNING_SEC * self.params.get(
-                'rounds', 1)
-
-        @staticmethod
-        def get_first_sequence(rounds, who_first):
-            '''
-            获取双方先手序列
-            0为己方(code1)先手，1为对方(code2)先手
-            '''
-            # 使用序列重载
-            if isinstance(who_first, (list, tuple)):
-                seq = []
-                while len(seq) < rounds:
-                    seq.extend(who_first)
-                return seq[:rounds]
-
-            # 输入预设类型编号
-            else:
-                who_first = int(who_first)
-                if who_first < 2:  # 0己方/1对方
-                    return [who_first] * rounds
-                elif who_first == 2:  # 2各半
-                    return [i < (rounds + 1) // 2 for i in range(rounds)]
-                else:  # 3随机
-                    return [random.randrange(2) for i in range(rounds)]
 
 
 class BaseCodeLoader:
@@ -145,6 +115,14 @@ class BaseCodeLoader:
                 func_name = getattr(func, 'attr', getattr(func, 'id', None))
                 assert func_name not in cls.Meta.func_blacklist, (
                     node.lineno, '非法函数调用: ' + func_name)
+
+        # 检查是否已导入必要函数
+        all_func = set()
+        for node in code_tree.body:
+            if isinstance(node, ast.FunctionDef):
+                all_func.add(node.name)
+        for func in cls.Meta.required_functions:
+            assert func in all_func, '缺少必要函数: ' + func
 
         # 返回AST
         return code_tree
@@ -189,9 +167,14 @@ class BaseCodeLoader:
     class Meta:
         module_blacklist = ['os', 'sys', 'builtins', 'subprocess']  # 禁止导入的模块
         func_blacklist = ['eval', 'exec', 'compile', '__import__']  # 禁止使用的函数
+        required_functions = []  # 必要的函数接口
 
 
 class BaseRecordLoader:
+    '''
+    在前端加载比赛记录
+    '''
+
     @classmethod
     def load_record(cls, match_dir, rec_id):
         '''
@@ -233,14 +216,102 @@ class BasePairMatch(BaseProcess, BaseCodeLoader, BaseRecordLoader):
     组装功能组件
     增加比赛记录统计与天梯分计算部分
     '''
+    template_dir = NotImplemented  # 前端渲染页地址
+    __repr__ = __str__ = lambda self: '<%s: %s>' % (type(self).__name__, self.match_name)
+
+    # 默认的获取比赛参数函数
+    if 'grabbing parameters':
+
+        def get_timeout(self):
+            '''默认获取超时限制'''
+            return settings.DEFAULT_MAX_RUNNING_SEC * self.params.get(
+                'rounds', 1)
+
+        @staticmethod
+        def get_first_sequence(rounds, who_first):
+            '''
+            获取双方先手序列
+            0为己方(code1)先手，1为对方(code2)先手
+            '''
+            # 使用序列重载
+            if isinstance(who_first, (list, tuple)):
+                seq = []
+                while len(seq) < rounds:
+                    seq.extend(who_first)
+                return seq[:rounds]
+
+            # 输入预设类型编号
+            else:
+                who_first = int(who_first)
+                if who_first < 2:  # 0己方/1对方
+                    return [who_first] * rounds
+                elif who_first == 2:  # 2各半
+                    return [i < (rounds + 1) // 2 for i in range(rounds)]
+                else:  # 3随机
+                    return [random.randrange(2) for i in range(rounds)]
+
+    @classmethod
+    def process_run(cls, codes, match_dir, params, output):
+        '''
+        默认的比赛运行框架
+        结构:
+            读取参数
+            初始化环境 <pre_run>
+            for i in range(params['rounds']):
+                是否交换场地 <swap_fields>
+                运行比赛 <run_once>
+                发送结果至队列 <output_queue>
+                保存记录至硬盘 <save_log>
+        Params:
+            codes: 列表，内容为双方代码路径
+            match_dir: 比赛记录文件夹地址
+            params: 比赛表单参数
+            output: 用于输出比赛结果的multiprocessing.Queue对象
+        '''
+        # 读取参数
+        players = [cls.load_code(code) for code in codes]  # 读取代码模块
+        names = ('code1', 'code2')
+        rounds = params['rounds']
+        who_first = params['who_first']
+        first_sequence = cls.get_first_sequence(rounds, who_first)
+        d_local, d_global = locals(), globals()
+
+        # 初始化环境
+        cls.init_params = cls.pre_run(d_local, d_global)
+
+        # 运行多局比赛
+        last_invert = 0  # 上一局是否对方先手
+        for rid in range(rounds):
+            # 处理交换场地情况
+            now_invert = first_sequence[rid]
+            if now_invert != last_invert:
+                players = players[::-1]
+                names = names[::-1]
+                cls.swap_fields(d_local, d_global)
+            last_invert = now_invert
+
+            # 获取比赛记录
+            log = cls.run_once(d_local, d_global)
+
+            # 统计结果
+            result = cls.output_queue(log)
+            if isinstance(result, tuple):
+                output.put((now_invert, ) + result)  # 发送至输出队列
+
+            # 生成比赛记录
+            cls.save_log(rid, log, d_local, d_global)
 
     def summary_raw(self):
-        '''
-        抽象接口
-        将队列输出结果result_raw内容汇总为统计字典
-        {0: code1获胜, 1: code2获胜, None: 平局}
-        '''
-        return {0: 0, 1: 0, None: 0}
+        result_stat = {0: 0, 1: 0, None: 0}
+        for result in self.result_raw:
+            try:
+                winner = result[1]
+                if winner != None and result[0]:
+                    winner = 1 - winner
+                result_stat[winner] += 1
+            except Exception as e:
+                print(type(e).__name__, e)
+        return result_stat
 
     def calculate_dscore(self, code1, code2, results):
         '''
@@ -284,3 +355,56 @@ class BasePairMatch(BaseProcess, BaseCodeLoader, BaseRecordLoader):
         self.match.status = 2 + bool(timeout)
         self.match.delta_score = dscore
         self.match.save()
+
+    @classmethod
+    def pre_run(cls, d_local, d_global):
+        '''
+        抽象接口，进行多局比赛前准备
+        返回值将附着至cls.init_params
+        Params:
+            d_local: 函数内locals()获取的本地变量
+            d_global: 函数内globals()获取的全局变量
+        '''
+        pass
+
+    @classmethod
+    def swap_fields(cls, d_local, d_global):
+        '''
+        抽象接口，交换比赛双方场地时使用
+        Params:
+            d_local: 函数内locals()获取的本地变量
+            d_global: 函数内globals()获取的全局变量
+        '''
+        pass
+
+    @classmethod
+    def run_once(cls, d_local, d_global):
+        '''
+        抽象接口，运行一局比赛
+        并返回比赛记录对象
+        Params:
+            d_local: 函数内locals()获取的本地变量
+            d_global: 函数内globals()获取的全局变量
+        '''
+        pass
+
+    @classmethod
+    def output_queue(cls, log):
+        '''
+        抽象接口，读取比赛记录
+        返回比赛结果元组，其中首位代表比赛结果(0: 先手胜利; 1: 后手胜利; None: 平局)
+        Params:
+            log: 由run_once函数返回的比赛记录对象
+        '''
+        return (None, )
+
+    @classmethod
+    def save_log(cls, round_id, log, d_local, d_global):
+        '''
+        抽象接口，保存比赛记录至硬盘
+        Params:
+            log: 由run_once函数返回的比赛记录对象
+            d_local: 函数内locals()获取的本地变量
+            d_global: 函数内globals()获取的全局变量
+        '''
+        pass

@@ -10,24 +10,19 @@ if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
 class PaperIOMatch(BasePairMatch):
     template_dir = 'renderer/paperio.html'
 
+    class Meta(BasePairMatch.Meta):
+        required_functions = ['play']
+
     def get_timeout(self):
         '''局数*总思考时间*2方'''
         return self.params['rounds'] * (self.params['max_time'] * 2 + 5
                                         )  # 超时限制
 
-    @staticmethod
-    def process_run(codes, match_dir, params, output):
-        # 读取参数
-        players = [PaperIOMatch.load_code(code) for code in codes]  # 读取代码模块
-        names = ('code1', 'code2')
-        rounds = params['rounds']
-        who_first = params['who_first']
-        first_sequence = PaperIOMatch.get_first_sequence(rounds, who_first)
-        params = {
-            k: params[k]
-            for k in (  # 'k', 'h',
-                'max_turn', 'max_time')
-        }
+    @classmethod
+    def pre_run(cls, d_local, d_global):
+        '''
+        赛前准备
+        '''
 
         # 初始化环境
         match_interface.clear_storage()
@@ -37,39 +32,45 @@ class PaperIOMatch(BasePairMatch):
             except:
                 pass
 
-        # 运行多局比赛
-        last_invert = 0  # 上一局是否对方先手
-        for rid in range(rounds):
-            # 处理交换场地情况
-            now_invert = first_sequence[rid]
-            if now_invert != last_invert:
-                match_interface.swap_storage()
-                players = players[::-1]
-                names = names[::-1]
-            last_invert = now_invert
+        # 筛选保留params内参数
+        tmp = d_local['params']
+        return {
+            k: tmp[k]
+            for k in (  # 'k', 'h',
+                'max_turn', 'max_time')
+        }
 
-            # 获取比赛记录
-            match_log = match_core.match(players, names, **params)
+    @classmethod
+    def swap_fields(cls, d_local, d_global):
+        '''
+        交换场地
+        '''
+        match_interface.swap_storage()
 
-            # 统计结果
-            result = match_log['result']
-            output.put((now_invert, ) + result)  # 发送至输出队列
+    @classmethod
+    def run_once(cls, d_local, d_global):
+        '''
+        运行一局比赛
+        并返回比赛记录对象
+        '''
+        return match_core.match(d_local['players'], d_local['names'],
+                                **cls.init_params)
 
-            # 生成比赛记录
-            log_name = path.join(match_dir, 'logs/%02d.clog' % rid)
-            match_interface.save_compact_log(match_log, log_name)
+    @classmethod
+    def output_queue(cls, match_log):
+        '''
+        读取比赛记录
+        返回比赛结果元组
+        '''
+        return match_log['result']
 
-    def summary_raw(self):
-        result_stat = {0: 0, 1: 0, None: 0}
-        for result in self.result_raw:
-            winner = result[1]
-            if winner != None and result[0]:
-                winner = 1 - winner
-            result_stat[winner] += 1
-        return result_stat
-
-    # class Meta(BasePairMatch.Meta):
-    #     required_functions = ['play']
+    @classmethod
+    def save_log(cls, round_id, log, d_local, d_global):
+        '''
+        保存比赛记录为.clog文件
+        '''
+        log_name = path.join(d_local['match_dir'], 'logs/%02d.clog' % round_id)
+        match_interface.save_compact_log(log, log_name)
 
     @classmethod
     @lru_cache()
@@ -89,6 +90,9 @@ class PaperIOMatch(BasePairMatch):
 
     @staticmethod
     def summary_records(records):
+        '''
+        统计比赛记录
+        '''
         result_stat = {0: 0, 1: 0, None: 0}
         for rec in records:
             if rec == None:
