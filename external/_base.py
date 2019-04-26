@@ -66,6 +66,7 @@ class BaseProcess:
         # 判断超时
         res = True
         if self.process.is_alive():
+            self.flush_queue()
             if now - self.t_start > self.timeout:  # 超时或外部中止自动杀进程
                 self.process.terminate()
                 self.flush_queue()
