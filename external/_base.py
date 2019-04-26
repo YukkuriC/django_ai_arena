@@ -48,6 +48,16 @@ class BaseProcess:
         except:
             pass
 
+    def flush_queue(self):
+        updated = False
+        while not self.output.empty():
+            self.result_raw.append(self.output.get())
+            updated = True
+        if updated:
+            self.match.finished_rounds = len(self.result_raw)
+            print(f'RESULT: {self.result_raw}')
+            self.match.save()
+
     def check_active(self, now):
         '''
         获取当前比赛状态，并自动运行总结程序
@@ -58,18 +68,11 @@ class BaseProcess:
         if self.process.is_alive():
             if now - self.t_start > self.timeout:  # 超时或外部中止自动杀进程
                 self.process.terminate()
+                self.flush_queue()
                 res = self.summary(True)
         else:
+            self.flush_queue()
             res = self.summary(False)
-
-        # 读取进程队列输出内容
-        updated = False
-        while not self.output.empty():
-            self.result_raw.append(self.output.get())
-            updated = True
-        if updated:
-            self.match.finished_rounds = len(self.result_raw)
-            self.match.save()
 
         # 返回结果
         return res
@@ -170,7 +173,8 @@ class BaseCodeLoader:
 
     class Meta:
         module_blacklist = ['os', 'sys', 'builtins', 'subprocess']  # 禁止导入的模块
-        func_blacklist = ['eval', 'exec', 'compile', '__import__']  # 禁止使用的函数
+        func_blacklist = ['eval', 'exec', 'compile', '__import__',
+                          'open']  # 禁止使用的函数
         required_functions = []  # 必要的函数接口
 
 

@@ -57,7 +57,7 @@ def monitor(sock):
     from match_sys import models
     from . import helpers
     from .factory import Factory
-    print('Init match pool')
+    print('START MONITOR')
     dataq = Queue()  # socket命令读取进程
     match_pool = []  # 比赛进程容器
     last_idle_then = pf()  # 闲置时间戳
@@ -73,7 +73,7 @@ def monitor(sock):
                     data += new_data
                 else:
                     break
-            dataq.put(data.decode('utf-8', 'ignore'))
+            que.put(data.decode('utf-8', 'ignore'))
 
     thr = Thread(target=inner_socket, args=(sock, dataq))
     thr.setDaemon(True)
@@ -138,6 +138,7 @@ def monitor(sock):
         # 如果过长闲置则终止
         sleep(settings.MONITOR_CYCLE)
         if now - last_idle_then > settings.MONITOR_MAX_IDLE_SEC:
+            print('END MONITOR')
             return
 
 
