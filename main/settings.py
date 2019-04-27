@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'usr_sys',
     'match_sys',
     'ajax_sys',
+    'external',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
