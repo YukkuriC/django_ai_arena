@@ -27,12 +27,20 @@
 ### external 比赛系统后端
 1. 监视进程维护多进程比赛运行，支持超时中止与手动中止
 1. 提供抽象层接口，调用ORM与不同比赛模块
+1. 加载、验证比赛代码等辅助功能及接口
+
+### 比赛项目
+1. [漂移乒乓](https://github.com/chbpku/pingpong.sessdsa)
+    1. 上传代码、比赛、保存记录
+1. [纸带圈地](https://github.com/chbpku/paper.io.sessdsa)
+    1. 上传代码、比赛、保存记录
+    1. 前端查看比赛记录
+1. [OSMO](https://github.com/chbpku/osmo.sessdsa)
 
 ## 待实现功能：
 
 ### usr_sys 用户系统
-1. 用户个人资料修改、上传头像
-1. Gravatar
+1. 用户上传头像（可用Gravatar）
 1. 用户大厅，检索所有用户公开信息
 
 ### match_sys 比赛系统
@@ -41,3 +49,14 @@
 
 ### external 比赛系统后端
 1. 基于图与pairmatch的复杂比赛系统框架
+1. 更稳定的多进程维护机制
+
+### 比赛项目
+1. 黑白棋
+    1. 移植
+1. 漂移乒乓
+    1. 前端查看比赛记录
+1. 纸带圈地
+    1. 前端页面布局修改
+1. OSMO
+    1. 移植

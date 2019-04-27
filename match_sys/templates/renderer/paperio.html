@@ -333,14 +333,16 @@
             return pre + ', 比分为 ' + scores[0] + ' : ' + scores[1] + ', ' + res
         }
 
-        function round_text(ind) {
+        function round_text(ind, is_middle = false) {
             var plr_ind = 1 - ind % 2
             var text = ' 先手玩家朝' + '东南西北'[record_obj.traces[0][Math.floor((ind + 1) / 2)]]
             text += ', 后手玩家朝' + '东南西北'[record_obj.traces[1][Math.floor(ind / 2)]]
-            text += ', ' + '先后'[plr_ind] + '手玩家移动, '
-            var scores = FRAME_BUFFER[ind].scores
-            if (scores[0] == scores[1]) text += '平局'
-            else text += ('先后'[(scores[0] < scores[1]) + 0]) + '手玩家领先' + Math.abs(scores[0] - scores[1]) + '分'
+            if (is_middle) {
+                text += ', ' + '先后'[plr_ind] + '手玩家移动, '
+                var scores = FRAME_BUFFER[ind].scores
+                if (scores[0] == scores[1]) text += '平局'
+                else text += ('先后'[(scores[0] < scores[1]) + 0]) + '手玩家领先' + Math.abs(scores[0] - scores[1]) + '分'
+            }
             return text
         }
 
@@ -348,9 +350,8 @@
 
         function update_description() {
             var text = '我是比赛描述'
-            if (FRAME_DISPLAY <= 0);
-            else if (FRAME_DISPLAY >= TOTAL_FRAMES - 1) text = end_text(record_obj.result)
-            else text = round_text(FRAME_DISPLAY)
+            if (FRAME_DISPLAY >= TOTAL_FRAMES - 1) text = end_text(record_obj.result)
+            else text = round_text(FRAME_DISPLAY, FRAME_DISPLAY > 0)
             document.getElementById('description').textContent = text
         }
     }

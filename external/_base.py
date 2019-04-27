@@ -55,7 +55,6 @@ class BaseProcess:
             updated = True
         if updated:
             self.match.finished_rounds = len(self.result_raw)
-            print(f'RESULT: {self.result_raw}')
             self.match.save()
 
     def check_active(self, now):
