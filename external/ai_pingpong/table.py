@@ -369,7 +369,7 @@ class Table:  # 球桌
         # 桌面坐标系的范围，单位"pace"
         self.xmin, self.xmax, self.ymin, self.ymax = DIM
         self.tick = 0
-        self.ball = None
+        self.ball = Ball(DIM, Vector(*BALL_POS), Vector(*BALL_V))  # 球的初始化
         self.clock_start = time.time()  # 第一次调用
         self.clock_end = time.time()  # 第二次调用
 
