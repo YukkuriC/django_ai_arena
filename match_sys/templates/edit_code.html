@@ -44,12 +44,19 @@
 {% block header %}
 <div class='col-sm-6'>
     <h1>代码名称:
-        <span id='code_name'>{{code.name}}</span>
+        <span id='code_name_region'>
+            <span id='code_name'>{{code.name}}</span>
+            (<span id='code_public'></span>)
+        </span>
         {%if my_code%}
         <div id='code_name_edit' style="display:none" title="注: 新名称保存后需点“更新代码”应用">
             <input id='code_name_input' class='btn-sm' style='border:0'>
+            <select name="code_public" id="code_public_edit" class='btn-sm'>
+                <option value="0">私密</option>
+                <option value="1">公开</option>
+            </select>
             <button id='save_name' class='btn btn-sm btn-primary'>保存</button>
-            <button id='abandon_name' class='btn btn-sm btn-warning'>放弃</button>
+            <button id='abandon_name' class='btn btn-sm btn-warning' onclick='refresh_display()'>放弃</button>
         </div>
         {%endif%}
     </h1>
@@ -98,6 +105,7 @@
     csrf_token = "{{csrf_token}}"
     default_name = "{{code.name}}"
     code_original = document.getElementById("code").textContent
+    code_was_public = '{% if code.public %}true{% endif %}' && 1 || 0
 
     // tab功能修正
     function newTab(cm) {
@@ -127,7 +135,7 @@
 
     // 编辑器设置
     {
-        document.getElementById('codemirror_linewrap').addEventListener('click', e => {
+        document.getElementById('codemirror_linewrap').addEventListener('click', function (e) {
             var self = e.path[0]
             e.stopPropagation();
             editor.setOption('lineWrapping', !editor.getOption('lineWrapping'))
@@ -142,30 +150,36 @@
 
     // 代码名称编辑区
     code_name = document.getElementById('code_name')
+    code_public = document.getElementById('code_public')
+    code_name_region = code_name.parentElement
     name_edit_region = document.getElementById('code_name_edit')
+    public_input = document.getElementById('code_public_edit')
     name_edit_input = document.getElementById('code_name_input')
-    code_name.addEventListener('click', e => {
-        code_name.style.display = 'none'
+    code_name_region.addEventListener('click', function (e) {
+        code_name_region.style.display = 'none'
         name_edit_region.style.display = 'inline-block'
         name_edit_input.value = code_name.textContent
     })
-    document.getElementById('abandon_name').addEventListener('click', e => {
-        code_name.style.display = 'inline-block'
+    function refresh_display(e) {
+        code_name_region.style.display = 'inline-block'
         name_edit_region.style.display = 'none'
-    })
-    document.getElementById('save_name').addEventListener('click', e => {
+        code_public.innerHTML = public_input.children[public_input.value].innerHTML
+    }
+    document.getElementById('save_name').addEventListener('click', function (e) {
         code_name.textContent = name_edit_input.value.substr(0, 20)
         if (!code_name.textContent) code_name.textContent = default_name
-        document.getElementById('abandon_name').click()
+        refresh_display()
     })
+    public_input.value = code_was_public
+    refresh_display(null)
 
     // 重置代码
-    document.getElementById("reset_code").addEventListener('click', e => {
+    document.getElementById("reset_code").addEventListener('click', function (e) {
         editor.setValue(code_original)
     })
 
     // 上传代码
-    document.getElementById("upload_code").addEventListener('click', e => {
+    document.getElementById("upload_code").addEventListener('click', function (e) {
         post_content = {
             csrfmiddlewaretoken: csrf_token,
         }
@@ -177,6 +191,13 @@
         if (current_name != default_name) {
             to_update = true
             post_content.name = current_name
+        }
+
+        // 公开情况是否更新
+        code_is_public = (public_input.value * 1) && 1 || 0
+        if (code_is_public != code_was_public) {
+            to_update = true
+            post_content.public = code_is_public
         }
 
         // 代码是否更新

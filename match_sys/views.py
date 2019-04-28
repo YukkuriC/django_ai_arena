@@ -256,6 +256,16 @@ if 'view code':
             code.name = new_name
             res['name'] = new_name
 
+        # 更新代码是否公开
+        new_public = request.POST.get('public')
+        try:
+            new_public = int(new_public)
+        except:
+            pass
+        if isinstance(new_public, int):
+            to_update = True
+            code.public = bool(new_public)
+
         # 验证更新代码
         new_code = request.POST.get('code')
         if new_code:
