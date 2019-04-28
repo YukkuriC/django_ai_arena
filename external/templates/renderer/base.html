@@ -1,0 +1,70 @@
+{% extends 'layout0.html' %}
+{% load staticfiles %}
+
+{% block title %}查看比赛记录: {{match.code1.name}} vs. {{match.code2.name}} - {{record_id}}{% endblock %}
+
+{% block css %}
+<style>
+    .screen-pool {
+        box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
+        margin: 15px;
+    }
+
+    .xscroll {
+        width: 100%
+    }
+</style>
+{% endblock %}
+
+{% block header %}
+<div class='col-sm-4'>
+    <h1>
+        <a href='../' title='{{match.code1.name}} vs. {{match.code2.name}}'>返回比赛</a>
+    </h1>
+</div>
+<div class='col-sm-4 text-center'>
+    {% if record_id %}
+    <h1 class='d-inline-block'>
+        <a href='../{{record_id | add:"-1"}}'>
+            上一场
+        </a>
+    </h1>
+    {% endif %}
+    <h1 class='d-inline-block' style="margin-left:10px;margin-right:10px">
+        {{record_id|add:"1"}}/{{match.finished_rounds}}
+    </h1>
+    {% if not_last_record %}
+    <h1 class='d-inline-block'>
+        <a href='../{{record_id | add:"1"}}'>
+            下一场
+        </a>
+    </h1>
+    {% endif %}
+</div>
+<div class='col-sm-4'>
+    <div class='float-right'>
+        {% block control_buttons %}
+        <button class='btn btn-sm btn-success' id='btn_play'>播放/暂停</button>
+        {% endblock %}
+    </div>
+</div>
+{% endblock %}
+
+{% block body %}
+{% block descriptions %}
+{% endblock %}
+<div class='row x_block'>
+    <input type="range" min='0' max='4000' step='1' value="0" id="video_scroll" class='xscroll' style='margin:10px'>
+</div>
+<div class='row'>
+    {% block display_body %}
+    {% endblock %}
+</div>
+<div id='record_receiver' style="display:none">{{record_content}}</div>
+{% endblock %}
+
+{% block script %}
+<script>
+    record_obj = JSON.parse(document.getElementById('record_receiver').innerHTML)
+</script>
+{% endblock %}

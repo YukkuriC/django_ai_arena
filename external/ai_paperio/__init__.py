@@ -7,6 +7,7 @@ if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
     from django.conf import settings
 
 
+# 比赛进程
 class PaperIOMatch(BasePairMatch):
     template_dir = 'renderer/paperio.html'
 
@@ -79,8 +80,9 @@ class PaperIOMatch(BasePairMatch):
             path.join(match_dir, 'logs', '%02d.clog' % rec_id))
 
     @classmethod
-    def stringfy_record(cls, record):
-        record = {**record}  # 复制一份
+    @lru_cache()
+    def stringfy_record(cls, match_dir, rec_id):
+        record = {**cls.load_record(match_dir, rec_id)}  # 复制一份
         record['traces'] = list(map(list, record['traces']))
         record['timeleft'] = [[round(x, 3) for x in lst]
                               for lst in record['timeleft']]
@@ -107,3 +109,48 @@ class PaperIOMatch(BasePairMatch):
         return {
             'stat': result_stat,
         }
+
+
+# 比赛记录显示模板
+if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
+    from external.tag_loader import RecordMeta
+
+    class PaperIORecord(metaclass=RecordMeta(2)):
+        def r_holder(_, match, record):
+            if record['players'][0] == 'code1':
+                return match.code1.name
+            return match.code2.name
+
+        def r_length(_, match, record):
+            return len(record['timeleft'][0]) - 1
+
+        def r_winner(_, match, record):
+            res = record['result']
+            if res[0] == None:
+                return '平手'
+
+            code2_hold = (record['players'][0] == 'code2')
+            code2_win = res[0]
+            holder_win = code2_hold ^ code2_win
+            return '%s (%s, %s)' % (
+                match.code2.name if code2_win else match.code1.name,
+                ('接收方', '发起方')[holder_win],
+                ('先手', '后手')[code2_win],
+            )
+
+        desc_pool = [
+            '回合数耗尽，结算得分', '运行超时', 'AI函数报错', '玩家撞墙', '玩家撞击纸带', '侧碰', '正碰，结算得分',
+            '领地内互相碰撞'
+        ]
+
+        def r_win_desc(_, match, record):
+            res = record['result']
+            return _.desc_pool[res[1] + 3]
+
+        def r_desc_plus(_, match, record):
+            res = record['result']
+            if abs(res[1]) == 3:
+                return '%s : %s' % tuple(res[2])
+            if res[1] == -1:
+                return res[2]
+            return '无'

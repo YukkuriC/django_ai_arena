@@ -1,5 +1,6 @@
 {% extends 'layout0.html' %}
 {% load staticfiles %}
+{% load tag_loader %}
 
 {% block title %}查看比赛: {{match.code1.name}} vs. {{match.code2.name}}{% endblock %}
 
@@ -63,7 +64,7 @@
                     <tr>
                         <th>编号</th>
                         <th>先手方</th>
-                        <th>比赛长度 (帧)</th>
+                        <th>比赛长度</th>
                         <th>胜者</th>
                         <th>胜利原因</th>
                         <th>补充说明</th>
@@ -72,41 +73,24 @@
                 <tbody>
                     {%with root_link="./"%}
                     {%for record in records%}
-                    {%with res=record.result%}
                     <tr {% with sublink=forloop.counter0 %}{% include "sub/trow_link.html" %}{%endwith%}>
                         <td>{{forloop.counter0}}</td>
                         <td>
-                            {%if record.players.0 == "code1"%}
-                            {{match.code1.name}}
-                            {%else%}
-                            {{match.code2.name}}
-                            {%endif%}
+                            {{ match|r_holder:record }}
                         </td>
                         <td>
-                            {{record.timeleft.0 | length}}
+                            {{ match|r_length:record }}
                         </td>
                         <td>
-                            {%if res.0 == 1%}
-                            {%if record.players.0 == "code2"%}发起方{%endif%}
-                            {%if record.players.0 == "code1"%}接受方{%endif%}
-                            (后手)
-                            {%endif%}
-                            {%if res.0 == 0%}
-                            {%if record.players.0 == "code1"%}发起方{%endif%}
-                            {%if record.players.0 == "code2"%}接受方{%endif%}
-                            (先手)
-                            {%endif%}
+                            {{ match|r_winner:record }}
                         </td>
                         <td>
-                            {% include "sub/win_descrip.html" %}
+                            {{ match|r_win_desc:record }}
                         </td>
                         <td>
-                            {% if res.1 == 3 or res.1 == -3%}
-                            {{res.2.0}} : {{res.2.1}}
-                            {% endif %}
+                            {{ match|r_desc_plus:record }}
                         </td>
                     </tr>
-                    {%endwith%}
                     {%endfor%}
                     {%endwith%}
                 </tbody>

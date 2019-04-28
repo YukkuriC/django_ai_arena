@@ -103,46 +103,58 @@ def load_log(path):
     return obj
 
 
-def transform_obj(obj):
-    if hasattr(obj, '__iter__'):
-        if isinstance(obj, dict):
-            return {k: transform_obj(v) for k, v in obj.items()}
-        if isinstance(obj, (list, tuple)):
-            return list(map(transform_obj, obj))
-    if isinstance(obj, (LogEntry, RacketData, BallData, CardData, Card, Vector,
-                        RacketAction)):
-        return {
-            k: transform_obj(v)
-            for k, v in obj.__dict__.items() if not k.startswith('__')
-        }
+def jsonfy(obj):
+    '''将比赛记录转换为可json序列化的结构'''
+
+    def _j(obj):
+        # LogEntry保留
+        if isinstance(obj, LogEntry):  # tick,side,op,ball,card
+            return {
+                k: _j(v)
+                for k, v in obj.__dict__.items() if not k.startswith('__')
+            }
+
+        # Card重用映射
+        if isinstance(obj, Card):  # code,params,pos
+            obj = (obj.code, obj.param, _j(obj.pos))  # 转换为元组
+            if obj not in card_mapper:  # 插入新的卡片映射
+                card_mapper[obj] = len(card_pool)
+                card_pool.append(obj)
+            return card_mapper[obj]  # 返回映射表下标
+
+        # 其余类型
+        if isinstance(obj, Vector):  # x,y
+            obj = (obj.x, obj.y)
+        if isinstance(obj, CardData):  # tick,cards,active_card
+            obj = (obj.card_tick, obj.cards, obj.active_card)
+        if isinstance(obj, BallData):  # pos,vel
+            obj = (obj.pos, obj.velocity)
+        if isinstance(obj, RacketAction):  # bat,acc,run,card
+            obj = (obj.bat, obj.acc, obj.run, obj.card)
+        if isinstance(obj, RacketData):
+            # life,pos,action,*life_costs*4,cardbox
+            obj = (obj.life, obj.pos, obj.action, obj.bat_lf, obj.acc_lf,
+                   obj.run_lf, obj.card_lf, obj.card_box)
+
+        # 统一递归处理列表与字典
+        if hasattr(obj, '__iter__'):
+            if isinstance(obj, dict):
+                return {k: _j(v) for k, v in obj.items()}
+            if isinstance(obj, (list, tuple)):
+                return tuple(map(_j, obj))
+
+        return obj  # 其余对象
+
+    card_mapper = {}
+    card_pool = []
+    res = _j(obj)
+    res['card_map'] = card_pool
+    return res
+
+
+def recover_log(obj):
+    '''将可json序列化结构复原为比赛记录对象'''
+    card_pool = obj['card_map']
+    del obj['card_map']
+    # TODO
     return obj
-
-
-if __name__ == '__main__':
-    import teams.T_idiot as bot
-    import traceback
-    import json, pickle, zlib, base64
-
-    tmp = one_race([bot, bot], [{}, {}])
-    tmp1 = transform_obj(tmp)
-    t1 = json.dumps(tmp1, separators=(',', ':'))
-    print(len(t1))
-    t2 = pickle.dumps(tmp)
-    print(len(t2))
-    t3 = zlib.compress(t2, -1)
-    print(len(t3))
-    # while 1:
-    #     try:
-    #         print(repr(eval(input('>>> '))))
-    #     except (EOFError,SystemExit):
-    #         break
-    #     except:
-    #         traceback.print_exc()
-    # # 终局打印信息输出
-    # my_print(
-    #     "%03d) %s win! for %s, West:%s(%d）, East:%s(%d),总时间: %d ticks %.3fs:%.3fs"
-    #     % (round_count, main_table.winner, main_table.reason, west_name,
-    #     main_table.players['West'].life, east_name,
-    #     main_table.players['East'].life, main_table.tick,
-    #     main_table.players['West'].clock_time,
-    #     main_table.players['East'].clock_time))

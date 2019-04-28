@@ -390,8 +390,7 @@ if 'view':
         loader = Factory(match.ai_type)
         try:
             record_id = int(record_id)
-            record = loader.load_record(match_dir, record_id)
-            record_content = loader.stringfy_record(record)
+            record_content = loader.stringfy_record(match_dir, record_id)
         except:
             return sorry(request, text='无效的记录编号')
 

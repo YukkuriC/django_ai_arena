@@ -1,55 +1,12 @@
-{% extends 'layout0.html' %}
+{% extends 'renderer/base.html' %}
 {% load staticfiles %}
 
-{% block title %}查看比赛记录: {{match.code1.name}} vs. {{match.code2.name}} - {{record_id}}{% endblock %}
-
-{% block css %}
-<style>
-    .screen-pool {
-        box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
-        margin: 15px;
-    }
-
-    .xscroll {
-        width: 100%
-    }
-</style>
+{% block control_buttons %}
+{{ block.super }}
+<button class='btn btn-sm btn-success' id='btn_speed'>播放速度: 1x</button>
 {% endblock %}
 
-{% block header %}
-<div class='col-sm-4'>
-    <h1>
-        <a href='../' title='{{match.code1.name}} vs. {{match.code2.name}}'>返回比赛</a>
-    </h1>
-</div>
-<div class='col-sm-4 text-center'>
-    {% if record_id %}
-    <h1 class='d-inline-block'>
-        <a href='../{{record_id | add:"-1"}}'>
-            上一场
-        </a>
-    </h1>
-    {% endif %}
-    <h1 class='d-inline-block' style="margin-left:10px;margin-right:10px">
-        {{record_id|add:"1"}}/{{match.finished_rounds}}
-    </h1>
-    {% if not_last_record %}
-    <h1 class='d-inline-block'>
-        <a href='../{{record_id | add:"1"}}'>
-            下一场
-        </a>
-    </h1>
-    {% endif %}
-</div>
-<div class='col-sm-4'>
-    <div class='float-right'>
-        <button class='btn btn-sm btn-success' id='btn_play'>播放/暂停</button>
-        <button class='btn btn-sm btn-success' id='btn_speed'>播放速度: 1x</button>
-    </div>
-</div>
-{% endblock %}
-
-{% block body %}
+{% block descriptions %}
 <div class='row x_block'>
     <div class='col-sm-4'>
         <div>
@@ -76,64 +33,61 @@
         <span id='description'>我是比赛描述</span>
     </div>
 </div>
-<div class='row x_block'>
-    <input type="range" min='0' max='4000' step='1' value="0" id="video_scroll" class='xscroll' style='margin:10px'>
-</div>
-<div class='row'>
-    <div class='col-sm-3' style='border-right: 2px solid #E6E9ED; padding-right: 15px'>
-        <div class='row x_title'>
-            <h1 class='col-sm-12'>显示设置</h1>
-        </div>
-        <div class='row x_block'>
-            <div class='col-sm-6'>
-                先手玩家颜色:
-            </div>
-            <div class='col-sm-6'>
-                <input type="color" value="#FDA761" id="color1">
-                <input type="color" value="#fc7b12" id="color1_1">
-            </div>
-            <div class='col-sm-6'>
-                后手玩家颜色:
-            </div>
-            <div class='col-sm-6'>
-                <input type="color" value="#80D1FF" id="color2">
-                <input type="color" value="#06a8ff" id="color2_1">
-            </div>
-        </div>
-        <div class='row x_block'>
-            <div class='col-sm-6'>
-                网格大小 (<label id="grid_size_val">5</label>)
-            </div>
-            <div class='col-sm-6'>
-                <input type="range" min='1' max='10' step='1' value="5" id="grid_size" class='xscroll'>
-            </div>
-            <div class='col-sm-6'>
-                纸带宽度 (<label id="band_width_val">3</label>)
-            </div>
-            <div class='col-sm-6'>
-                <input type="range" min='1' max='10' step='1' value="3" id="band_width" class='xscroll'>
-            </div>
-            <div class='col-sm-6'>
-                玩家尺寸
-            </div>
-            <div class='col-sm-6'>
-                <select id="player_size" class='form-control-sm'>
-                    <option value="0">小</option>
-                    <option value="1">大</option>
-                </select>
-            </div>
-        </div>
-    </div>
-    <div class='screen-pool ml-auto mr-auto'>
-        <canvas id='screen'></canvas>
-    </div>
-</div>
-<div id='record_receiver' style="display:none">{{record_content}}</div>
 {% endblock %}
-{% block script %}
-<script>
-    record_obj = JSON.parse(document.getElementById('record_receiver').innerHTML)
 
+{% block display_body %}
+<div class='col-sm-3' style='border-right: 2px solid #E6E9ED; padding-right: 15px'>
+    <div class='row x_title'>
+        <h1 class='col-sm-12'>显示设置</h1>
+    </div>
+    <div class='row x_block'>
+        <div class='col-sm-6'>
+            先手玩家颜色:
+        </div>
+        <div class='col-sm-6'>
+            <input type="color" value="#FDA761" id="color1">
+            <input type="color" value="#fc7b12" id="color1_1">
+        </div>
+        <div class='col-sm-6'>
+            后手玩家颜色:
+        </div>
+        <div class='col-sm-6'>
+            <input type="color" value="#80D1FF" id="color2">
+            <input type="color" value="#06a8ff" id="color2_1">
+        </div>
+    </div>
+    <div class='row x_block'>
+        <div class='col-sm-6'>
+            网格大小 (<label id="grid_size_val">5</label>)
+        </div>
+        <div class='col-sm-6'>
+            <input type="range" min='1' max='10' step='1' value="5" id="grid_size" class='xscroll'>
+        </div>
+        <div class='col-sm-6'>
+            纸带宽度 (<label id="band_width_val">3</label>)
+        </div>
+        <div class='col-sm-6'>
+            <input type="range" min='1' max='10' step='1' value="3" id="band_width" class='xscroll'>
+        </div>
+        <div class='col-sm-6'>
+            玩家尺寸
+        </div>
+        <div class='col-sm-6'>
+            <select id="player_size" class='form-control-sm'>
+                <option value="0">小</option>
+                <option value="1">大</option>
+            </select>
+        </div>
+    </div>
+</div>
+<div class='screen-pool ml-auto mr-auto'>
+    <canvas id='screen'></canvas>
+</div>
+{% endblock %}
+
+{% block script %}
+{{ block.super }}
+<script>
     // storage structure
     class MySet {
         constructor() {
@@ -529,10 +483,6 @@
     // event binding
     {
         var scroller = document.getElementById('video_scroll')
-        // document.getElementById('video_scroll').addEventListener('change',()=>{
-        //     FRAME_DISPLAY=grab('video_scroll')
-        //     draw_frame()
-        // })
         SCROLL_DRAGGING = false
         function update_scroll() {
             if (SCROLL_DRAGGING) {
