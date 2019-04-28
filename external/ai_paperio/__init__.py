@@ -134,8 +134,8 @@ if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
             holder_win = code2_hold ^ code2_win
             return '%s (%s, %s)' % (
                 match.code2.name if code2_win else match.code1.name,
-                ('接收方', '发起方')[holder_win],
-                ('先手', '后手')[code2_win],
+                ('发起方', '接收方')[code2_win],
+                ('先手', '后手')[holder_win],
             )
 
         desc_pool = [
@@ -153,4 +153,8 @@ if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
                 return '%s : %s' % tuple(res[2])
             if res[1] == -1:
                 return res[2]
+            if res[1] == 1:
+                if res[0] == res[2]:
+                    return '对手撞击'
+                return '自己撞击'
             return '无'

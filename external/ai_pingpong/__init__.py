@@ -100,12 +100,12 @@ if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
 
         def r_winner(_, match, record):
             code2_hold = (record['West'] == 'code2')
-            code2_win = (record['winner'] == 'West')
-            holder_win = code2_hold ^ code2_win
+            holder_win = (record['winner'] == 'West')
+            code2_win = (code2_hold == holder_win)
             return '%s (%s, %s)' % (
                 match.code2.name if code2_win else match.code1.name,
-                ('接收方', '发起方')[holder_win],
-                ('先手', '后手')[code2_win],
+                ('发起方', '接收方')[code2_win],
+                ('先手', '后手')[holder_win],
             )
 
         def r_win_desc(_, match, record):
