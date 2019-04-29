@@ -105,7 +105,7 @@ if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
             return '%s (%s, %s)' % (
                 match.code2.name if code2_win else match.code1.name,
                 ('发起方', '接收方')[code2_win],
-                ('先手', '后手')[holder_win],
+                ('后手', '先手')[holder_win],
             )
 
         def r_win_desc(_, match, record):

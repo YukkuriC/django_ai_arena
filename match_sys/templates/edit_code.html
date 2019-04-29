@@ -216,6 +216,7 @@
                     break
             }
             code_name.textContent = res.name || code_name.textContent
+            code_was_public = code_is_public
             update_messages()
         }, 'json')
     })
