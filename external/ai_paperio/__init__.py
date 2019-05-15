@@ -90,7 +90,7 @@ class PaperIOMatch(BasePairMatch):
             record['result'] = list(record['result'])
             e = record['result'][2]
             record['result'][2] = cls.stringfy_error(e)
-        return super().stringfy_record(record)
+        return super().stringfy_record_obj(record)
 
     @staticmethod
     def summary_records(records):

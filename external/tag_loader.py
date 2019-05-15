@@ -23,7 +23,10 @@ def register_record(name):
         target = RecordMeta.storage[match.ai_type]
         func = getattr(target, name, None)
         if func:
-            return func(match, record)
+            try:
+                return func(match, record)
+            except:
+                return '*ERROR*'
         return 'NotImplemented'
 
     register.filter(name=name)(_func)

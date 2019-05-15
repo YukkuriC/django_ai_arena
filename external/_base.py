@@ -222,7 +222,18 @@ class BaseRecordLoader:
         return res
 
     @classmethod
-    def stringfy_record(cls, record):
+    def stringfy_record(cls, match_dir, rec_id):
+        '''
+        将比赛记录输出为字符串，实现时可lru_cache
+        params:
+            match_dir: 比赛对应存储文件夹
+            rec_id: 比赛记录编号
+        '''
+        record = cls.load_record(match_dir, rec_id)
+        return cls.stringfy_record_obj(record)
+
+    @classmethod
+    def stringfy_record_obj(cls, record):
         '''将比赛记录输出为字符串，以传输至前端'''
         return json.dumps(record, separators=(',', ':'))
 

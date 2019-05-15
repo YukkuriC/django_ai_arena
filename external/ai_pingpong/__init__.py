@@ -2,7 +2,6 @@ from . import pingpong_api
 from external._base import BasePairMatch
 from os import path
 from functools import lru_cache
-import json
 
 
 class PingPongMatch(BasePairMatch):
@@ -33,7 +32,6 @@ class PingPongMatch(BasePairMatch):
         '''
         tmp = (d_local['players'], cls.init_params, d_local['names'],
                d_local['params'])
-        print(tmp)
         return pingpong_api.one_race(*tmp)
 
     @classmethod
@@ -65,7 +63,7 @@ class PingPongMatch(BasePairMatch):
     def stringfy_record(cls, match_dir, rec_id):
         record = cls.load_record(match_dir, rec_id)
         record_trans = pingpong_api.jsonfy(record)
-        return json.dumps(record_trans, separators=(',', ':'))
+        return super().stringfy_record_obj(record)
 
     @staticmethod
     def summary_records(records):
