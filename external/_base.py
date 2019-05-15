@@ -123,13 +123,25 @@ class BaseCodeLoader:
                 assert func_name not in cls.Meta.func_blacklist, (
                     node.lineno, '非法函数调用: ' + func_name)
 
-        # 检查是否已导入必要函数
+        # 检查是否已导入必要函数与类
         all_func = set()
-        for node in code_tree.body:
+        all_classes = {}
+        for node in code_tree.body:  # 查找根节点函数类定义
             if isinstance(node, ast.FunctionDef):
                 all_func.add(node.name)
-        for func in cls.Meta.required_functions:
+            elif isinstance(node, ast.ClassDef):
+                tmp = set()
+                for prop in node.body:
+                    if isinstance(prop, ast.FunctionDef):
+                        tmp.add(prop.name)
+                all_classes[node.name] = tmp
+        for func in cls.Meta.required_functions:  # 查找需求函数
             assert func in all_func, '缺少必要函数: ' + func
+        for clas, funcs in cls.Meta.required_classes:  # 查找需求类
+            assert clas in all_classes, '缺少必要类定义: ' + clas
+            for func in funcs:
+                assert func in all_classes[clas], '类%s中缺少必要函数: %s' % (clas,
+                                                                      func)
 
         # 返回AST
         return code_tree
@@ -175,7 +187,8 @@ class BaseCodeLoader:
         module_blacklist = ['os', 'sys', 'builtins', 'subprocess']  # 禁止导入的模块
         func_blacklist = ['eval', 'exec', 'compile', '__import__',
                           'open']  # 禁止使用的函数
-        required_functions = []  # 必要的函数接口
+        required_functions = []  # 必要的函数接口 (名称)
+        required_classes = []  # 必要的类定义 (名称,函数名称列表)
 
 
 class BaseRecordLoader:
@@ -215,7 +228,10 @@ class BaseRecordLoader:
 
     @staticmethod
     def summary_records(records):
-        '''将比赛记录汇总统计'''
+        '''
+        将比赛记录汇总统计
+        在view_match界面使用
+        '''
         pass
 
 
@@ -304,7 +320,7 @@ class BasePairMatch(BaseProcess, BaseCodeLoader, BaseRecordLoader):
             # 统计结果
             result = cls.output_queue(log)
             if isinstance(result, tuple):
-                output.put((now_invert, ) + result)  # 发送至输出队列
+                output.put((now_invert, *result))  # 发送至输出队列
 
             # 生成比赛记录
             cls.save_log(rid, log, locals(), globals())
@@ -326,6 +342,8 @@ class BasePairMatch(BaseProcess, BaseCodeLoader, BaseRecordLoader):
         计算双方代码天梯分变动
         默认为ELO算法
         '''
+        if not self.match.is_ranked:
+            return 0
         real_score = results[0] + 0.5 * results[None]
         e_score = sum(results.values()) / (1 + 10**
                                            ((code2.score - code1.score) / 400))
