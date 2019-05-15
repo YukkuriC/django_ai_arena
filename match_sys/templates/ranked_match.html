@@ -1,12 +1,12 @@
 {% extends 'form_base.html' %}
 {% load staticfiles %}
 
-{% block title %}自由对战 - {{title}}{% endblock %}
+{% block title %}匹配赛 - {{title}}{% endblock %}
 
 {% block form_override %}
 <div class="form-group">
     <div>
-        <label for="id_code1">我方代码:</label>
+        <label for="id_code1">参赛代码:</label>
         {%if form.errors.code1%}
         <label style='color:red'>{{form.errors.code1}}</label>
         {%endif%}
@@ -18,35 +18,6 @@
         {%endfor%}
     </select>
 </div>
-<div class="form-group">
-    <div>
-        <div>
-            <label for="id_code1">对方代码:</label>
-            <a class='float-right' href='#' id='random_roll'>手气不错</a>
-        </div>
-        {%if form.errors.code2%}
-        <label style='color:red'>{{form.errors.code2}}</label>
-        {%endif%}
-    </div>
-    <select name="code2" class="form-control" id="id_code2" required>
-        <option value="">---------</option>
-        {%for i in target_codes%}
-        <option value={{i.id}} title="{{i.author.name}}">{{i.author.name}} - {{i.name}}</option>
-        {%endfor%}
-    </select>
-</div>
-
-<div class='row x_block'>
-    {%for elem in form%}
-    <div class="form-group col-sm-6">
-        {% include "sub/form_element.html" %}
-    </div>
-    {%if forloop.counter == 2 or forloop.last%}
-</div>
-<div class='row x_block'>
-    {%endif%}
-    {%endfor%}
-</div>
 
 <div class="form-group">
     <input type="submit" value="发起比赛" class='btn btn-primary form-control'>
@@ -55,7 +26,10 @@
 
 {% block footer %}
 <div>
-    <i>注：自由对战模式不影响天梯积分</i>
+    <i>注：排位赛依据天梯积分匹配对手，每局双方轮流发起比赛，比赛结果会引起积分变动</i>
+</div>
+<div>
+    <i style='font-size:10'>注2：以上功能未实现</i>
 </div>
 {% endblock %}
 

@@ -169,7 +169,7 @@ def changepasswd(request):
 
 
 @login_required(1)
-def settings(request):
+def user_settings(request):
     '''
     个人设置
     '''

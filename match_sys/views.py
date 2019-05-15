@@ -172,6 +172,31 @@ if 'forms':
         return render(request, 'pairmatch.html', locals())
 
     @login_required(1)
+    def ranked_match(request, AI_type):
+        '''积分匹配赛'''
+
+        # 读取参数
+        try:
+            AI_type = int(AI_type)
+            assert AI_type in settings.AI_TYPES
+        except:
+            return sorry(request, text='无效的比赛编号')
+        title = settings.AI_TYPES[AI_type]
+        request.session['curr_game'] = AI_type  # 设置当前页面游戏
+
+        # 获取可选AI列表
+        codes = Code.objects.filter(ai_type=AI_type)
+        my_codes = codes.filter(author=request.session['userid'])  # 我方所有
+
+        # 读取筛选条件
+        my_code = request.GET.get('code1', '')
+
+        if request.method == 'POST':
+            pass
+        form = forms.PairMatchFormFactory.get(AI_type)
+        return render(request, 'ranked_match.html', locals())
+
+    @login_required(1)
     def invite_match(request, AI_type):
         # TODO: 支持向其他用户发起指定参数的比赛
         request.session['curr_game'] = AI_type  # 设置当前页面游戏

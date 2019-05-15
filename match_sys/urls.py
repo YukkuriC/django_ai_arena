@@ -11,5 +11,6 @@ urlpatterns = [
     path('lobby/', views.lobby),
     path('lobby/run_match/<str:AI_type>/', views.pairmatch),
     path('lobby/ladder/<str:AI_type>/', views.ladder),
+    path('lobby/ranked_match/<str:AI_type>/', views.ranked_match),
     path('lobby/invitation/<str:AI_type>/', views.invite_match),
 ]

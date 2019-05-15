@@ -71,7 +71,8 @@ class PairMatch(models.Model):
     status = models.IntegerField(
         '状态', default=0, choices=settings.PAIRMATCH_STATUS.items())
 
-    delta_score = models.FloatField('等级分变化', null=1)
+    is_ranked = models.BooleanField('是否计分', default=0)
+    delta_score = models.FloatField('等级分变化', null=True, default=0)
 
     def __str__(self):
         return '%s - %s vs. %s' % (self.run_datetime, self.code1, self.code2)

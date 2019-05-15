@@ -11,14 +11,14 @@
   <link rel="stylesheet" type="text/css" href="/assets/css/view_base.css">
   <script src='/assets/js/table_holder.js'></script>
   <script src='/assets/js/helpers.js'></script>
-  <title>{% block title %}base{% endblock %} | AI对战平台</title>
+  <title>{% block title %}base{% endblock %} | 代码竞技场</title>
   {% block css %}{% endblock %}
 </head>
 
 <body>
   <!-- 导航栏 -->
   <nav class="navbar navbar-expand-md navbar-dark bg-dark border">
-    <a class="navbar-brand" href="/">SESSDSA AI对战平台</a>
+    <a class="navbar-brand" href="/">SESSDSA 代码竞技场</a>
     <button aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation" class="navbar-toggler"
       data-target="#navbar" data-toggle="collapse" type="button">
       <span class="navbar-toggler-icon"></span>
@@ -40,13 +40,16 @@
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="/lobby/">对战大厅</a>
           <div class="dropdown-menu bg-dark">
-            <a class="dropdown-item text-nav bg-dark" href="/lobby/#">大厅首页</a>
             {% if request.session.curr_game >= 0 %}
             {% with gameid=request.session.curr_game %}
-            <a class="dropdown-item text-nav bg-dark" href="/lobby/run_match/{{gameid}}/">发起对战</a>
+            <a class="dropdown-item text-nav bg-dark" href="/game/{{gameid}}/">比赛介绍</a>
+            <a class="dropdown-item text-nav bg-dark" href="/lobby/run_match/{{gameid}}/">自由对战</a>
             <a class="dropdown-item text-nav bg-dark" href="/lobby/ladder/{{gameid}}/">查看天梯</a>
-            <!-- <a class="dropdown-item text-nav bg-dark" href="/lobby/invitation/{{gameid}}/">对战邀请</a> -->
+            <a class="dropdown-item text-nav bg-dark" href="/lobby/ranked_match/{{gameid}}/">匹配积分赛</a>
+            <a class="dropdown-item text-nav bg-dark" href="/lobby/#">返回首页</a>
             {% endwith %}
+            {% else %}
+            <a class="dropdown-item text-nav bg-dark" href="/lobby/#">大厅首页</a>
             {% endif %}
           </div>
         </li>
