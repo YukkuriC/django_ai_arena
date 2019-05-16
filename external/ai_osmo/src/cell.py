@@ -45,6 +45,14 @@ class Cell():
 
     # Methods
     def distance_from(self, other):
+        """Calculate the distance from another cell.
+
+        Args:
+            other: another cell.
+        Returns:
+            the minimum distance.
+
+        """
         dx = self.pos[0] - other.pos[0]
         dy = self.pos[1] - other.pos[1]
         min_x = min(abs(dx), abs(dx + Consts["WORLD_X"]), abs(dx - Consts["WORLD_X"]))
@@ -52,13 +60,36 @@ class Cell():
         return (min_x ** 2 + min_y ** 2) ** 0.5
 
     def collide(self, other):
+        """Determine if it collides with another cell.
+
+        Args:
+            other: another cell.
+        Returns:
+            True / False.
+
+        """
         return self.distance_from(other) < self.radius + other.radius
 
     def area(self):
+        """Calculate the area of the cell.
+
+        Args:
+            
+        Returns:
+            the area of the cell.
+
+        """
         return math.pi * self.radius * self.radius
 
     def stay_in_bounds(self):
-        # Out of bounds
+        """Make the out-of-bounds cell stay within the bounds.
+
+        Args:
+            
+        Returns:
+            
+
+        """
         if self.pos[0] < 0:
             self.pos[0] += Consts["WORLD_X"]
         elif self.pos[0] > Consts["WORLD_X"]:
@@ -70,7 +101,14 @@ class Cell():
             self.pos[1] -= Consts["WORLD_Y"]
 
     def limit_speed(self):
-        # Enforce speed limits
+        """Enforce speed limits.
+
+        Args:
+            
+        Returns:
+            
+
+        """
         if self.veloc[0] > Consts["MAX_VELOC"]:
             self.veloc[0] = Consts["MAX_VELOC"]
         elif self.veloc[0] < -Consts["MAX_VELOC"]:
@@ -82,11 +120,17 @@ class Cell():
             self.veloc[1] = -Consts["MAX_VELOC"]
 
     def move(self, frame_delta):
+        """Move the cell according to its velocity.
+
+        Args:
+            frame_delta: Time interval between two frames.
+        Returns:
+            
+
+        """
         self.collide_group = None
         # Adjust the position, according to velocity.
         self.pos[0] += self.veloc[0] * frame_delta
         self.pos[1] += self.veloc[1] * frame_delta
-        # Friction
-        self.veloc *= Consts["FRICTION"]
         self.stay_in_bounds()
         self.limit_speed()

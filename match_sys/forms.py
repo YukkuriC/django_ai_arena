@@ -2,6 +2,7 @@ from django import forms
 from django.conf import settings
 from .models import Code
 from external.factory import Factory
+from external.ai_osmo.src.consts import Consts
 
 
 # 上传代码表单
@@ -21,17 +22,21 @@ class CodeUploadForm(forms.ModelForm):
         model = Code
         fields = ['name', 'ai_type', 'content', 'public']
         widgets = {
-            'name': forms.TextInput({
+            'name':
+            forms.TextInput({
                 'class': 'form-control'
             }),
-            'content': forms.FileInput({
+            'content':
+            forms.FileInput({
                 'class': 'form-control'
             }),
-            'public': forms.CheckboxInput({
+            'public':
+            forms.CheckboxInput({
                 'class': 'form-control',
                 'title': '是否可以被其他人查看代码及复制'
             }),
-            'ai_type': forms.Select({
+            'ai_type':
+            forms.Select({
                 'class': 'form-control'
             }),
         }
@@ -83,7 +88,7 @@ class PairMatch_PaperIO(PairMatch_Base):
             'class': 'form-control',
             'value': 2000
         }))
-    max_time = forms.IntegerField(
+    max_time = forms.FloatField(
         label='总思考时间（秒）',
         max_value=30,
         min_value=5,
@@ -93,9 +98,32 @@ class PairMatch_PaperIO(PairMatch_Base):
         }))
 
 
+class PairMatch_Osmo(PairMatch_Base):
+    '''osmo参数'''
+    MAX_TIME = forms.FloatField(
+        label='总思考时间（秒）',
+        max_value=30,
+        min_value=0.1,
+        widget=forms.NumberInput({
+            'class': 'form-control',
+            'value': Consts['MAX_TIME']
+        }))
+    MAX_FRAME = forms.IntegerField(
+        label='最大帧数',
+        max_value=10000,
+        min_value=100,
+        widget=forms.NumberInput({
+            'class': 'form-control',
+            'value': Consts['MAX_FRAME']
+        }))
+
+
 class PairMatchFormFactory:
     '''分发表单工厂类'''
-    mapper = {2: PairMatch_PaperIO}
+    mapper = {
+        2: PairMatch_PaperIO,
+        3: PairMatch_Osmo,
+    }
 
     @staticmethod
     def get(id, *args, **kwargs):

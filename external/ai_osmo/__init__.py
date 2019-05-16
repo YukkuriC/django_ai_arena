@@ -13,6 +13,11 @@ class OsmoMatch(BasePairMatch):
     class Meta(BasePairMatch.Meta):
         required_classes = [('Player', ['strategy'])]
 
+    def get_timeout(self):
+        '''获取超时限制'''
+        return self.params['rounds'] * (
+            osmo_api.consts.Consts["MAX_TIME"] * 2 + 10)
+
     @classmethod
     def pre_run(cls, d_local, d_global):
         '''
@@ -63,6 +68,20 @@ class OsmoMatch(BasePairMatch):
         log_name = path.join(match_dir, 'logs/%02d.zlog' % rec_id)
         return osmo_api.load_log(log_name)
 
+    @classmethod
+    @lru_cache()
+    def stringfy_record(cls, match_dir, rec_id):
+        record = {**cls.load_record(match_dir, rec_id)}
+        if record['cause'] == "RUNTIME_ERROR":  # 将Exception转换为str
+            if isinstance(record["detail"], (list, tuple)):
+                tmp = []
+                for i in record["detail"]:
+                    if isinstance(i, Exception):
+                        i = cls.stringfy_error(i)
+                    tmp.append(i)
+                record['detail'] = tmp
+        return super().stringfy_record_obj(record)
+
     @staticmethod
     def summary_records(records):
         '''
@@ -108,7 +127,26 @@ if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
             )
 
         def r_win_desc(_, match, record):
+            if record['cause'] == 'PLAYER_DEAD':
+                return '吞噬玩家'
+            elif record['cause'] == "RUNTIME_ERROR":
+                return '代码错误'
+            elif record['cause'] == "MAX_FRAME":
+                return '超时结算'
             return '会有的'
 
         def r_desc_plus(_, match, record):
+            if record['cause'] == 'PLAYER_DEAD':
+                dead=record['detail']
+                if all(dead):
+                    dead='双方同时'
+                else:
+                    dead=match.code1.name+'(先手)' if dead[0] else match.code2.name+'(后手)'
+                return dead+'被吞噬'
+            elif record['cause'] == "RUNTIME_ERROR":
+                return record['cause']
+            elif record['cause'] == "MAX_FRAME":
+                last_frame = record['data'][-1]
+                return "%s : %s" % (round(last_frame[0][4]),
+                                    round(last_frame[1][4]))
             return '会有的'
