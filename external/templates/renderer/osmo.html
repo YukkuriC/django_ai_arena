@@ -10,6 +10,11 @@
 </style>
 {% endblock %}
 
+{% block control_buttons %}
+{{ block.super }}
+<button class='btn btn-sm btn-success' id='btn_speed'>播放速度: 1x</button>
+{% endblock %}
+
 {% block descriptions %}
 <div class='x_block'>
     <span>跟踪视角</span>
@@ -17,17 +22,24 @@
         <option value="0" selected>固定点</option>
         <option value="1">星体</option>
     </select>
-    <span>X</span>
-    <input id="x" type="text" value="500" onchange="changeTarget()" />
-    <span>Y</span>
-    <input id="y" type="text" value="250" onchange="changeTarget()" />
-    <span>ID</span>
-    <input id="id" type="text" value="0" onchange="changeTarget()" />
+    <span id='panel_camera_free'>
+        <span>X</span>
+        <input id="x" type="text" value="500" onchange="changeTarget()" />
+        <span>Y</span>
+        <input id="y" type="text" value="250" onchange="changeTarget()" />
+    </span>
+    <span id='panel_camera_target' style='display:none'>
+        <span>ID</span>
+        <input id="id" type="text" value="0" onchange="changeTarget()" />
+    </span>
+</div>
+<div class='x_block'>
+    比赛解说会有的
 </div>
 {% endblock %}
 
 {% block display_body %}
-<canvas id="canvas" width=1000 height=500></canvas>
+<canvas id="canvas" width=1000 height=500 class='ml-auto mr-auto screen-pool'></canvas>
 {% endblock %}
 
 {% block script %}
@@ -38,6 +50,7 @@
     PLAYING = false
     SCROLL_DRAGGING = false
     CURR_FRAME = 0
+    PLAYING_SPEED = 1
 </script>
 
 <!-- canvas可视化 -->
@@ -82,7 +95,7 @@
             if (index < TOTAL_FRAMES - 1) {
                 setTimeout(function () {
                     parse_frame(index + 1);
-                }, 1000 / 30);
+                }, 1000 / 30 / PLAYING_SPEED);
             } else {
                 PLAYING = false
                 CURR_FRAME = 0
@@ -96,8 +109,8 @@
             camera.scale = Math.min(canvas.width / 1000, canvas.height / 500);
         }
         if (camera.target != null && frame[camera.target]) {
-            camera.center = [frame[camera.target][1], frame[camera.target][2]];
-            camera.radius = frame[camera.target][5];
+            camera.center = [frame[camera.target][0], frame[camera.target][1]];
+            camera.radius = frame[camera.target][4];
             camera.limit[1] = Math.min(canvas.width, canvas.height) / 4 / camera.radius;
         }
         var ctx = canvas.getContext("2d");
@@ -186,14 +199,20 @@
     }
 
     function changeTarget() {
+        var panel_free = document.getElementById('panel_camera_free')
+        var panel_target = document.getElementById('panel_camera_target')
         if (select.value == 0) {
             camera.center[0] = x.value;
             camera.center[1] = y.value;
             camera.target = null;
             camera.radius = null;
+            panel_free.style.display = 'inline-block'
+            panel_target.style.display = 'none'
         }
         else {
             camera.target = id.value;
+            panel_free.style.display = 'none'
+            panel_target.style.display = 'inline-block'
         }
         if (!PLAYING) parse_frame()
     }
@@ -207,6 +226,14 @@
     }
     document.getElementById('btn_play').addEventListener('click', play_pause)
     play_pause()
+
+
+    function switch_speed() {
+        PLAYING_SPEED *= 2
+        if (PLAYING_SPEED > 8) PLAYING_SPEED = 0.25
+        document.getElementById('btn_speed').innerHTML = '播放速度: @x'.replace('@', PLAYING_SPEED)
+    }
+    document.getElementById('btn_speed').addEventListener('click', switch_speed)
 
 
     var scroller = document.getElementById('video_scroll')
