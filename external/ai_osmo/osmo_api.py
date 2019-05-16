@@ -12,7 +12,7 @@ world.print = lambda *a, **kw: None
 def apply_params(params):
     """ 覆盖默认参数 """
     if not hasattr(consts, 'def_consts'):
-        consts.def_consts = consts.Consts
+        consts.def_consts = {**consts.Consts}
     consts.Consts.clear()
     for k, v in consts.def_consts:
         consts.Consts[k] = v

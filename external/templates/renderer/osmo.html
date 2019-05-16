@@ -98,7 +98,6 @@
                 }, 1000 / 30 / PLAYING_SPEED);
             } else {
                 PLAYING = false
-                CURR_FRAME = 0
             }
         }
     }
@@ -222,7 +221,11 @@
 <script>
     function play_pause() {
         PLAYING = !PLAYING
-        if (PLAYING) parse_frame()
+        CURR_FRAME = 0
+        if (PLAYING) {
+            if (CURR_FRAME >= TOTAL_FRAMES - 1) CURR_FRAME = 0
+            parse_frame()
+        }
     }
     document.getElementById('btn_play').addEventListener('click', play_pause)
     play_pause()
