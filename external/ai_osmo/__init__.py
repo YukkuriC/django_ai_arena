@@ -63,13 +63,6 @@ class OsmoMatch(BasePairMatch):
         log_name = path.join(match_dir, 'logs/%02d.zlog' % rec_id)
         return osmo_api.load_log(log_name)
 
-    @classmethod
-    @lru_cache()
-    def stringfy_record(cls, match_dir, rec_id):
-        record = cls.load_record(match_dir, rec_id)
-        record_trans = osmo_api.jsonfy(record)
-        return super().stringfy_record_obj(record_trans)
-
     @staticmethod
     def summary_records(records):
         '''

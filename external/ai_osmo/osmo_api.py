@@ -31,19 +31,17 @@ def save_log(wld, path):
     if folder:
         os.makedirs(folder, exist_ok=True)
 
+    # 转为列表格式储存，除去所有死细胞
+    tmp = {**wld.result}
+    tmp['data'] = [[[
+        cell.pos[0], cell.pos[1], cell.veloc[0], cell.veloc[1], cell.radius
+    ] for cell in frame if not cell.dead] for frame in tmp['data']]
+
     with open(path, 'wb') as f:
-        f.write(zlib.compress(pickle.dumps(wld.result), -1))
+        f.write(zlib.compress(pickle.dumps(tmp), -1))
 
 
 def load_log(path):
     with open(path, 'rb') as f:
         obj = pickle.loads(zlib.decompress(f.read()))
     return obj
-
-
-def jsonfy(log):
-    tmp = {**log}
-    tmp['data'] = [[[
-        cell.pos[0], cell.pos[1], cell.veloc[0], cell.veloc[1], cell.radius
-    ] for cell in frame] for frame in tmp['data']]
-    return tmp

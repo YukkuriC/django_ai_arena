@@ -1,2 +1,232 @@
 {% extends 'renderer/base.html' %}
 {% load staticfiles %}
+
+{% block css %}
+{{ block.super }}
+<style>
+    #canvas {
+        background-color: #1D40B5;
+    }
+</style>
+{% endblock %}
+
+{% block descriptions %}
+<div class='x_block'>
+    <span>跟踪视角</span>
+    <select id="select" onchange="changeTarget()">
+        <option value="0" selected>固定点</option>
+        <option value="1">星体</option>
+    </select>
+    <span>X</span>
+    <input id="x" type="text" value="500" onchange="changeTarget()" />
+    <span>Y</span>
+    <input id="y" type="text" value="250" onchange="changeTarget()" />
+    <span>ID</span>
+    <input id="id" type="text" value="0" onchange="changeTarget()" />
+</div>
+{% endblock %}
+
+{% block display_body %}
+<canvas id="canvas" width=1000 height=500></canvas>
+{% endblock %}
+
+{% block script %}
+{{ block.super }}
+<!-- 全局参数 -->
+<script>
+    TOTAL_FRAMES = record_obj['data'].length
+    PLAYING = false
+    SCROLL_DRAGGING = false
+    CURR_FRAME = 0
+</script>
+
+<!-- canvas可视化 -->
+<script>
+    var camera = {
+        center: [500, 250],
+        scale: 1,
+        limit: [Math.min(canvas.width, canvas.height) / 3 / 500, Math.min(canvas.width, canvas.height) / 4 / 10],
+        adjusted: false,
+        target: null,
+        radius: null,
+        rect: function (ctx, X1, Y1, dX, dY) {
+            ctx.rect(this.scale * (X1 - this.center[0]) + canvas.width / 2, this.scale * (Y1 - this.center[1]) + canvas.height / 2, this.scale * dX, this.scale * dY);
+        },
+        arc: function (ctx, X, Y, R) {
+            min_x = Math.ceil((-this.scale * R - (this.scale * (X - this.center[0]) + canvas.width / 2)) / (1000 * this.scale));
+            max_x = Math.floor((canvas.width + this.scale * R - (this.scale * (X - this.center[0]) + canvas.width / 2)) / (1000 * this.scale));
+            min_y = Math.ceil((-this.scale * R - (this.scale * (Y - this.center[1]) + canvas.height / 2)) / (500 * this.scale));
+            max_y = Math.floor((canvas.height + this.scale * R - (this.scale * (Y - this.center[1]) + canvas.height / 2)) / (500 * this.scale));
+            for (var i = min_x; i <= max_x; i++) {
+                for (var j = min_y; j <= max_y; j++) {
+                    ctx.beginPath();
+                    ctx.arc(this.scale * (X - this.center[0]) + canvas.width / 2 + i * 1000 * this.scale, this.scale * (Y - this.center[1]) + canvas.height / 2 + j * 500 * this.scale, this.scale * R, 0, Math.PI * 2, true);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+            }
+        }
+    }
+    // 读取数据库数据
+    function parse_frame(index = null) {
+        if (index == null) index = CURR_FRAME
+        else {
+            CURR_FRAME = index
+            document.getElementById('video_scroll').value = CURR_FRAME
+        }
+        // 执行查询
+        var result = record_obj['data'][index];
+        // 解析数据
+        if (result) draw(result);
+        if (PLAYING) {
+            if (index < TOTAL_FRAMES - 1) {
+                setTimeout(function () {
+                    parse_frame(index + 1);
+                }, 1000 / 30);
+            } else {
+                PLAYING = false
+                CURR_FRAME = 0
+            }
+        }
+    }
+
+    function draw(frame) {
+        camera.limit = [Math.min(canvas.width, canvas.height) / 3 / 500, Math.min(canvas.width, canvas.height) / 4 / 10];
+        if (!camera.adjusted) {
+            camera.scale = Math.min(canvas.width / 1000, canvas.height / 500);
+        }
+        if (camera.target != null && frame[camera.target]) {
+            camera.center = [frame[camera.target][1], frame[camera.target][2]];
+            camera.radius = frame[camera.target][5];
+            camera.limit[1] = Math.min(canvas.width, canvas.height) / 4 / camera.radius;
+        }
+        var ctx = canvas.getContext("2d");
+        var shadows = true;
+        // Background
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Level boundary
+        ctx.fillStyle = "#2450E4"; // Background color of the level (inside the boundaries)
+        ctx.beginPath();
+        camera.rect(ctx, 0, 0, 1000, 500);
+        ctx.closePath();
+        ctx.fill();
+        if (shadows) {
+            ctx.strokeStyle = "rgba(0,0,0,0.3)";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            camera.rect(ctx, 0, 0, 1000, 500);
+            ctx.closePath();
+            ctx.stroke();
+        }
+        ctx.strokeStyle = "#FFF";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        camera.rect(ctx, 0, 0, 1000, 500);
+        ctx.closePath();
+        ctx.stroke();
+        for (var i = 0; i < frame.length; i++) {
+            var cell = frame[i]
+            draw_cell(ctx, shadows, i, cell[0], cell[1], cell[4]);
+        }
+    }
+
+    function draw_cell(ctx, shadow, ID, X, Y, R) {
+        // Shadow
+        if (shadow) {
+            ctx.fillStyle = "rgba(0,0,0,0.3)"; // gray
+            camera.arc(ctx, X + 1, Y + 3, R, 0);
+        }
+        ctx.fillStyle = "rgb(54,182,255)"; // blue
+        if ((camera.target == null && ID <= 1) || ID == camera.target) {
+            ctx.fillStyle = "green";
+        }
+        else if (camera.radius) {
+            if (R > camera.radius) ctx.fillStyle = "rgb(255,68,26)"; // red
+            else if (camera.radius - R <= 4) {
+                var delta = camera.radius - R;
+                if (delta <= 2) {
+                    var ref = [[255, 255], [68, 175], [26, 0]];
+                    ctx.fillStyle = "rgb(" + ref.map(x => x[0] + (x[1] - x[0]) * delta / 4).join(",") + ")";
+                }
+                else {
+                    delta -= 2;
+                    var ref = [[255, 54], [175, 182], [0, 255]];
+                    ctx.fillStyle = "rgb(" + ref.map(x => x[0] + (x[1] - x[0]) * delta / 4).join(",") + ")";
+                }
+            }
+        }
+        camera.arc(ctx, X, Y, R, 0);
+    }
+
+    canvas.addEventListener("DOMMouseScroll", mouse_scroll, false);
+    canvas.addEventListener("mousewheel", mouse_scroll, false);
+
+    function mouse_scroll(event) {
+        event.preventDefault();
+        var delta = 0;
+        if (!event) event = window.event;
+        // normalize the delta
+        if (event.wheelDelta) {
+            // IE and Opera
+            delta = event.wheelDelta / 60;
+        }
+        else if (event.detail) {
+            // W3C
+            delta = -event.detail / 2;
+        }
+        delta = delta / Math.abs(delta);
+        if (delta != 0) {
+            camera.adjusted = true;
+            if (delta > 0) camera.scale *= 1.05;
+            if (delta < 0) camera.scale /= 1.05;
+            if (camera.scale < camera.limit[0]) camera.scale = camera.limit[0];
+            if (camera.scale > camera.limit[1]) camera.scale = camera.limit[1];
+        }
+        if (!PLAYING) parse_frame()
+    }
+
+    function changeTarget() {
+        if (select.value == 0) {
+            camera.center[0] = x.value;
+            camera.center[1] = y.value;
+            camera.target = null;
+            camera.radius = null;
+        }
+        else {
+            camera.target = id.value;
+        }
+        if (!PLAYING) parse_frame()
+    }
+</script>
+
+<!-- 按钮、进度条API -->
+<script>
+    function play_pause() {
+        PLAYING = !PLAYING
+        if (PLAYING) parse_frame()
+    }
+    document.getElementById('btn_play').addEventListener('click', play_pause)
+    play_pause()
+
+
+    var scroller = document.getElementById('video_scroll')
+    scroller.max = TOTAL_FRAMES - 1
+    function update_scroll() {
+        if (SCROLL_DRAGGING) {
+            CURR_FRAME = scroller.value * 1
+            parse_frame()
+        }
+    }
+
+    scroller.addEventListener('mousedown', () => {
+        PLAYING = false
+        SCROLL_DRAGGING = true
+        update_scroll()
+    })
+    scroller.addEventListener('mouseup', () => {
+        SCROLL_DRAGGING = false
+        scroller.value = CURR_FRAME
+    })
+    scroller.addEventListener('mousemove', update_scroll)
+</script>
+{% endblock %}

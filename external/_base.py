@@ -3,6 +3,7 @@ from multiprocessing import Process, Queue
 from os import path
 from sys import modules
 from datetime import datetime
+from functools import lru_cache
 import ast, random, json
 if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
     from django.conf import settings
@@ -222,6 +223,7 @@ class BaseRecordLoader:
         return res
 
     @classmethod
+    @lru_cache()
     def stringfy_record(cls, match_dir, rec_id):
         '''
         将比赛记录输出为字符串，实现时可lru_cache
