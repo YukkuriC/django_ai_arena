@@ -1,15 +1,27 @@
 {% extends 'layout0.html' %}
+{% load main_filters %}
+
+{% block title %}
+{% if user.id == request.session.userid %}
+个人主页
+{% else %}
+查看用户: {{user.name}}
+{% endif %}
+{% endblock %}
 
 {% block header %}
 <div class='col-sm-6'>
     <h1>
-        {% block title %}
         {% if user.id == request.session.userid %}
         个人主页
+        <a href="//www.gravatar.com" target='_blank' title='头像使用Gravatar服务'>
+            <img src="{{user | g_icon}}" style='display:inline-block'>
+        </a>
         {% else %}
-        查看用户: {{user.name}}
+        查看用户:
+        {{user.name}}
+        <img src="{{user | g_icon}}" style='display:inline-block'>
         {% endif %}
-        {% endblock %}
     </h1>
 </div>
 {% if user.id == request.session.userid %}

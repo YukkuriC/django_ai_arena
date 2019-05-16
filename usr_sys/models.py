@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.hashers import make_password, check_password, hashlib
 from django.conf import settings
 from main.helpers import set_autodelete
+import hashlib
 
 
 ### models
@@ -28,6 +29,13 @@ class User(models.Model):
     @property
     def name(self):
         return self.nickname or self.username
+
+    def gravatar_icon(self, size=30):
+        email = self.stu_code + '@pku.edu.cn'
+        hasher = hashlib.md5()
+        hasher.update(email.encode('utf-8'))
+        email_hash = hasher.hexdigest()
+        return "//www.gravatar.com/avatar/%s?s=%s&d=retro" % (email_hash, size)
 
     class Meta:
         ordering = ["stu_code"]

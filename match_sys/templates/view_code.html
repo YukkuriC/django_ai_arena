@@ -1,5 +1,6 @@
 {% extends 'layout0.html' %}
 {% load staticfiles %}
+{% load main_filters %}
 
 {% block title %}查看代码: {{code.name}}{% endblock %}
 
@@ -10,9 +11,15 @@
 <div class='col-sm-6 text-right'>
     <h1>
         {% if my_code %}
-        <a href="/home">个人主页</a>
+        <a href="/home">
+            个人主页
+            <img src="{{code.author | g_icon}}" style='display:inline-block'>
+        </a>
         {% else %}
-        <a href="/user/{{code.author.id}}/">作者: {{code.author.name}}</a>
+        <a href="/user/{{code.author.id}}/">
+            作者: {{code.author.name}}
+            <img src="{{code.author | g_icon}}" style='display:inline-block'>
+        </a>
         {% endif %}
     </h1>
 </div>

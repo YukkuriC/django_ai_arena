@@ -137,9 +137,9 @@ def monitor(sock):
 
         # 如果过长闲置则终止
         sleep(settings.MONITOR_CYCLE)
-        if now - last_idle_then > settings.MONITOR_MAX_IDLE_SEC:
-            print('END MONITOR')
-            return
+        # if now - last_idle_then > settings.MONITOR_MAX_IDLE_SEC:
+        #     print('END MONITOR')
+        #     return
 
 
 def start_match(AI_type, code1, code2, param_form):
