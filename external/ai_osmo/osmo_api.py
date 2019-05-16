@@ -14,7 +14,7 @@ def apply_params(params):
     if not hasattr(consts, 'def_consts'):
         consts.def_consts = {**consts.Consts}
     consts.Consts.clear()
-    for k, v in consts.def_consts:
+    for k, v in consts.def_consts.items():
         consts.Consts[k] = v
     for k, v in params.items():
         consts.Consts[k] = v
