@@ -78,8 +78,13 @@ class PairMatch(models.Model):
     status = models.IntegerField(
         '状态', default=0, choices=settings.PAIRMATCH_STATUS.items())
 
+    # 匹配赛参数
     is_ranked = models.BooleanField('是否计分', default=0)
-    delta_score = models.FloatField('等级分变化', null=True, default=0)
+    old_score1=models.FloatField('发起方等级分', null=True, default=1000)
+    old_score2=models.FloatField('接收方等级分', null=True, default=1000)
+    delta_score = models.FloatField('发起方等级分变化', null=True, default=0)
+    delta_score_code2 = models.FloatField('接收方等级分变化', null=True, default=0)
+    params = models.TextField('对局参数', null=True, default='{}', max_length=512)
 
     def __str__(self):
         return '%s - %s vs. %s' % (self.run_datetime, self.code1, self.code2)

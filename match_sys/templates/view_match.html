@@ -46,9 +46,6 @@
             对局结果:
             {%if result_stat%}
             发起方{{result_stat.0}}胜 {{result_stat.1}}负 {%if result_stat.draw%}{{result_stat.draw}}平{%endif%}
-            {%if delta_show%}
-            (<span style='color:#ff3333' title='发起方等级分变动'>{{delta_show}}</span>)
-            {%endif%}
             {%endif%}
         </p>
         <p>
@@ -117,7 +114,50 @@
             </div>
         </div>
     </div>
-    <h1>WORK IN PROGRESS</h1>
+    <div class='row x_block'>
+        <div class='col-sm-4'>
+            <h4>双方等级分</h4>
+            <div>
+                发起方 ({{match.code1.name}}):
+                {{match.old_score1 | floatformat:2}}
+                {%if match.is_ranked%}
+                <span style='color:#ff3333'>{{match.delta_score | floatformat:2 | if_plus}}</span>
+                {%endif%}
+            </div>
+            <div>
+                接收方 ({{match.code2.name}}):
+                {{match.old_score2 | floatformat:2}}
+                {%if match.is_ranked%}
+                <span style='color:#ff3333'>{{match.delta_score_code2 | floatformat:2 | if_plus}}</span>
+                {%endif%}
+            </div>
+        </div>
+        <div class='col-sm-4'>
+            <h4>参赛代码版本</h4>
+            <div>
+                发起方 ({{match.code1.name}}): 
+                {% if match.run_datetime > match.code1.edit_datetime %}
+                为最新版本
+                {%else%}
+                <a href="/code/match.code1.id">已更新</a>
+                {%endif%}
+            </div>
+            <div>
+                接收方 ({{match.code2.name}}): 
+                {% if match.run_datetime > match.code2.edit_datetime %}
+                为最新版本
+                {%else%}
+                <a href="/code/match.code2.id">已更新</a>
+                {%endif%}
+            </div>
+        </div>
+        <div class='col-sm-4'>
+            <h4>使用比赛参数</h4>
+            <div>
+                {{match.params}}
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 

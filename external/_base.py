@@ -363,7 +363,9 @@ class BasePairMatch(BaseProcess, BaseCodeLoader, BaseRecordLoader):
         real_score = results[0] + 0.5 * results[None]
         e_score = sum(results.values()) / (1 + 10**
                                            ((code2.score - code1.score) / 400))
-        return (real_score - e_score) * settings.SCORE_FACTOR_PAIRMATCH
+        score1 = (real_score - e_score) * settings.SCORE_FACTOR_PAIRMATCH
+        score2 = -score1  # TODO 归中算法
+        return score1, score2
 
     def summary(self, timeout):
         '''
@@ -375,17 +377,19 @@ class BasePairMatch(BaseProcess, BaseCodeLoader, BaseRecordLoader):
         # 计算等级分变化
         code1 = self.match.code1
         code2 = self.match.code2
-        dscore = self.calculate_dscore(code1, code2, result_stat)
+        self.match.old_score1 = code1.score
+        self.match.old_score2 = code2.score
+        score1, score2 = self.calculate_dscore(code1, code2, result_stat)
 
         # 写入双方代码统计
         if code1 != code2:
-            code1.score += dscore
+            code1.score += score1
             code1.num_matches += 1
             code1.num_wins += result_stat[0]
             code1.num_loses += result_stat[1]
             code1.num_draws += result_stat[None]
             code1.save()
-            code2.score -= dscore
+            code2.score += score2
             code2.num_matches += 1
             code2.num_wins += result_stat[1]
             code2.num_loses += result_stat[0]
@@ -395,7 +399,8 @@ class BasePairMatch(BaseProcess, BaseCodeLoader, BaseRecordLoader):
         # 写入match信息
         self.match.finish_datetime = datetime.now()
         self.match.status = 2 + bool(timeout)
-        self.match.delta_score = dscore
+        self.match.delta_score = score1
+        self.match.delta_score_code2 = score2
         self.match.save()
 
     @classmethod

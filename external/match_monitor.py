@@ -91,7 +91,8 @@ def monitor(sock):
 
             # 创建比赛(Pairmatch)
             if data[0] == 'match':
-                AI_type, code1, code2, match_name, params = json.loads(data[1])
+                AI_type, code1, code2, match_name, params, ranked = json.loads(
+                    data[1])
 
                 # 创建新比赛对象
                 new_match = models.PairMatch()
@@ -100,6 +101,8 @@ def monitor(sock):
                 new_match.code1 = models.Code.objects.get(id=code1)
                 new_match.code2 = models.Code.objects.get(id=code2)
                 new_match.rounds = params['rounds']
+                new_match.is_ranked = ranked
+                new_match.params = json.dumps(params)
                 new_match.save()
 
                 # 读取代码、比赛路径
@@ -142,7 +145,7 @@ def monitor(sock):
         #     return
 
 
-def start_match(AI_type, code1, code2, param_form):
+def start_match(AI_type, code1, code2, param_form, ranked=False):
     from match_sys import models
     from . import helpers
 
@@ -155,7 +158,8 @@ def start_match(AI_type, code1, code2, param_form):
     # 获取match参数
     params = param_form.cleaned_data
     create_params = json.dumps(
-        [AI_type, code1, code2, match_name, params], separators=(',', ':'))
+        [AI_type, code1, code2, match_name, params, ranked],
+        separators=(',', ':'))
 
     # 传送参数至进程 (AI_type,code1,code2,match_name,params)
     send_command('match ' + create_params)

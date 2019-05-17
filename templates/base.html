@@ -44,9 +44,9 @@
             {% if request.session.curr_game >= 0 %}
             {% with gameid=request.session.curr_game %}
             <a class="dropdown-item text-nav bg-dark" href="/game/{{gameid}}/">比赛介绍</a>
+            <a class="dropdown-item text-nav bg-dark" href="/lobby/ranked_match/{{gameid}}/">匹配积分赛</a>
             <a class="dropdown-item text-nav bg-dark" href="/lobby/run_match/{{gameid}}/">自由对战</a>
             <a class="dropdown-item text-nav bg-dark" href="/lobby/ladder/{{gameid}}/">查看天梯</a>
-            <a class="dropdown-item text-nav bg-dark" href="/lobby/ranked_match/{{gameid}}/">匹配积分赛</a>
             <a class="dropdown-item text-nav bg-dark" href="/lobby/#">返回首页</a>
             {% endwith %}
             {% else %}

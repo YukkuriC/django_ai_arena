@@ -11,7 +11,7 @@ from main.helpers import login_required, get_user, sorry
 from usr_sys.models import User
 from . import forms
 from .models import Code, PairMatch
-import os, json, shutil
+import os, json, shutil, random
 
 
 def game_info(request, AI_type):
@@ -158,7 +158,7 @@ if 'forms':
             my_code = request.POST.get('code1')
             target_code = request.POST.get('code2')
             if not (my_code and my_codes.filter(id=my_code)):
-                form.errors['code1'] = '非法输入: %s' % target_code
+                form.errors['code1'] = '非法输入: %s' % my_code
             if not (target_code and target_codes.filter(id=target_code)):
                 form.errors['code2'] = '非法输入: %s' % target_code
             if form.is_valid():  # run match
@@ -192,7 +192,30 @@ if 'forms':
         my_code = request.GET.get('code1', '')
 
         if request.method == 'POST':
-            pass
+            form = forms.PairMatchFormFactory.get(AI_type, request.POST)
+            my_code = request.POST.get('code1')
+            if not (my_code and my_codes.filter(id=my_code)):
+                form.errors['code1'] = '非法输入: %s' % my_code
+
+            # 选取目标代码
+            if form.is_valid():
+                my_code_obj = my_codes.filter(id=my_code)[0]
+                target_codes = codes.exclude(author=request.session['userid'])
+                target_codes = sorted(
+                    target_codes,
+                    key=lambda code: abs(code.score - my_code_obj.score)
+                )[:settings.RANKING_RANDOM_RANGE]
+                if not target_codes:
+                    form.errors['code1'] = '暂无可用的匹配代码'
+
+            if form.is_valid():  # run match
+                target = random.choice(target_codes).id
+                match_monitor.start_match(AI_type, my_code, target, form, True)
+                messages.info(request, '创建比赛成功')
+                return redirect('/code/%s/' % my_code)
+            else:  # invalid input
+                messages.warning(request, '请检查非法输入')
+                return render(request, 'ranked_match.html', locals())
         form = forms.PairMatchFormFactory.get(AI_type)
         return render(request, 'ranked_match.html', locals())
 
@@ -401,11 +424,6 @@ if 'view':
                 match.delete()
                 messages.info(request, '比赛记录已删除')
                 return redirect('/code/%d' % upper)
-
-        # 获取等级分变动
-        if match.delta_score != None:
-            delta_show = '+' if match.delta_score >= 0 else ''
-            delta_show += '%.2f' % match.delta_score
 
         # 读取比赛记录
         loader = Factory(match.ai_type)
