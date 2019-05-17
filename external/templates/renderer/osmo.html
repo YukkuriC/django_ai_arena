@@ -221,7 +221,6 @@
 <script>
     function play_pause() {
         PLAYING = !PLAYING
-        CURR_FRAME = 0
         if (PLAYING) {
             if (CURR_FRAME >= TOTAL_FRAMES - 1) CURR_FRAME = 0
             parse_frame()

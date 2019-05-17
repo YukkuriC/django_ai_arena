@@ -47,7 +47,11 @@ class TablePageBase:
         for item in item_list:
             row = [cls.grab_row_link(prefab, item, params)]
             for cell_type in template:
-                row.append(cls.grab_cell(cell_type, item, params))
+                try:
+                    cell = cls.grab_cell(cell_type, item, params)
+                except:
+                    cell = '*ERROR*'
+                row.append(cell)
             res.append(row)
         return res
 

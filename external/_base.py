@@ -178,6 +178,9 @@ class BaseCodeLoader:
         except Exception as e:
             raise RuntimeError(cls.stringfy_error(e))
 
+        # 屏蔽print功能
+        pack.print = lambda *a, **kw: None
+
         return pack
 
     @staticmethod
