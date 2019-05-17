@@ -72,6 +72,12 @@ class World():
             x = Consts["WORLD_X"] * random.random()
             y = Consts["WORLD_Y"] * random.random()
             cell = Cell(i + 2, [x, y], [(random.random() - 0.5) * 2, (random.random() - 0.5) * 2], rad)
+            safe_dist = Consts["SAFE_DIST"] + rad
+            while min(map(cell.distance_from, self.cells[:2])) < safe_dist:
+                cell.pos = [
+                    Consts["WORLD_X"] * random.random(),
+                    Consts["WORLD_Y"] * random.random()
+                ]
             self.cells.append(cell)
 
     def check_point(self, flag0, flag1, cause):

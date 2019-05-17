@@ -45,6 +45,8 @@ Consts = {
     "MAX_TIME": 10,
     # MAX_FRAME
     "MAX_FRAME": 5000,
+    # SAFE_DIST
+    "SAFE_DIST": 30,
 
     "PREFIXES": "Angry Baby Crazy Diligent Excited Fat Greedy Hungry Interesting Japanese Kind Little Magic Naïve Old Powerful Quiet Rich Superman THU Undefined Valuable Wifeless Xiangbuchulai Young Zombie",
     "NAMES": "Alice Bob Carol Dave Eve Francis Grace Hans Isabella Jason Kate Louis Margaret Nathan Olivia Paul Queen Richard Susan Thomas Uma Vivian Winnie Xander Yasmine Zach"
