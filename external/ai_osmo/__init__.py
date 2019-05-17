@@ -41,8 +41,11 @@ class OsmoMatch(BasePairMatch):
         运行一局比赛
         并返回比赛记录对象
         '''
-        return osmo_api.one_race(d_local['players'], cls.init_params,
-                                 d_local['names'])
+        wld = osmo_api.one_race(d_local['players'], cls.init_params,
+                                d_local['names'])
+        if wld.result['winner'] not in (0, 1):
+            wld.result['winner'] = None
+        return wld
 
     @classmethod
     def output_queue(cls, world):
