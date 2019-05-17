@@ -37,6 +37,13 @@ class Code(models.Model):
         def score_show(self):
             return round(self.score, 2)
 
+        @property
+        def winning_rate(self):
+            nrecords = self.num_wins + self.num_loses + self.num_draws
+            if nrecords == 0:
+                return 0
+            return (self.num_wins + self.num_draws / 2) / nrecords
+
     def __str__(self):
         return '%s (%s)' % (self.name, self.author.username)
 

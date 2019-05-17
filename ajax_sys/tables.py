@@ -19,27 +19,37 @@ template_base = '''{{{{max_page}}}}|
 
 class TablePageBase:
     root_link = NotImplemented
-    sub_link = NotImplemented
-    prefab_setter = []
-    row_items = {}
+    template_prefabs = {}
     max_page_size = 10
-
-    @classmethod
-    def set_templates(cls):
-        cls.template_prefabs = {}  # 模板缓存
-
-        # 提前组装模板
-        for name, fields in cls.prefab_setter:
-            content = ''.join(
-                cls.row_items.get(key, '') for key in fields.split())
-            template_str = template_base.format(
-                root=cls.root_link, sub=cls.sub_link, content=content)
-            cls.template_prefabs[name] = Template(template_str)
 
     @classmethod
     def grab_content(cls, request, prefab):
         '''从ORM获取列表与额外参数'''
         return [], {}
+
+    @classmethod
+    def send_error(cls, err):
+        """ 输出报错json """
+        return JsonResponse({'size': 0, 'status': 1, 'content': err})
+
+    @classmethod
+    def grab_cell(cls, cell_type, item, params):
+        pass
+
+    @classmethod
+    def grab_row_link(cls, prefab, item, params):
+        return '#'
+
+    @classmethod
+    def grab_rows(cls, prefab, item_list, params):
+        res = []
+        template = cls.template_prefabs[prefab]
+        for item in item_list:
+            row = [cls.grab_row_link(prefab, item, params)]
+            for cell_type in template:
+                row.append(cls.grab_cell(cell_type, item, params))
+            res.append(row)
+        return res
 
     def __new__(cls, request):
         '''页面访问接口'''
@@ -47,14 +57,14 @@ class TablePageBase:
         # 获取模板
         prefab = request.GET.get('pre')
         if not prefab in cls.template_prefabs:
-            return HttpResponse('0|参数错误')
+            return cls.send_error('参数错误')
         template = cls.template_prefabs[prefab]
 
         # 获取内容列表
         try:
             item_list, params = cls.grab_content(request, prefab)
         except Exception as e:
-            return HttpResponse('0|内容读取错误(%s: %s)' % (type(e).__name__, e))
+            return cls.send_error('内容读取错误(%s: %s)' % (type(e).__name__, e))
 
         # 翻页功能
         page_size = cls.max_page_size  # 先不考虑可变页长
@@ -67,40 +77,59 @@ class TablePageBase:
         item_list = item_list[page * page_size:(page + 1) * page_size]
 
         # 渲染内容
-        content = template.render(Context(locals()))
-        return HttpResponse(content)
+        content = {
+            'size': max_page,
+            'status': 0,
+            'headers': template,
+            'root': cls.root_link,
+        }
+        content['rows'] = cls.grab_rows(prefab, item_list, params)
+        return JsonResponse(content)
 
 
 class MatchTablePage(TablePageBase):
     root_link = '/match/'
-    sub_link = 'item.name'
-    prefab_setter = (
-        ('send', 'code2 time rounds status'),
-        ('recv', 'code1 time rounds status'),
-        ('near', 'time type code1 code2 rounds status'),
-    )
-    row_items = {
-        'code1':
-        '''<td>
-{% if params.code == item.code1%} {{item.code1.name}}
-{% else %} <a href="/code/{{item.code1.id}}/">{{item.code1.name}}</a>
-{% endif %}
-</td>''',
-        'code2':
-        '''<td>
-{% if params.code == item.code2%} {{item.code2.name}}
-{% else %} <a href="/code/{{item.code2.id}}/">{{item.code2.name}}</a>
-{% endif %}
-</td>''',
-        'time':
-        '''<td>{{item.run_datetime|date:"Y/m/d H:i:s"}}</td>''',
-        'rounds':
-        '''<td>{{item.finished_rounds}}/{{item.rounds}}</td>''',
-        'status':
-        '''<td>{{item.get_status_display}}</td>''',
-        'type':
-        '''<td>{{item.get_ai_type_display}}</td>'''
+    template_prefabs = {
+        'send': 'code2 time rounds status'.split(),
+        'recv': 'code1 time rounds status'.split(),
+        'near': 'time type code1 code2 rounds status'.split(),
     }
+
+    @classmethod
+    def grab_cell(cls, cell_type, item, params):
+        if cell_type[:4] == 'code':  # name, id or null
+            code = getattr(item, cell_type)
+            res = [code.name]
+            if params.get('code') == code:
+                res.append(None)
+            else:
+                res.append(code.id)
+                # gravatar
+                res.append(code.author.gravatar_icon(settings.TABLE_ICON_SIZE))
+            return res
+        if cell_type == 'code1':
+            return [
+                item.code1.name, None
+                if params.get('code') == item.code1 else item.code1.id
+            ]
+        elif cell_type == 'code2':
+            return [
+                item.code2.name, None
+                if params.get('code') == item.code2 else item.code2.id
+            ]
+        elif cell_type == 'time':
+            return item.run_datetime.strftime("%Y/%m/%d %H:%M:%S")
+        elif cell_type == 'rounds':
+            return '%s/%s' % (item.finished_rounds, item.rounds)
+        elif cell_type == 'status':
+            return item.get_status_display()
+        elif cell_type == 'type':
+            return [item.get_ai_type_display(), item.ai_type]
+        return cell_type
+
+    @classmethod
+    def grab_row_link(cls, prefab, item, params):
+        return item.name
 
     @classmethod
     def grab_content(cls, request, prefab):
@@ -120,27 +149,35 @@ class MatchTablePage(TablePageBase):
 
 class CodeTablePage(TablePageBase):
     root_link = '/code/'
-    sub_link = 'item.id'
-    prefab_setter = (
-        ('ladder', 'name author records score tools'),
-        ('home', 'name author records score'),
-    )
-    row_items = {
-        'name':
-        '<td>{{item.name}}</td>',
-        'author':
-        '<td><a href="/user/{{item.author.id}}">{{item.author.name}}</a></td>',
-        'records':
-        '''<td>
-{{item.num_matches}}赛{{item.num_records}}战- {{item.num_wins}}胜{{item.num_loses}}负{{item.num_draws}}平
-</td>''',
-        'score':
-        '<td>{{item.score_show}}</td>',
-        'tools':
-        '''<td>
-<a class='btn-sm btn-info' href='/lobby/run_match/{{item.ai_type}}/?code2={{item.id}}'>发起对战</a>
-</td>''',
+    template_prefabs = {
+        'ladder': 'name author records score tools'.split(),
+        'home': 'name type records score'.split(),
     }
+
+    @classmethod
+    def grab_cell(cls, cell_type, item, params):
+        if cell_type == 'name':
+            return item.name
+        elif cell_type == 'type':
+            return [item.get_ai_type_display(), item.ai_type]
+        elif cell_type == 'author':
+            au = item.author
+            return [au.name, au.id, au.gravatar_icon(settings.TABLE_ICON_SIZE)]
+        elif cell_type == 'records':
+            return '%s赛%s战; 胜率%.1f%%' % (item.num_matches, item.num_records,
+                                         item.winning_rate * 100)
+        elif cell_type == 'score':
+            return item.score_show
+        elif cell_type == 'tools':
+            res = []
+            res.append(('自由挑战', '/lobby/run_match/%s/?code2=%s' %
+                        (item.ai_type, item.id)))
+            return res
+        return cell_type
+
+    @classmethod
+    def grab_row_link(cls, prefab, item, params):
+        return item.id
 
     @classmethod
     def grab_content(cls, request, prefab):
@@ -151,7 +188,3 @@ class CodeTablePage(TablePageBase):
         else:
             code_list = Code.objects.all()
         return code_list, {}
-
-
-MatchTablePage.set_templates()
-CodeTablePage.set_templates()

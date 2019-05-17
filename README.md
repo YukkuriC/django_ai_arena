@@ -38,6 +38,7 @@
     1. 前端查看比赛记录
 1. [OSMO](https://github.com/chbpku/osmo.sessdsa)
     1. 上传代码、比赛
+    1. 前端查看比赛记录
 
 ## 待实现功能：
 

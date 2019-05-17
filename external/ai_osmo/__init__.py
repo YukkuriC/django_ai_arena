@@ -141,7 +141,7 @@ if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
                 if all(dead):
                     dead='双方同时'
                 else:
-                    dead=match.code1.name+'(先手)' if dead[0] else match.code2.name+'(后手)'
+                    dead='先手玩家' if dead[0] else '后手玩家'
                 return dead+'被吞噬'
             elif record['cause'] == "RUNTIME_ERROR":
                 return record['cause']

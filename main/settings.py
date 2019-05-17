@@ -208,3 +208,6 @@ DEFAULT_MAX_RUNNING_SEC = 2  # 获取计时函数缺省时每局最大运行{}�
 MONITOR_CYCLE = 0.5  # 每隔（秒）监测一次比赛进程状态
 # MONITOR_MAX_IDLE_SEC = 5  # 监控进程最大闲置秒数
 MONITOR_SOCKET_PORT = 37037  # 数据传输socket端口
+
+# 显示参数
+TABLE_ICON_SIZE = 24  # 显示在表格内的用户头像大小
