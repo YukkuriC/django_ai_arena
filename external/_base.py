@@ -359,7 +359,7 @@ class BasePairMatch(BaseProcess, BaseCodeLoader, BaseRecordLoader):
         默认为ELO算法
         '''
         if not self.match.is_ranked:
-            return 0
+            return 0, 0
         real_score = results[0] + 0.5 * results[None]
         e_score = sum(results.values()) / (1 + 10**
                                            ((code2.score - code1.score) / 400))
