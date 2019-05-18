@@ -149,6 +149,9 @@ if 'forms':
         if code2_empty:
             target_codes = codes.all()  # 所有代码
 
+        # 获取自由模式得分参数，转换为百分比
+        score_ratio = settings.SCORE_FACTOR_NORANK * 100
+
         # 读取筛选条件
         my_code = request.GET.get('code1', '')
         target_code = request.GET.get('code2', '')
