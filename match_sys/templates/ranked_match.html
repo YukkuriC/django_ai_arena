@@ -46,17 +46,6 @@
 <script>
     window.addEventListener('load', () => {
         document.getElementById('id_code1').value = "{{my_code}}"
-        document.getElementById('id_code2').value = "{{target_code}}"
-        var tmp = document.getElementById('id_code2').children
-        var rand_picker = []
-        for (var i = 1; i < tmp.length; i++) {
-            rand_picker.push(tmp[i].value)
-        }
-        document.getElementById('random_roll').addEventListener('click', e => {
-            e.preventDefault()
-            var randid = randrange(rand_picker.length)
-            document.getElementById('id_code2').value = rand_picker[randid]
-        })
     })
 </script>
 {% endblock %}

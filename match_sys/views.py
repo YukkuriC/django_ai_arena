@@ -77,7 +77,7 @@ if 'multi-view':
         users = all_codes.values('author').annotate(
             score=Max('score'), count=Count('id')).values(
                 'author_id', 'author__username', 'author__nickname', 'score',
-                'count').order_by('-score')
+                'count').order_by('-score')[:settings.MAX_LADDER_USER]
 
         return render(request, 'ladder.html', locals())
 

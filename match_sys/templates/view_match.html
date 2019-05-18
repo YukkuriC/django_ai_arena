@@ -146,7 +146,7 @@
                 {% if match.run_datetime > match.code1.edit_datetime %}
                 为最新版本
                 {%else%}
-                <a href="/code/match.code1.id">已更新</a>
+                <a href="/code/{{match.code1.id}}">已更新</a>
                 {%endif%}
             </div>
             <div>
@@ -154,7 +154,7 @@
                 {% if match.run_datetime > match.code2.edit_datetime %}
                 为最新版本
                 {%else%}
-                <a href="/code/match.code2.id">已更新</a>
+                <a href="/code/{{match.code2.id}}">已更新</a>
                 {%endif%}
             </div>
         </div>

@@ -46,7 +46,7 @@
     <h1>代码名称:
         <span id='code_name_region'>
             <span id='code_name'>{{code.name}}</span>
-            (<span id='code_public'></span>)
+            (<span id='code_public'>{% if code.public %}公开{% endif %}</span>)
         </span>
         {%if my_code%}
         <div id='code_name_edit' style="display:none" title="注: 新名称保存后需点“更新代码”应用">
@@ -93,9 +93,7 @@
     </div>
 </div>
 <!-- 原始代码 -->
-<textarea id="code">
-{{code_content}}
-</textarea>
+<textarea id="code">{{code_content}}</textarea>
 {% csrf_token %}
 {% endblock %}
 
