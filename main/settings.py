@@ -205,6 +205,9 @@ DEFAULT_MAX_RUNNING_SEC = 2  # 获取计时函数缺省时每局最大运行{}�
 
 # 天梯匹配参数
 SCORE_FACTOR_PAIRMATCH = 16  # 天梯积分变化参数
+SCORE_FACTOR_NORANK = 0.05# 自由对战模式天梯分变动参数
+SCORE_NORM = 3000 # 归中分
+SCORE_NORM_FACTOR = 0.001 # 归中系数
 RANKING_RANDOM_RANGE = 10  # 随机前X个得分相近的代码参与匹配
 
 # 比赛监控进程设置

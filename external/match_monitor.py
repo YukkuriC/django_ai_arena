@@ -100,6 +100,8 @@ def monitor(sock):
                 new_match.name = match_name
                 new_match.code1 = models.Code.objects.get(id=code1)
                 new_match.code2 = models.Code.objects.get(id=code2)
+                new_match.old_score1 = new_match.code1.score
+                new_match.old_score2 = new_match.code2.score
                 new_match.rounds = params['rounds']
                 new_match.is_ranked = ranked
                 new_match.params = json.dumps(params)

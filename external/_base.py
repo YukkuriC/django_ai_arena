@@ -358,13 +358,23 @@ class BasePairMatch(BaseProcess, BaseCodeLoader, BaseRecordLoader):
         计算双方代码天梯分变动
         默认为ELO算法
         '''
-        if not self.match.is_ranked:
-            return 0, 0
         real_score = results[0] + 0.5 * results[None]
         e_score = sum(results.values()) / (1 + 10**
                                            ((code2.score - code1.score) / 400))
         score1 = (real_score - e_score) * settings.SCORE_FACTOR_PAIRMATCH
-        score2 = -score1  # TODO 归中算法
+        score2 = -score1
+
+        # 归中
+        score1 += (
+            settings.SCORE_NORM - code1.score) * settings.SCORE_NORM_FACTOR
+        score2 += (
+            settings.SCORE_NORM - code2.score) * settings.SCORE_NORM_FACTOR
+
+        # 自由模式得分
+        if not self.match.is_ranked:
+            score1 *= settings.SCORE_FACTOR_NORANK
+            score2 *= settings.SCORE_FACTOR_NORANK
+
         return score1, score2
 
     def summary(self, timeout):
@@ -377,8 +387,6 @@ class BasePairMatch(BaseProcess, BaseCodeLoader, BaseRecordLoader):
         # 计算等级分变化
         code1 = self.match.code1
         code2 = self.match.code2
-        self.match.old_score1 = code1.score
-        self.match.old_score2 = code2.score
         score1, score2 = self.calculate_dscore(code1, code2, result_stat)
 
         # 写入双方代码统计
@@ -395,12 +403,12 @@ class BasePairMatch(BaseProcess, BaseCodeLoader, BaseRecordLoader):
             code2.num_loses += result_stat[0]
             code2.num_draws += result_stat[None]
             code2.save()
+            self.match.delta_score = score1
+            self.match.delta_score_code2 = score2
 
         # 写入match信息
         self.match.finish_datetime = datetime.now()
         self.match.status = 2 + bool(timeout)
-        self.match.delta_score = score1
-        self.match.delta_score_code2 = score2
         self.match.save()
 
     @classmethod

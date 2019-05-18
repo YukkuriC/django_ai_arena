@@ -41,18 +41,19 @@
         <p>最后修改时间: {{code.edit_datetime|date:"Y/m/d H:i:s"}}</p>
         <p>对战：
             {%if my_code%}
-            <a href="/lobby/run_match/{{code.ai_type}}/?code1={{code.id}}">发起对战</a>
+            <a class='btn-sm btn-info' href="/lobby/ranked_match/{{code.ai_type}}/?code1={{code.id}}">参与匹配</a>
+            <a class='btn-sm btn-info' href="/lobby/run_match/{{code.ai_type}}/?code1={{code.id}}">自由对战</a>
             {%endif%}
-            <a href="/lobby/run_match/{{code.ai_type}}/?code2={{code.id}}">挑战该代码</a>
+            <a class='btn-sm btn-info' href="/lobby/run_match/{{code.ai_type}}/?code2={{code.id}}">挑战该代码</a>
         </p>
         {%if my_code or code.public%}
         <p>操作：
             {%if my_code%}
-            <a href="./edit">编辑代码</a>
-            <a href="./del">删除代码</a>
+            <a class='btn-sm btn-info' href="./edit">编辑代码</a>
+            <a class='btn-sm btn-info' href="./del">删除代码</a>
             {%else%}
-            <a href="./view">查看代码</a>
-            <a href="./fork">创建副本</a>
+            <a class='btn-sm btn-info' href="./view">查看代码</a>
+            <a class='btn-sm btn-info' href="./fork">创建副本</a>
             {%endif%}
         </p>
         {%endif%}

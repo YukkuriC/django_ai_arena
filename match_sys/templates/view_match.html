@@ -49,19 +49,19 @@
             {%endif%}
         </p>
         <p>
-            <a href="#" onclick='panel_status(0)'>查看记录</a>
-            <a href="#" onclick='panel_status(1)'>查看统计</a>
+            <a class='btn-sm btn-info' href="#" onclick='panel_status(0)'>查看统计</a>
+            <a class='btn-sm btn-info' href="#" onclick='panel_status(1)'>查看记录</a>
             {%if my_match%}
             {%if match.status == 1%}
-            <a href="./?op=stop">中止比赛运行</a>
+            <a class='btn-sm btn-warning' href="./?op=stop">中止比赛运行</a>
             {%else%}
-            <a href="./?op=del">删除记录</a>
+            <a class='btn-sm btn-danger' href="./?op=del">删除记录</a>
             {%endif%}
             {%endif%}
         </p>
     </div>
 </div>
-<div id='view_results'>
+<div id='view_results' style='transition: 0.5s all;height:0px;overflow:hidden'>
     <div class='row'>
         <div class='col-sm-12'>
             <div class="x_title">
@@ -106,7 +106,7 @@
         </div>
     </div>
 </div>
-<div id='view_plots' style='display:none'>
+<div id='view_plots' style='transition: 0.5s all;overflow:hidden'>
     <div class='row'>
         <div class='col-sm-12'>
             <div class="x_title">
@@ -116,26 +116,33 @@
     </div>
     <div class='row x_block'>
         <div class='col-sm-4'>
-            <h4>双方等级分</h4>
+            <h4>
+                等级分变动
+                {%if match.is_ranked%}
+                (匹配模式)
+                {%else%}
+                (自由模式)
+                {%endif%}
+            </h4>
             <div>
                 发起方 ({{match.code1.name}}):
                 {{match.old_score1 | floatformat:2}}
-                {%if match.is_ranked%}
+                {% if match.status > 1 %}
                 <span style='color:#ff3333'>{{match.delta_score | floatformat:2 | if_plus}}</span>
-                {%endif%}
+                {% endif %}
             </div>
             <div>
                 接收方 ({{match.code2.name}}):
                 {{match.old_score2 | floatformat:2}}
-                {%if match.is_ranked%}
+                {% if match.status > 1 %}
                 <span style='color:#ff3333'>{{match.delta_score_code2 | floatformat:2 | if_plus}}</span>
-                {%endif%}
+                {% endif %}
             </div>
         </div>
         <div class='col-sm-4'>
             <h4>参赛代码版本</h4>
             <div>
-                发起方 ({{match.code1.name}}): 
+                发起方 ({{match.code1.name}}):
                 {% if match.run_datetime > match.code1.edit_datetime %}
                 为最新版本
                 {%else%}
@@ -143,7 +150,7 @@
                 {%endif%}
             </div>
             <div>
-                接收方 ({{match.code2.name}}): 
+                接收方 ({{match.code2.name}}):
                 {% if match.run_datetime > match.code2.edit_datetime %}
                 为最新版本
                 {%else%}
@@ -163,24 +170,33 @@
 
 {% block script %}
 <script>
+    function show(dom) {
+        dom.style.height = dom.scrollHeight + 'px'
+        dom.style.visibility = 'visible'
+    }
+    function hide(dom) {
+        dom.style.height = '0px'
+        dom.style.visibility = 'hidden'
+    }
     function panel_status(i) {
         switch (i) {
             case 0:
-                document.getElementById('view_results').style.display = 'block'
-                document.getElementById('view_plots').style.display = 'none'
+                hide(document.getElementById('view_results'))
+                show(document.getElementById('view_plots'))
                 break
             case 1:
-                document.getElementById('view_results').style.display = 'none'
-                document.getElementById('view_plots').style.display = 'block'
+                show(document.getElementById('view_results'))
+                hide(document.getElementById('view_plots'))
                 break
         }
     }
+    panel_status(0)
     //{% if match.status == 1 %}
     window.addEventListener('load', () => {
         setTimeout(() => {
             window.location.href += ''
         }, 3000)
     })
-        //{% endif %}
+    //{% endif %}
 </script>
 {% endblock %}

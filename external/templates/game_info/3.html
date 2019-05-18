@@ -1,2 +1,25 @@
 {% extends 'game_info/base.html' %}
 {% load staticfiles %}
+
+{% block intro %}
+<h4>地空数算课2019期末作业：星际吞噬</h4>
+<ul>
+    <li>
+        本游戏的原型为
+        <a href='//www.osmos-game.com/' target='_blank'>Osmos</a>
+        ，一个由Hemisphere Games开发的独立游戏，曾在2009年
+        <a href='//zh.wikipedia.org/%E7%8B%AC%E7%AB%8B%E6%B8%B8%E6%88%8F%E8%8A%82' target='_blank'>独立游戏节</a>
+        获得3个奖项的提名。原作支持多个平台，欢迎通过官方渠道购买/下载。
+    </li>
+    <li>
+        Osmo是受到到Osmos启发，而制作的一个简化版游戏框架。这里有一个部署在Heroku上的JavaScript单机版本，可以
+        <a href="//osmoss.herokuapp.com/" target='_blank'>在线体验</a>
+        。
+    </li>
+    <li>
+        项目地址：
+        <a href="//github.com/chbpku/osmo.sessdsa" target='_blank'>osmo.sessdsa</a>
+        ；详细说明请见其文档。
+    </li>
+</ul>
+{% endblock %}
