@@ -18,8 +18,17 @@ def auto_admin(model_pool):
     '''一行注册admin'''
     for md_name in dir(model_pool):
         md = getattr(model_pool, md_name)
+
         if isinstance(md, models.base.ModelBase):
-            admin.site.register(md)
+            tmp = []
+            for name, field in md.__dict__.items():
+                if isinstance(field, models.query_utils.DeferredAttribute):
+                    tmp.append(name)
+
+            class AutoAdmin(admin.ModelAdmin):
+                list_display = tmp
+
+            admin.site.register(md, AutoAdmin)
 
 
 def set_autodelete(local_dict, model, field):
@@ -107,7 +116,7 @@ if 'user system':
         link = '%s://%s/activate/?code=%s' % (http, host, checker.check_hash)
         html_content = loader.render_to_string('email/activation.html',
                                                locals())
-        print(settings.EMAIL_HOST_USER,settings.EMAIL_HOST_PASSWORD)
+        print(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
         mail.send_mail(
             'AI对战平台激活邮件',
             html_content,
