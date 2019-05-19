@@ -24,13 +24,13 @@
     </select>
     <span id='panel_camera_free'>
         <span>X</span>
-        <input id="x" type="text" value="500" onchange="changeTarget()" />
+        <input id="x" type="number" value="500" onchange="changeTarget()" />
         <span>Y</span>
-        <input id="y" type="text" value="250" onchange="changeTarget()" />
+        <input id="y" type="number" value="250" onchange="changeTarget()" />
     </span>
     <span id='panel_camera_target' style='display:none'>
         <span>ID</span>
-        <input id="id" type="text" value="0" onchange="changeTarget()" />
+        <input id="id" type="number" value="0" min=0 step=1 onchange="changeTarget()" />
     </span>
 </div>
 <div class='x_block'>
@@ -153,7 +153,10 @@
             ctx.fillStyle = "green";
         }
         else if (camera.radius) {
-            if (R > camera.radius) ctx.fillStyle = "rgb(255,68,26)"; // red
+            if (ID <= 1) {
+                ctx.fillStyle = "rgb(68,255,26)"
+            }
+            else if (R > camera.radius) ctx.fillStyle = "rgb(255,68,26)"; // red
             else if (camera.radius - R <= 4) {
                 var delta = camera.radius - R;
                 if (delta <= 2) {
@@ -257,5 +260,40 @@
         scroller.value = CURR_FRAME
     })
     scroller.addEventListener('mousemove', update_scroll)
+</script>
+
+<!-- 自由模式拖动屏幕移动 -->
+<script>
+    CANVAS_DRAGGING = false
+    CANVAS_DRAGPOS = null
+    OLD_CAMERA = null
+    function update_drag_canvas(e) {
+        dx = (CANVAS_DRAGPOS[0] - e.x) / camera.scale
+        dy = (CANVAS_DRAGPOS[1] - e.y) / camera.scale
+        tmp = [
+            Math.round(OLD_CAMERA[0] * 1 + dx),
+            Math.round(OLD_CAMERA[1] * 1 + dy)
+        ]
+        document.getElementById('x').value = tmp[0]
+        document.getElementById('y').value = tmp[1]
+        camera.center = tmp
+
+        draw(record_obj['data'][CURR_FRAME])
+    }
+    canvas.addEventListener("mousedown", function (e) {
+        if (camera.target != null) return
+        CANVAS_DRAGGING = true
+        CANVAS_DRAGPOS = [e.x, e.y]
+        OLD_CAMERA = camera.center
+    });
+    canvas.addEventListener('mouseup', function (e) {
+        CANVAS_DRAGGING = false
+        if (camera.target == null)
+            update_drag_canvas(e)
+    })
+    canvas.addEventListener('mousemove', function (e) {
+        if ((!CANVAS_DRAGGING) || camera.target != null) return
+        update_drag_canvas(e)
+    })
 </script>
 {% endblock %}
