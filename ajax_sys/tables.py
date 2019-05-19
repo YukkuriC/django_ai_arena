@@ -49,8 +49,8 @@ class TablePageBase:
             for cell_type in template:
                 try:
                     cell = cls.grab_cell(cell_type, item, params)
-                except:
-                    cell = '*ERROR*'
+                except Exception as e:
+                    cell = '*ERROR* %s' % e
                 row.append(cell)
             res.append(row)
         return res

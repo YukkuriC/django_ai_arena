@@ -25,8 +25,8 @@ def register_record(name):
         if func:
             try:
                 return func(match, record)
-            except:
-                return '*ERROR*'
+            except Exception as e:
+                return '*ERROR* %s' % e
         return 'NotImplemented'
 
     register.filter(name=name)(_func)

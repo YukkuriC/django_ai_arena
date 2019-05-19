@@ -147,12 +147,16 @@ if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
                     dead = '先手玩家' if dead[0] else '后手玩家'
                 return dead + '被吞噬'
             elif record['cause'] == "RUNTIME_ERROR":
+                res = list(record['detail'])
+                for i in 0, 1:
+                    if res[i] == True:
+                        res[i] = '输出格式错误'
+                    elif isinstance(res[i], Exception):
+                        tmp = BasePairMatch.stringfy_error(res[i])
+                        res[i] = tmp
                 if record['winner'] != None:
-                    tmp = record['detail'][0] or record['detail'][1]
-                    if tmp == True:
-                        return '输出格式错误'
-                    return tmp
-                return record['detail']
+                    res = res[0] or res[1]
+                return res
             elif record['cause'] == "MAX_FRAME":
                 last_frame = record['data'][-1]
                 return "%s : %s" % (round(last_frame[0][4], 2),
