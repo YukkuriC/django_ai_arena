@@ -146,8 +146,14 @@ class MatchTablePage(TablePageBase):
             else:
                 match_list = code.pmatch2.all()
         elif prefab == 'near':
-            match_list = PairMatch.objects.all()[:100]
-
+            aitype = request.GET.get('aitype')
+            try:
+                aitype = int(aitype)
+                assert aitype in settings.AI_TYPES
+                match_list = PairMatch.objects.filter(ai_type=aitype)
+            except:
+                match_list = PairMatch.objects.all()
+            match_list = match_list[:settings.RECENT_MATCH_SHOWN]
         return match_list, params
 
 

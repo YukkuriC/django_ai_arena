@@ -113,22 +113,48 @@ class TableHolder {
             tbody.innerHTML = data.content
         }
     }
+    tbody_error(url, e, data, text = 'ERROR') {
+        console.log([url, e, data])
+        var tmp = document.createElement('div')
+        tmp.innerHTML = text
+        this.tbody.appendChild(tmp)
+
+        this.max_page = 0
+        this.update_panel()
+    }
+    update_panel() {
+        if (this.page <= 0) this.btn_prev.style.display = 'none'
+        else this.btn_prev.style.display = ''
+        if (this.page >= this.max_page - 1) this.btn_next.style.display = 'none'
+        else this.btn_next.style.display = ''
+        this.page_noticer.innerHTML = (this.page + 1) + '/' + this.max_page
+        this.panel.style.display = ''
+    }
     refresh(callback = null) {
         var url = this.base_url + '&page=' + this.page
         this.panel.style.display = 'none'
-        $.get(url, data => {
-            this.max_page = data.size || 0
-            this.parse_rows(this.tbody, data)
-            if (this.page <= 0) this.btn_prev.style.display = 'none'
-            else this.btn_prev.style.display = ''
-            if (this.page >= this.max_page - 1) this.btn_next.style.display = 'none'
-            else this.btn_next.style.display = ''
-            this.page_noticer.innerHTML = (this.page + 1) + '/' + this.max_page
-
-            this.panel.style.display = ''
-
-            if (callback != null) callback()
-        }, 'json')
+        var thisRef = this
+        $.ajax({
+            url: url,
+            data: {},
+            timeout:2000,
+            success: function (data) {
+                try {
+                    data = JSON.parse(data)
+                    thisRef.max_page = data.size || 0
+                    thisRef.parse_rows(thisRef.tbody, data)
+                    thisRef.update_panel()
+                } catch (e) {
+                    thisRef.tbody_error(url, e, data)
+                }
+                if (callback != null) callback()
+            },
+            error: function (x, e) {
+                thisRef.tbody_error(url, e, x, '链接异常<br>' + url)
+                if (callback != null) callback()
+            },
+            dataType: 'text'
+        })
     }
     next_page() {
         if (this.max_page <= 0) return

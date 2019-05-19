@@ -29,4 +29,35 @@
             <a href="/lobby/ladder/{{AI_type}}/" class='btn btn-primary form-control'>查看天梯</a>
         </div>
 </div>
+<div class="x_title">
+    <div style='float:right' id='pool_panel'>
+    </div>
+    <div>
+        <h1>最近发起的比赛</h1>
+    </div>
+</div>
+<div class='row'>
+    <table class='table' id='pool'>
+        <thead>
+            <tr>
+                <th>发起时间</th>
+                <th>游戏名称</th>
+                <th>发起方</th>
+                <th>接收方</th>
+                <th>对局数</th>
+                <th>比赛状态</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+    window.addEventListener('load', () => {
+        window.table = new TableHolder('pool', '/table/match/?pre=near&aitype={{AI_type}}')
+    })
+</script>
 {% endblock %}

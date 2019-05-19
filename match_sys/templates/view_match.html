@@ -194,7 +194,7 @@
     //{% if match.status == 1 %}
     window.addEventListener('load', () => {
         setTimeout(() => {
-            window.location.href += ''
+            window.location.href = window.location.href.split('#')[0]
         }, 3000)
     })
     //{% endif %}

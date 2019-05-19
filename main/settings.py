@@ -218,3 +218,4 @@ MONITOR_SOCKET_PORT = 37037  # 数据传输socket端口
 # 显示参数
 TABLE_ICON_SIZE = 24  # 显示在表格内的用户头像大小
 MAX_LADDER_USER = 10  # 天梯显示最大用户数
+RECENT_MATCH_SHOWN = 100  # 最大显示历史比赛数
