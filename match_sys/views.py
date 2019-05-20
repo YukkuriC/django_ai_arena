@@ -325,7 +325,7 @@ if 'view code':
 
             # 尝试读取代码
             try:
-                loader.load_code(new_code, True)
+                loader.load_code(new_code, True, True)
                 validated = True
                 res['code_status'] = 0
                 messages.info(request, '更新代码"%s"成功' % code.name)

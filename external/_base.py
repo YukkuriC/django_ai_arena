@@ -148,12 +148,13 @@ class BaseCodeLoader:
         return code_tree
 
     @classmethod
-    def load_code(cls, code_raw, raw=False):
+    def load_code(cls, code_raw, raw=False, to_ast=False):
         '''
         加载代码文件，返回其模块
         params:
             code_raw: 代码文件路径或代码整体字符串
             raw: 是否为直接的代码字串
+            to_ast: 仅输出至AST为止
         '''
         # 直接读取字符串
         if raw:
@@ -170,6 +171,10 @@ class BaseCodeLoader:
 
         # 检查代码合法性
         code_tree = cls.verify_code(code_raw)
+
+        # 输出AST，不继续执行
+        if to_ast:
+            return code_tree
 
         # 加载模块并输出
         try:
