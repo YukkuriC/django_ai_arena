@@ -32,10 +32,16 @@
     c2 = "{{ resend_delta }}"
     setInterval(() => {
         c1--
+        // {%if expire_delta%}
+        c1--
+        document.getElementById('timer1').innerHTML = c1
+        // {%endif%}
+        // {%if resend_delta%}
         c2--
-        try { document.getElementById('timer1').innerHTML = c1 } catch (e) { }
-        try { document.getElementById('timer2').innerHTML = c2 } catch (e) { }
-        if (c1 == 0 || c2 == 0) window.location.href += ''
+        document.getElementById('timer2').innerHTML = c2
+        // {%endif%}
+        if (c1 == 0 || c2 == 0)
+            window.location.href = window.location.href.split('#')[0]
     }, 1000)
 </script>
 {% endblock %}

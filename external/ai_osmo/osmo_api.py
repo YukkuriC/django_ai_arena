@@ -4,7 +4,7 @@ osmo_path = os.path.join(os.path.dirname(__file__), 'src')
 sys.path.append(osmo_path)
 
 import world, consts
-import pickle, zlib
+import pickle, zlib, random, time
 
 world.print = lambda *a, **kw: None
 
@@ -50,6 +50,7 @@ def one_race(modules, storages, plr_names):
     if any(isinstance(e, Exception) for e in plrs):  # 初始化报错
         return FakeWorld(plrs, plr_names)
 
+    random.seed(int(time.time()))
     wld = world.World(*plrs, plr_names)
     while not wld.result:
         wld.update(consts.Consts["FRAME_DELTA"])

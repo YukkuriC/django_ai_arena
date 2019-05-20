@@ -288,8 +288,10 @@ class BasePairMatch(BaseProcess, BaseCodeLoader, BaseRecordLoader):
                     return [who_first] * rounds
                 elif who_first == 2:  # 2各半
                     return [i < (rounds + 1) // 2 for i in range(rounds)]
-                else:  # 3随机
+                elif who_first == 3:  # 3随机
                     return [random.randrange(2) for i in range(rounds)]
+                else:  # 交替先后手
+                    return [i % 2 for i in range(rounds)]
 
     @classmethod
     def process_run(cls, codes, match_dir, params, output):
