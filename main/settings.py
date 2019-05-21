@@ -10,7 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
-import os
+import os, multiprocessing
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -195,7 +195,7 @@ MATCH_TYPES = {  # 生成比赛类型
     # 4:'Override',
 }
 MATCH_CODE_LENGTH = 10  # 比赛记录文件随机编码长度
-MATCH_POOL_SIZE = 5  # 最大同时启动比赛数
+MATCH_POOL_SIZE = multiprocessing.cpu_count()  # 最大同时启动比赛数
 PAIRMATCH_STATUS = {  # 比赛状态码
     0: '未启动',
     1: '执行中',
