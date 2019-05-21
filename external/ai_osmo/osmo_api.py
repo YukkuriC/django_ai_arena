@@ -31,7 +31,10 @@ def _repr_e(e):
     """ 将异常转化为带行号报错信息 """
     res = '%s: %s' % (type(e).__name__, e)
     if e.__traceback__:
-        res = 'Line %s %s' % (e.__traceback__.tb_lineno, res)
+        tb = e.__traceback__
+        while tb.tb_next:
+            tb = tb.tb_next
+        res = 'Line %s %s' % (tb.tb_lineno, res)
     return res
 
 

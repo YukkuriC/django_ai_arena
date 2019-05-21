@@ -117,9 +117,9 @@ if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
             return len(record['data'])
 
         def r_winner(_, match, record):
-            holder_win = not record['winner']
-            if holder_win == None:
+            if record['winner'] == None:
                 return '平手'
+            holder_win = not record['winner']
 
             code2_hold = (record['players'][0] == 'code2')
             code2_win = (code2_hold == holder_win)
