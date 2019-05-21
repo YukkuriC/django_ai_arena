@@ -244,7 +244,7 @@ if 'view code':
 
         # 检测权限
         user = get_user(request)
-        my_code = code.author == user
+        my_code = (code.author == user) or user.is_admin
 
         # 代码主页
         if code_op == None:
@@ -275,7 +275,7 @@ if 'view code':
         '''
 
         # 检测权限及重定向
-        my_code = code.author == user
+        my_code = (code.author == user) or user.is_admin
 
         if is_edit:
             if not my_code:  # 非本人进入编辑模式
@@ -414,7 +414,7 @@ if 'view':
 
         # 检测权限
         user = get_user(request)
-        my_match = match.code1.author == user
+        my_match = (match.code1.author == user) or user.is_admin
 
         # 处理操作请求
         if my_match:

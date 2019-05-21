@@ -94,6 +94,8 @@ if 'user system':
     def set_user(request, user):
         request.session['userid'] = user.id
         request.session['username'] = user.name
+        if user.is_admin:
+            request.session['username'] += ' (管理员)'
 
     def send_valid_email(user, request, type='valid'):
         if type == 'forgotpw':  # 忘记密码
