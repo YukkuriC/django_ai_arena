@@ -27,6 +27,14 @@ class FakeWorld:
         }
 
 
+def _repr_e(e):
+    """ 将异常转化为带行号报错信息 """
+    res = '%s: %s' % (type(e).__name__, e)
+    if e.__traceback__:
+        res = 'Line %s %s' % (e.__traceback__.tb_lineno, res)
+    return res
+
+
 def apply_params(params):
     """ 覆盖默认参数 """
     if not hasattr(consts, 'def_consts'):
@@ -67,6 +75,10 @@ def save_log(wld, path):
     tmp['data'] = [[[
         cell.pos[0], cell.pos[1], cell.veloc[0], cell.veloc[1], cell.radius
     ] for cell in frame if not cell.dead] for frame in tmp['data']]
+
+    # 将异常转换为带行号的信息
+    tmp["detail"] = [(_repr_e(e) if isinstance(e, Exception) else e)
+                     for e in tmp["detail"]]
 
     with open(path, 'wb') as f:
         f.write(zlib.compress(pickle.dumps(tmp), -1))
