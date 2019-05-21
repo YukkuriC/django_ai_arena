@@ -120,13 +120,14 @@ if 'user system':
         expire_time = checker.send_time + timezone.timedelta(
             days=settings.EMAIL_VALID_LAST_DAYS)
 
+        http = 'https' if request.is_secure() else 'http'
         host = request.META['HTTP_HOST']
         if type == 'forgotpw':
-            link = '//%s/forgotpasswd/%s' % (host, checker.check_hash)
+            link = '%s://%s/forgotpasswd/%s' % (http, host, checker.check_hash)
             title = '代码竞技场重设密码'
             template_name = 'email/resetpasswd.html'
         else:
-            link = '//%s/validate/%s' % (host, checker.check_hash)
+            link = '%s://%s/validate/%s' % (http, host, checker.check_hash)
             title = '代码竞技场激活邮件'
             template_name = 'email/activation.html'
 
