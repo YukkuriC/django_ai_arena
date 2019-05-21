@@ -51,7 +51,7 @@ def one_race(modules, storages, plr_names):
         return FakeWorld(plrs, plr_names)
 
     random.seed(int(time.time()))
-    wld = world.World(*plrs, plr_names)
+    wld = world.World(*plrs, plr_names, storages)
     while not wld.result:
         wld.update(consts.Consts["FRAME_DELTA"])
     return wld
