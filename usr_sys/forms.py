@@ -93,11 +93,12 @@ class SettingsForm(forms.Form):
         label="昵称 (不超过20字符)",
         required=False,
         max_length=20,
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            "oninput": "value=value.substr(0,20)",
-            'title': '向其他人显示的名称'
-        }))
+        widget=forms.TextInput(
+            attrs={
+                'class': 'form-control',
+                "oninput": "value=value.substr(0,20)",
+                'title': '向其他人显示的名称'
+            }))
     real_name = forms.CharField(
         label="真实姓名",
         required=True,
@@ -106,3 +107,52 @@ class SettingsForm(forms.Form):
             'class': 'form-control',
             "oninput": "value=value.substr(0,32)",
         }))
+
+
+class ForgotPasswdForm(forms.Form):
+    username = forms.CharField(
+        label="用户名",
+        required=True,
+        max_length=20,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            "oninput": "value=value.substr(0,20)"
+        }))
+
+    stu_code = forms.CharField(
+        label="学号 (10位数字)",
+        min_length=10,
+        max_length=10,
+        widget=forms.TextInput(
+            attrs={
+                'class': 'form-control',
+                "oninput": "value=value.replace(/[^\d]/g,'').substr(0,10)"
+            }))
+
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        try:
+            user = User.objects.get(username=username)
+        except:
+            raise forms.ValidationError('用户不存在')
+        return username
+
+    def clean_stu_code(self):
+        code = self.cleaned_data.get('stu_code')
+        try:
+            user = User.objects.get(stu_code=code)
+        except:
+            raise forms.ValidationError('用户不存在')
+        return code
+
+
+class ResetPasswdForm(forms.Form):
+    new_passwd = forms.CharField(
+        label="新密码 (最少6位)",
+        min_length=6,
+        max_length=128,
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+    new_pw2 = forms.CharField(
+        label="确认新密码",
+        max_length=128,
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}))

@@ -2,7 +2,7 @@ import os
 
 from django.db import models
 from django.dispatch import receiver
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.shortcuts import redirect
 from django.http import JsonResponse, HttpRequest
 from django.utils import timezone
@@ -95,15 +95,23 @@ if 'user system':
         request.session['userid'] = user.id
         request.session['username'] = user.name
 
-    def send_valid_email(user, request):
+    def send_valid_email(user, request, type='valid'):
+        if type == 'forgotpw':  # 忘记密码
+            mail_class = usr_models.UserResetPwMail
+            mail_name = 'userresetpwmail'
+        else:  # 新用户激活
+            mail_class = usr_models.UserMailCheck
+            mail_name = 'usermailcheck'
+
         # create email checker
-        if hasattr(user, 'usermailcheck'):
-            checker = user.usermailcheck
+        if hasattr(user, mail_name):
+            checker = getattr(user, mail_name)
             if timezone.now() < checker.send_time + timezone.timedelta(
                     minutes=settings.EMAIL_VALID_RESEND_MINUTES):
-                return
+                messages.warning(request, '邮件发送过于频繁')
+                return False
         else:
-            checker = usr_models.UserMailCheck()
+            checker = mail_class()
             checker.user = user
         checker.send_time = timezone.now()
         checker.activate()
@@ -111,17 +119,26 @@ if 'user system':
         # send email
         expire_time = checker.send_time + timezone.timedelta(
             days=settings.EMAIL_VALID_LAST_DAYS)
-        http = 'https' if request.is_secure() else 'http'
+
         host = request.META['HTTP_HOST']
-        link = '%s://%s/activate/?code=%s' % (http, host, checker.check_hash)
-        html_content = loader.render_to_string('email/activation.html',
-                                               locals())
-        print(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
+        if type == 'forgotpw':
+            link = '//%s/forgotpasswd/%s' % (host, checker.check_hash)
+            title = '代码竞技场重设密码'
+            template_name = 'email/resetpasswd.html'
+        else:
+            link = '//%s/validate/%s' % (host, checker.check_hash)
+            title = '代码竞技场激活邮件'
+            template_name = 'email/activation.html'
+
+        html_content = loader.render_to_string(template_name, locals())
         mail.send_mail(
-            'AI对战平台激活邮件',
+            title,
             html_content,
             settings.EMAIL_HOST_USER, [user.stu_code + '@pku.edu.cn'],
             html_message=html_content)
+
+        messages.info(request, '邮件发送成功')
+        return True
 
 
 if 'pages':

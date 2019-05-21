@@ -5,7 +5,12 @@
 {% block submit_button %}登录{% endblock %}
 
 {% block footer %}
-<div>
-    没有账号？<a style='color:dodgerblue' href='/register/'>注册</a>
+<div class='row'>
+    <div class='col-sm-6'>
+        <a href="/forgotpasswd/">忘记密码？</a>
+    </div>
+    <div class='col-sm-6 text-right'>
+        没有账号？<a href='/register/'>注册</a>
+    </div>
 </div>
 {% endblock %}

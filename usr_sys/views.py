@@ -6,7 +6,7 @@ from django.conf import settings
 from django.contrib import messages
 from . import forms
 from main.helpers import login_required, get_user, set_user, send_valid_email, sorry
-from .models import User, UserMailCheck
+from .models import User, UserMailCheck, UserResetPwMail
 
 
 def index(request):
@@ -110,12 +110,12 @@ def validate(request):
     return render(request, 'validate.html', locals())
 
 
-def activate(request):
+def activate(request, code):
     '''
     激活电子邮件指向
     '''
     try:
-        checker = UserMailCheck.objects.get(check_hash=request.GET.get('code'))
+        checker = UserMailCheck.objects.get(check_hash=code)
         if timezone.now() > checker.send_time + timezone.timedelta(
                 settings.EMAIL_VALID_LAST_DAYS):
             raise ValueError
@@ -209,3 +209,54 @@ def view_user(request, userid):
         return redirect('/home/')
 
     return home(request, user)
+
+
+@login_required(0)
+def forgotpasswd(request, code=None):
+    if code == None:  # 验证页面
+        form = forms.ForgotPasswdForm()
+
+        # 判断发送邮件逻辑
+        if request.method == 'POST':
+            form = forms.ForgotPasswdForm(request.POST)
+
+            # 检查用户名与学号匹配情况
+            if form.is_valid():
+                name = request.POST.get('username')
+                code = request.POST.get('stu_code')
+                try:
+                    user = User.objects.get(username=name, stu_code=code)
+                except:
+                    form.add_error('username', '用户名与学号不匹配')
+                    form.add_error('stu_code', '用户名与学号不匹配')
+
+            # 发送邮件
+            if form.is_valid():
+                send_valid_email(user, request, 'forgotpw')
+                return redirect('/login/')
+            else:
+                messages.warning(request, '请检查非法输入')
+        return render(request, 'forgotpasswd.html', locals())
+    else:
+        try:
+            checker = UserResetPwMail.objects.get(check_hash=code)
+            if timezone.now() > checker.send_time + timezone.timedelta(
+                    settings.EMAIL_VALID_LAST_DAYS):
+                raise ValueError
+
+            form = forms.ResetPasswdForm()
+            if request.method == 'POST':
+                form = forms.ResetPasswdForm(request.POST)
+                if request.POST.get('new_passwd') != request.POST.get(
+                        'new_pw2'):
+                    form.add_error('new_pw2', '两次密码输入不同')
+                if form.is_valid():
+                    checker.user.set_passwd(form.cleaned_data['new_pw2'])
+                    set_user(request, checker.user)
+                    messages.info(request, '密码已重设')
+                    checker.delete()
+                    return redirect('/home/')
+                messages.warning(request, '请检查非法输入')
+            return render(request, 'changepasswd.html', locals())
+        except:
+            return sorry(request, text='无效的链接')

@@ -56,3 +56,10 @@ class UserMailCheck(models.Model):
         hasher.update(hash_str.encode())
         self.check_hash = hasher.hexdigest()
         self.save()
+
+
+class UserResetPwMail(models.Model):
+    user = models.OneToOneField(User, models.CASCADE, verbose_name='用户')
+    send_time = models.DateTimeField('请求时间')
+    check_hash = models.CharField('校验hash', max_length=256)
+    activate = UserMailCheck.activate
