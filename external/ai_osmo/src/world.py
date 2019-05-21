@@ -241,7 +241,7 @@ class World():
         if self.timer[0] > 0:
             try:
                 ti = pf()
-                theta0 = self.player0.strategy([c.copy() for c in self.cells])
+                theta0 = self.player0.strategy([c.copy() for c in allcells])
                 tf = pf()
                 self.timer[0] -= tf - ti
             except Exception as e:
@@ -250,7 +250,7 @@ class World():
         if self.timer[1] > 0:
             try:
                 ti = pf()
-                theta1 = self.player1.strategy([c.copy() for c in self.cells])
+                theta1 = self.player1.strategy([c.copy() for c in allcells])
                 tf = pf()
                 self.timer[1] -= tf - ti
             except Exception as e:

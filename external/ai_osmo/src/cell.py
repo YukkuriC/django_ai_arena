@@ -144,4 +144,6 @@ class Cell():
             the copy
 
         """
-        return Cell(self.id, self.pos[:], self.veloc[:], self.radius)
+        res = Cell(self.id, self.pos[:], self.veloc[:], self.radius)
+        res.dead = self.dead
+        return res
