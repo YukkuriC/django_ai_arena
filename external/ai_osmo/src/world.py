@@ -33,18 +33,16 @@ from consts import Consts
 from cell import Cell
 
 class World():
-    def __init__(self, player0, player1, names=None, storages=[{}, {}]):
+    def __init__(self, player0, player1, names=None, recorders=None):
         # Variables and setup
         self.cells_count = 0
+        # Bind stat recorders
+        self.recorders = recorders
         # Init
         self.new_game()
         self.player0 = player0
         self.player1 = player1
         self.names = names
-        # Bind stat recorders
-        self.recorders = [WorldStat(Consts["MAX_FRAME"]) for i in 'xx']
-        for i in 0, 1:
-            storages[i]['world'] = self.recorders[i]
 
     # Methods
     def new_game(self):
@@ -280,6 +278,8 @@ class World():
         Returns:
     
         """
+        if not self.recorders:
+            return
         for i, rec in enumerate(self.recorders):
             rec.frame = self.frame_count  # current frame
             rec.cells_count = len(self.cells)
@@ -288,3 +288,4 @@ class World():
 class WorldStat:
     def __init__(self, frames):
         self.total_frames = frames
+        self.frame = 0

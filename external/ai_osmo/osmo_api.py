@@ -51,6 +51,11 @@ def apply_params(params):
 
 def one_race(modules, storages, plr_names):
     '''运行一局比赛并输出结果对象'''
+    # 创建World记录对象
+    recorders = [world.WorldStat(consts.Consts["MAX_FRAME"]) for i in 'xx']
+    for s, r in zip(storages, recorders):
+        s['world'] = r
+
     # 初始化双方玩家对象
     plrs = [None, None]
     for i in (0, 1):
@@ -62,7 +67,7 @@ def one_race(modules, storages, plr_names):
         return FakeWorld(plrs, plr_names)
 
     random.seed(int(time.time()))
-    wld = world.World(*plrs, plr_names, storages)
+    wld = world.World(*plrs, plr_names, recorders)
     while not wld.result:
         wld.update(consts.Consts["FRAME_DELTA"])
     return wld
