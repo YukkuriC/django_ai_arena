@@ -38,15 +38,18 @@
         {% if request.session.userid %}
         <li class="nav-item"><a class="nav-link" href="/home/">个人主页</a></li>
         <li class="nav-item"><a class="nav-link" href="/upload/">代码上传</a></li>
+        {% endif %}
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="/lobby/">对战大厅</a>
           <div class="dropdown-menu bg-dark">
             {% if request.session.curr_game >= 0 %}
             {% with gameid=request.session.curr_game %}
             <a class="dropdown-item text-nav bg-dark" href="/game/{{gameid}}/">比赛介绍</a>
+            {% if request.session.userid %}
             <a class="dropdown-item text-nav bg-dark" href="/lobby/ranked_match/{{gameid}}/">匹配积分赛</a>
             <a class="dropdown-item text-nav bg-dark" href="/lobby/run_match/{{gameid}}/">自由对战</a>
             <a class="dropdown-item text-nav bg-dark" href="/lobby/ladder/{{gameid}}/">查看天梯</a>
+            {% endif %}
             <a class="dropdown-item text-nav bg-dark" href="/lobby/#">返回首页</a>
             {% endwith %}
             {% else %}
@@ -54,7 +57,6 @@
             {% endif %}
           </div>
         </li>
-        {% endif %}
       </ul>
       {% if request.session.userid %}
       <ul class="navbar-nav ml-auto">

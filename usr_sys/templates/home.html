@@ -73,12 +73,14 @@
         </tr>
     </thead>
     <tbody>
-        {% with root_link="/code/" %}
         {% for code in user.code_set.all %}
-        {% with sublink=code.id %}
-        <tr {% include "sub/trow_link.html" %}{%endwith%}>
-            <td>{{code.name}}</td>
-            <td>{{code.get_ai_type_display}}</td>
+        <tr>
+            <td>
+                <a href="/code/{{code.id}}"> {{code.name | default:"(未命名)"}} </a>
+            </td>
+            <td>
+                <a href="/game/{{code.ai_type}}/">{{code.get_ai_type_display}}</a>
+            </td>
             <td>
                 {{code.num_matches}}赛{{code.num_records}}战- {{code.num_wins}}胜{{code.num_loses}}负{{code.num_draws}}平
             </td>
@@ -86,7 +88,7 @@
                 {{code.score_show}}
             </td>
         </tr>
-        {% endfor %}{% endwith %}
+        {% endfor %}
     </tbody>
 </table>
 {% endblock %}

@@ -2,7 +2,7 @@ from django.template import Template, Context
 from django.http import HttpResponse, JsonResponse
 from django.conf import settings
 from functools import lru_cache, partial
-from main.helpers import sorry
+from main.helpers import sorry, show_date
 from match_sys.models import PairMatch, Code
 
 # 设置页
@@ -45,14 +45,15 @@ class TablePageBase:
         res = []
         template = cls.template_prefabs[prefab]
         for item in item_list:
-            row = [cls.grab_row_link(prefab, item, params)]
+            row = []
             for cell_type in template:
                 try:
                     cell = cls.grab_cell(cell_type, item, params)
                 except Exception as e:
                     cell = '*ERROR* %s' % e
                 row.append(cell)
-            res.append(row)
+            row_data = [cls.grab_row_link(prefab, item, params), row]
+            res.append(row_data)
         return res
 
     def __new__(cls, request):
@@ -97,6 +98,7 @@ class MatchTablePage(TablePageBase):
         'send': 'code2 time rounds status'.split(),
         'recv': 'code1 time rounds status'.split(),
         'near': 'time type code1 code2 rounds status'.split(),
+        'near_type': 'time code1 code2 rounds status'.split(),
     }
 
     @classmethod
@@ -122,7 +124,7 @@ class MatchTablePage(TablePageBase):
                 if params.get('code') == item.code2 else item.code2.id
             ]
         elif cell_type == 'time':
-            return item.run_datetime.strftime("%Y/%m/%d %H:%M:%S")
+            return show_date(item.run_datetime)
         elif cell_type == 'rounds':
             return '%s/%s' % (item.finished_rounds, item.rounds)
         elif cell_type == 'status':
@@ -145,13 +147,13 @@ class MatchTablePage(TablePageBase):
                 match_list = code.pmatch1.all()
             else:
                 match_list = code.pmatch2.all()
-        elif prefab == 'near':
-            aitype = request.GET.get('aitype')
-            try:
+        elif prefab[:4] == 'near':
+            if prefab == 'near_type':  # 特定类型
+                aitype = request.GET.get('aitype')
                 aitype = int(aitype)
                 assert aitype in settings.AI_TYPES
                 match_list = PairMatch.objects.filter(ai_type=aitype)
-            except:
+            else:  # 总体
                 match_list = PairMatch.objects.all()
             match_list = match_list[:settings.RECENT_MATCH_SHOWN]
         return match_list, params
@@ -174,8 +176,8 @@ class CodeTablePage(TablePageBase):
             au = item.author
             return [au.name, au.id, au.gravatar_icon(settings.TABLE_ICON_SIZE)]
         elif cell_type == 'records':
-            return '%s赛%s战; 胜率%.1f%%' % (item.num_matches, item.num_records,
-                                         item.winning_rate * 100)
+            return '胜率%.1f%% (%s场比赛)' % (item.winning_rate * 100,
+                                         item.num_records)
         elif cell_type == 'score':
             return item.score_show
         elif cell_type == 'tools':

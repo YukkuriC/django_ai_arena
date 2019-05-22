@@ -185,10 +185,10 @@
 
         // 姓名是否更新
         document.getElementById('save_name').click()// 自动保存正编辑名称
-        current_name = code_name.textContent
-        if (current_name != default_name) {
+        code_name = document.getElementById('code_name')
+        if (code_name.textContent != default_name) {
             to_update = true
-            post_content.name = current_name
+            post_content.name = code_name.textContent
         }
 
         // 公开情况是否更新
@@ -207,13 +207,15 @@
 
         if (!to_update) return
         $.post('.', post_content, res => {
+            console.log(post_content)
             console.log(res)
             switch (res.code_status) {
                 case 0:
                     code_original = current_code
                     break
             }
-            code_name.textContent = res.name || code_name.textContent
+            default_name = code_name.textContent = name_edit_input.value = (res.name || code_name.textContent)
+            console.log([default_name, code_name.textContent])
             code_was_public = code_is_public
             update_messages()
         }, 'json')

@@ -11,18 +11,16 @@
     <thead>
         <tr>
             <th>游戏名称</th>
-            <th>信息</th>
             <th>参与者</th>
             <th>传送门</th>
         </tr>
     </thead>
     <tbody>
-        {% with root_link="/game/" %}
         {% for type,game in games.items%}
-        {% with sublink=type %}
-        <tr {% include "sub/trow_link.html" %}{%endwith%}>
-            <td>{{game.name}}</td>
-            <td>WIP</td>
+        <tr>
+            <td>
+                <a href="/game/{{type}}">{{game.name}}</a>
+            </td>
             <td>
                 {{game.size}}代码({{game.users}}用户)
                 <a class='btn-sm btn-info' href='/upload/?id={{type}}'>上传</a>
@@ -34,11 +32,11 @@
                 <!-- <a class='btn-sm btn-info' href='./invitation/{{type}}/'>创建邀请</a> -->
             </td>
         </tr>
-        {% endfor %}{% endwith %}
+        {% endfor %}
     </tbody>
 </table>
 
-
+{% if request.session.userid %}
 <div class="x_title">
     <div style='float:right' id='pool_panel'>
     </div>
@@ -49,6 +47,7 @@
 <table class='table' id='pool'>
     <thead>
         <tr>
+            <th>链接</th>
             <th>发起时间</th>
             <th>游戏名称</th>
             <th>发起方</th>
@@ -60,12 +59,16 @@
     <tbody>
     </tbody>
 </table>
+{% endif %}
+
 {% endblock %}
 
 {% block script %}
+{% if request.session.userid %}
 <script>
     window.addEventListener('load', () => {
         window.table = new TableHolder('pool', '/table/match/?pre=near')
     })
 </script>
+{% endif %}
 {% endblock %}

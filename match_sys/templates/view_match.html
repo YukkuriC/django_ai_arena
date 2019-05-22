@@ -131,13 +131,15 @@
                         <th>胜者</th>
                         <th>胜利原因</th>
                         <th>补充说明</th>
+                        <th>比赛过程</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {%with root_link="./"%}
                     {%for record in records%}
-                    <tr {% with sublink=forloop.counter0 %}{% include "sub/trow_link.html" %}{%endwith%}>
-                        <td>{{forloop.counter0}}</td>
+                    <tr>
+                        <td>
+                            #{{forloop.counter}}
+                        </td>
                         <td>
                             {{ match|r_holder:record }}
                         </td>
@@ -153,9 +155,11 @@
                         <td>
                             {{ match|r_desc_plus:record }}
                         </td>
+                        <td>
+                            <a href="./{{forloop.counter0}}">查看</a>
+                        </td>
                     </tr>
                     {%endfor%}
-                    {%endwith%}
                 </tbody>
             </table>
         </div>

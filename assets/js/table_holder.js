@@ -1,12 +1,13 @@
 // ajax可翻页表格
 class TableHolder {
-    constructor(id, url, callback = null) {
+    constructor(id, url, callback = null, add_link = true) {
         this.table = document.getElementById(id)
         this.tbody = this.table.getElementsByTagName('tbody')[0]
         this.panel = document.getElementById(id + '_panel')
         this.page = 0
         this.max_page = -1
         this.base_url = url
+        this.add_link = add_link
 
         // create DOM
         this.panel.style.display = 'none'
@@ -97,15 +98,32 @@ class TableHolder {
         trow.appendChild(cell)
     }
     parse_rows(tbody, data) {
+        var thisRef = this
         if (data.status == 0) {
             tbody.innerHTML = ''
             data.rows.forEach(row => {
                 var trow = document.createElement('tr')
-                trow.onmouseover = Function("this.style.background='rgba(15,155,255,0.2)'")
-                trow.onmouseout = Function("this.style.background=''")
-                trow.onclick = function () { location.href = data.root + row[0] }
-                for (var i = 1; i < row.length; i++) {
-                    this.parse_cell(trow, data.type, data.headers[i - 1], row[i])
+                // trow.onmouseover = Function("this.style.background='rgba(15,155,255,0.2)'")
+                // trow.onmouseout = Function("this.style.background=''")
+                // trow.onclick = function () { location.href = data.root + row[0] }
+                if (thisRef.add_link) {
+                    var link = document.createElement('a')
+                    link.innerHTML = '进入'
+                    link.href = data.root + row[0]
+                    var tmp = document.createElement('td')
+                    tmp.appendChild(link)
+                    trow.appendChild(tmp)
+                }
+                row[1].forEach(function (cell, ind) {
+                    thisRef.parse_cell(trow, data.type, data.headers[ind], cell)
+                })
+                if (!thisRef.add_link) {
+                    var first_td = trow.children[0]
+                    var link = document.createElement('a')
+                    link.innerHTML = first_td.innerHTML
+                    link.href = data.root + row[0]
+                    first_td.innerHTML = ''
+                    first_td.appendChild(link)
                 }
                 tbody.appendChild(trow)
             })
@@ -137,7 +155,7 @@ class TableHolder {
         $.ajax({
             url: url,
             data: {},
-            timeout:2000,
+            timeout: 2000,
             success: function (data) {
                 try {
                     data = JSON.parse(data)
@@ -150,6 +168,7 @@ class TableHolder {
                 if (callback != null) callback()
             },
             error: function (x, e) {
+                tbody.innerHTML = ''
                 thisRef.tbody_error(url, e, x, '链接异常<br>' + url)
                 if (callback != null) callback()
             },

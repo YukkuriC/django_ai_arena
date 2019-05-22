@@ -74,10 +74,13 @@ if 'multi-view':
         all_codes = Code.objects.filter(ai_type=AI_type)
 
         # 用户均分统计
-        users = all_codes.values('author').annotate(
+        user_info = all_codes.values('author').annotate(
             score=Max('score'), count=Count('id')).values(
-                'author_id', 'author__username', 'author__nickname', 'score',
+                'author', 'score',
                 'count').order_by('-score')[:settings.MAX_LADDER_USER]
+        for grp in user_info:
+            grp['user']=User.objects.get(id=grp['author'])
+        print(user_info)
 
         return render(request, 'ladder.html', locals())
 
@@ -301,8 +304,8 @@ if 'view code':
 
         # 更新名称
         new_name = request.POST.get('name')
-        if new_name:
-            new_name = new_name[:20]
+        if new_name != None:
+            new_name = new_name[:20].strip() or '未命名'
             to_update = True
             code.name = new_name
             res['name'] = new_name
@@ -328,7 +331,6 @@ if 'view code':
                 loader.load_code(new_code, True, True)
                 validated = True
                 res['code_status'] = 0
-                messages.info(request, '更新代码"%s"成功' % code.name)
             except Exception as e:
                 messages.warning(request, '代码有误: ' + str(e))
                 res['code_status'] = 1
@@ -347,6 +349,7 @@ if 'view code':
                     pass
 
         if to_update:
+            messages.info(request, '更新代码"%s"成功' % code.name)
             code.save()
         return JsonResponse(res)
 

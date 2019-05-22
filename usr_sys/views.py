@@ -137,8 +137,6 @@ def home(request, user_override=None):
     '''
     if user_override == None:
         user = get_user(request)
-        user.login_datetime = timezone.now()
-        user.save()
     else:
         user = user_override
 

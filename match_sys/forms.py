@@ -18,6 +18,11 @@ class CodeUploadForm(forms.ModelForm):
             raise forms.ValidationError(str(e))
         return file
 
+    def clean_name(self):
+        raw_name = self.cleaned_data.get('name', '未命名')
+        name = raw_name.strip()
+        return name or '未命名'
+
     class Meta:
         model = Code
         fields = ['name', 'ai_type', 'content', 'public']

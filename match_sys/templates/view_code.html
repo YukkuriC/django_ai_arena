@@ -10,17 +10,10 @@
 </div>
 <div class='col-sm-6 text-right'>
     <h1>
-        {% if my_code %}
-        <a href="/home">
-            个人主页
-            <img src="{{code.author | g_icon}}" style='display:inline-block'>
-        </a>
-        {% else %}
         <a href="/user/{{code.author.id}}/">
             作者: {{code.author.name}}
             <img src="{{code.author | g_icon}}" style='display:inline-block'>
         </a>
-        {% endif %}
     </h1>
 </div>
 {% endblock %}
@@ -72,6 +65,7 @@
         <table class='table' id='pool1'>
             <thead>
                 <tr>
+                    <th>链接</th>
                     <th>接收方代码</th>
                     <th>创建时间</th>
                     <th>对局数</th>
@@ -94,6 +88,7 @@
         <table class='table' id='pool2'>
             <thead>
                 <tr>
+                    <th>链接</th>
                     <th>发起方代码</th>
                     <th>创建时间</th>
                     <th>对局数</th>

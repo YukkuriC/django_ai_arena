@@ -66,6 +66,21 @@ def set_autodelete(local_dict, model, field):
     models.signals.pre_save.connect(local_dict[del2], model)
 
 
+def show_date(date):
+    """ 显示日期 """
+    d_show = date.timetuple()
+    d_now = timezone.now().timetuple()
+    if d_show[:3] == d_now[:3]:  # 同一天显示时间
+        pattern = "%H:%M"
+        if d_show[3:5] == d_now[3:5]:  # 时分相同
+            pattern += ':%S'
+    elif d_show[0] == d_now[0]:  # 同年显示月日
+        pattern = "%m{M}%d{D}"
+    else:  # 不同年显示年月
+        pattern = "%Y{Y}%m{M}"
+    return date.strftime(pattern).format(Y='年', M='月', D='日')
+
+
 if 'user system':
 
     def login_required(req_yes, req_email=True, target=None):
@@ -85,11 +100,14 @@ if 'user system':
 
         return decorator
 
-    def get_user(request):
+    def get_user(request, update_login=False):
         try:
-            return usr_models.User.objects.get(id=request.session['userid'])
+            user = usr_models.User.objects.get(id=request.session['userid'])
         except:
             return None
+        user.login_datetime = timezone.now()
+        user.save()
+        return user
 
     def set_user(request, user):
         request.session['userid'] = user.id
