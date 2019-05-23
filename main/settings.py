@@ -213,8 +213,14 @@ RANKING_RANDOM_RANGE = 10  # 随机前X个得分相近的代码参与匹配
 
 # 比赛监控进程设置
 MONITOR_CYCLE = 0.5  # 每隔（秒）监测一次比赛进程状态
-# MONITOR_MAX_IDLE_SEC = 5  # 监控进程最大闲置秒数
-MONITOR_SOCKET_PORT = 37037  # 数据传输socket端口
+MONITOR_SOCKET_PORT = 37037
+MONITOR_DB_PATH = os.path.join(MEDIA_ROOT, 'matches.db')  # 比赛进程数据库路径
+MONITOR_DB_VERSION = 'AA'  # 用于修改数据库结构时删库重建
+MONITOR_DB_TABLES = [  # 建库使用的语句
+    """CREATE TABLE "data_queue" ( `type` INTEGER, `code1` INTEGER, `code2` INTEGER, `match` TEXT, `param` TEXT DEFAULT '{}', `ranked` BOOLEAN DEFAULT false )""",
+    """CREATE TABLE "running" ( `match` TEXT )""",
+    'CREATE TABLE "%s" ( `n` INTEGER )' % MONITOR_DB_VERSION  # 版本标识
+]
 
 # 显示参数
 TABLE_ICON_SIZE = 24  # 显示在表格内的用户头像大小
