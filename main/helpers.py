@@ -68,7 +68,10 @@ def set_autodelete(local_dict, model, field):
 
 def show_date(date):
     """ 显示日期 """
-    d_show = date.timetuple()
+    try:
+        d_show = date.timetuple()
+    except:
+        return '-'
     d_now = timezone.now().timetuple()
     if d_show[:3] == d_now[:3]:  # 同一天显示时间
         pattern = "%H:%M"

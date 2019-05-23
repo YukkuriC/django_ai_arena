@@ -1,4 +1,6 @@
-from multiprocessing import Process, Queue
+from multiprocessing import Process
+from threading import Thread
+from queue import Queue
 import os, sys, socket, json
 
 
@@ -75,11 +77,12 @@ def monitor(sock):
     from .factory import Factory
     print('START MONITOR')
     dataq = Queue()  # socket命令读取进程
+    match_queue = []  # 已创建的比赛进程队列
     match_pool = []  # 比赛进程容器
     last_idle_then = pf()  # 闲置时间戳
 
     # 监控socket读取内容
-    sock_proc = Process(target=inner_socket, args=(sock, dataq))
+    sock_proc = Thread(target=inner_socket, args=(sock, dataq))
     sock_proc.start()
 
     # 监控循环
@@ -87,7 +90,7 @@ def monitor(sock):
         # 获取当前时间
         now = pf()
 
-        # 在队列非空且存在空位时创建新进程
+        # 读取数据队列
         while not dataq.empty() and len(match_pool) < settings.MATCH_POOL_SIZE:
             # 读取参数
             data = dataq.get().split()
@@ -116,12 +119,10 @@ def monitor(sock):
                 match_dir = os.path.join(settings.PAIRMATCH_DIR, match_name)
                 os.makedirs(match_dir, exist_ok=1)
 
-                # 装载进程
+                # 创建比赛对象
                 new_match = Factory(AI_type, (code1, code2), match_name,
                                     params)
-                new_match.start()
-                match_pool.append(new_match)
-                print('Received: ' + match_name, match_pool)
+                match_queue.append(new_match)
 
             # 结束比赛
             if data[0] == 'kill_match':
@@ -132,6 +133,13 @@ def monitor(sock):
                         match.timeout = -1
                         print('Killed: ' + match_to_kill)
                         break
+
+        # 在队列非空且存在空位时创建新进程
+        while match_queue and len(match_pool) < settings.MATCH_POOL_SIZE:
+            new_match = match_queue.pop(0)
+            new_match.start()
+            match_pool.append(new_match)
+            print('Start:', match_pool)
 
         # 移除所有超时或结束进程
         tmp = [x for x in match_pool if x.check_active(now)]
@@ -146,10 +154,10 @@ def monitor(sock):
         # 如果过长闲置则终止
         sleep(settings.MONITOR_CYCLE)
         if now - last_idle_then > settings.MONITOR_MAX_IDLE_SEC:
-            sock_proc.terminate()
-            sock_proc.join()
+            sock.shutdown(socket.SHUT_RD)
+            sock.close()
             print('END MONITOR')
-            return
+            os._exit(0)
 
 
 def start_match(AI_type, code1, code2, param_form, ranked=False):
@@ -178,4 +186,3 @@ def start_match(AI_type, code1, code2, param_form, ranked=False):
 
 def kill_match(match_name):
     send_command('kill_match ' + match_name)
-    print('Killing: ' + match_name)
