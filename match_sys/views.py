@@ -80,7 +80,6 @@ if 'multi-view':
                 'count').order_by('-score')[:settings.MAX_LADDER_USER]
         for grp in user_info:
             grp['user']=User.objects.get(id=grp['author'])
-        print(user_info)
 
         return render(request, 'ladder.html', locals())
 
