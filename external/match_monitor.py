@@ -1,6 +1,4 @@
-from multiprocessing import Process
-from threading import Thread
-from queue import Queue
+from multiprocessing import Process, Queue
 import os, sys, socket, json
 
 
@@ -27,6 +25,7 @@ def send_command(cmd: str):
     new_socket = False
     try:
         serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        serversocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         serversocket.bind(("localhost", settings.MONITOR_SOCKET_PORT))
         serversocket.listen(10)
         new_socket = True
@@ -43,6 +42,23 @@ def send_command(cmd: str):
                                      settings.MONITOR_SOCKET_PORT))
     sock.sendall(cmd.encode('utf-8', 'ignore'))
     sock.shutdown(socket.SHUT_WR)
+
+
+def inner_socket(sock, que):
+    """
+    从socket中读取字节串
+    输出至queue
+    """
+    while 1:
+        conn, _ = sock.accept()
+        data = b''
+        while 1:
+            new_data = conn.recv(1024)
+            if new_data:
+                data += new_data
+            else:
+                break
+        que.put(data.decode('utf-8', 'ignore'))
 
 
 def monitor(sock):
@@ -63,21 +79,8 @@ def monitor(sock):
     last_idle_then = pf()  # 闲置时间戳
 
     # 监控socket读取内容
-    def inner_socket(sock, que):
-        while 1:
-            conn, _ = sock.accept()
-            data = b''
-            while 1:
-                new_data = conn.recv(1024)
-                if new_data:
-                    data += new_data
-                else:
-                    break
-            que.put(data.decode('utf-8', 'ignore'))
-
-    thr = Thread(target=inner_socket, args=(sock, dataq))
-    thr.setDaemon(True)
-    thr.start()
+    sock_proc = Process(target=inner_socket, args=(sock, dataq))
+    sock_proc.start()
 
     # 监控循环
     while 1:
@@ -142,9 +145,11 @@ def monitor(sock):
 
         # 如果过长闲置则终止
         sleep(settings.MONITOR_CYCLE)
-        # if now - last_idle_then > settings.MONITOR_MAX_IDLE_SEC:
-        #     print('END MONITOR')
-        #     return
+        if now - last_idle_then > settings.MONITOR_MAX_IDLE_SEC:
+            sock_proc.terminate()
+            sock_proc.join()
+            print('END MONITOR')
+            return
 
 
 def start_match(AI_type, code1, code2, param_form, ranked=False):

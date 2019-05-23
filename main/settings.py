@@ -213,7 +213,7 @@ RANKING_RANDOM_RANGE = 10  # 随机前X个得分相近的代码参与匹配
 
 # 比赛监控进程设置
 MONITOR_CYCLE = 0.5  # 每隔（秒）监测一次比赛进程状态
-# MONITOR_MAX_IDLE_SEC = 5  # 监控进程最大闲置秒数
+MONITOR_MAX_IDLE_SEC = 5  # 监控进程最大闲置秒数
 MONITOR_SOCKET_PORT = 37037  # 数据传输socket端口
 
 # 显示参数
