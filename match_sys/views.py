@@ -265,8 +265,8 @@ if 'view code':
             return _code_editor(request, code, user, False)
 
         # 复制公开代码
-        elif code_op == 'fork':
-            return _code_fork(request, code, user)
+        # elif code_op == 'fork':
+        #     return _code_fork(request, code, user)
 
         return sorry(request, text=['亲亲', '"%s"这样的命令' % code_op, '是不存在的呢'])
 

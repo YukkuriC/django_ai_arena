@@ -52,7 +52,7 @@ class PairMatch_Base(forms.Form):
     '''基础参数表单'''
     rounds = forms.IntegerField(
         label='比赛局数',
-        max_value=50,
+        max_value=30,
         min_value=1,
         widget=forms.NumberInput({
             'class': 'form-control',

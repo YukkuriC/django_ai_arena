@@ -36,36 +36,18 @@ def init_db():
 
     return conn
 
-def send_command(cmd: str):
+def _db_register(type,name):
+    ''' 在数据库内注册指定比赛 '''
+
+def _db_check(type,name):
+    ''' 查看指定比赛是否存活 '''
+
+
+def _db_unload(type,name):
     '''
-    向监控进程传递命令
-    若监控进程不存在则创建并挂载socket
+    从数据库中移除指定比赛
+    被移除的比赛将被对应监控进程停止
     '''
-    from django.db import connections
-    from django.conf import settings
-    connections.close_all()
-
-    # 尝试创建监控进程
-    new_socket = False
-    try:
-        serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        serversocket.bind(("localhost", settings.MONITOR_SOCKET_PORT))
-        serversocket.listen(10)
-        new_socket = True
-    except OSError:
-        pass
-
-    # 从新socket创建监控进程
-    if new_socket:
-        pc = Process(target=monitor, args=(serversocket, ))
-        pc.start()
-
-    # 传递参数
-    sock = socket.create_connection(('localhost',
-                                     settings.MONITOR_SOCKET_PORT))
-    sock.sendall(cmd.encode('utf-8', 'ignore'))
-    sock.shutdown(socket.SHUT_WR)
-
 
 def worker():
     '''
@@ -134,8 +116,6 @@ def worker():
                 #         break
 
 
-
-
 def monitor(sock):
     '''
     主伴随进程，用于管理比赛进程数量、杀死超时进程等
@@ -150,32 +130,20 @@ def monitor(sock):
     from .factory import Factory
     print('START MONITOR')
     dataq = Queue()  # socket命令读取进程
+    match_queue = []  # 已创建的比赛进程队列
     match_pool = []  # 比赛进程容器
     last_idle_then = pf()  # 闲置时间戳
 
     # 监控socket读取内容
-    def inner_socket(sock, que):
-        while 1:
-            conn, _ = sock.accept()
-            data = b''
-            while 1:
-                new_data = conn.recv(1024)
-                if new_data:
-                    data += new_data
-                else:
-                    break
-            que.put(data.decode('utf-8', 'ignore'))
-
-    thr = Thread(target=inner_socket, args=(sock, dataq))
-    thr.setDaemon(True)
-    thr.start()
+    sock_proc = Thread(target=inner_socket, args=(sock, dataq))
+    sock_proc.start()
 
     # 监控循环
     while 1:
         # 获取当前时间
         now = pf()
 
-        # 在队列非空且存在空位时创建新进程
+        # 读取数据队列
         while not dataq.empty() and len(match_pool) < settings.MATCH_POOL_SIZE:
             # 读取参数
             data = dataq.get().split()
@@ -204,12 +172,10 @@ def monitor(sock):
                 match_dir = os.path.join(settings.PAIRMATCH_DIR, match_name)
                 os.makedirs(match_dir, exist_ok=1)
 
-                # 装载进程
+                # 创建比赛对象
                 new_match = Factory(AI_type, (code1, code2), match_name,
                                     params)
-                new_match.start()
-                match_pool.append(new_match)
-                print('Received: ' + match_name, match_pool)
+                match_queue.append(new_match)
 
             # 结束比赛
             if data[0] == 'kill_match':
@@ -220,6 +186,13 @@ def monitor(sock):
                         match.timeout = -1
                         print('Killed: ' + match_to_kill)
                         break
+
+        # 在队列非空且存在空位时创建新进程
+        while match_queue and len(match_pool) < settings.MATCH_POOL_SIZE:
+            new_match = match_queue.pop(0)
+            new_match.start()
+            match_pool.append(new_match)
+            print('Start:', match_pool)
 
         # 移除所有超时或结束进程
         tmp = [x for x in match_pool if x.check_active(now)]
@@ -233,9 +206,11 @@ def monitor(sock):
 
         # 如果过长闲置则终止
         sleep(settings.MONITOR_CYCLE)
-        # if now - last_idle_then > settings.MONITOR_MAX_IDLE_SEC:
-        #     print('END MONITOR')
-        #     return
+        if now - last_idle_then > settings.MONITOR_MAX_IDLE_SEC:
+            sock.shutdown(socket.SHUT_RD)
+            sock.close()
+            print('END MONITOR')
+            os._exit(0)
 
 
 def start_match(AI_type, code1, code2, param_form, ranked=False):
@@ -264,4 +239,3 @@ def start_match(AI_type, code1, code2, param_form, ranked=False):
 
 def kill_match(match_name):
     send_command('kill_match ' + match_name)
-    print('Killing: ' + match_name)
