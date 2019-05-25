@@ -424,7 +424,7 @@ if 'view':
         if my_match:
             op = request.GET.get('op')
             if match.status == 1 and op == 'stop':
-                match_monitor.kill_match(match.name)
+                match_monitor.kill_match('match', match.name)
                 messages.info(request, '比赛已中止')
             elif match.status != 1 and op == 'del':
                 upper = match.code1.id
