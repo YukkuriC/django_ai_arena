@@ -79,7 +79,7 @@ if 'multi-view':
                 'author', 'score',
                 'count').order_by('-score')[:settings.MAX_LADDER_USER]
         for grp in user_info:
-            grp['user']=User.objects.get(id=grp['author'])
+            grp['user'] = User.objects.get(id=grp['author'])
 
         return render(request, 'ladder.html', locals())
 
@@ -167,9 +167,10 @@ if 'forms':
             if not (target_code and target_codes.filter(id=target_code)):
                 form.errors['code2'] = '非法输入: %s' % target_code
             if form.is_valid():  # run match
-                match_monitor.start_match(AI_type, my_code, target_code, form)
+                match_name = match_monitor.start_match(AI_type, my_code,
+                                                       target_code, form)
                 messages.info(request, '创建比赛成功')
-                return redirect('/code/%s/' % my_code)
+                return redirect('/match/' + match_name)
             else:  # invalid input
                 messages.warning(request, '请检查非法输入')
                 return render(request, 'pairmatch.html', locals())
@@ -215,9 +216,10 @@ if 'forms':
 
             if form.is_valid():  # run match
                 target = random.choice(target_codes).id
-                match_monitor.start_match(AI_type, my_code, target, form, True)
-                messages.info(request, '创建比赛成功')
-                return redirect('/code/%s/' % my_code)
+                match_name = match_monitor.start_match(AI_type, my_code,
+                                                       target, form, True)
+                messages.info(request, '创建匹配赛成功')
+                return redirect('/match/' + match_name)
             else:  # invalid input
                 messages.warning(request, '请检查非法输入')
                 return render(request, 'ranked_match.html', locals())

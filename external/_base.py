@@ -18,12 +18,17 @@ class BaseProcess:
         params: 比赛设置参数字典
     '''
 
-    def __init__(self, codes, match_name, params):
+    def __init__(self, match_name, params):
         from match_sys import models
 
         # 接收队列
         self.result_raw = []
         self.output = Queue()
+
+        # 获取match对象与代码路径
+        self.match = models.PairMatch.objects.get(name=match_name)
+        code1 = str(self.match.code1.content)
+        code2 = str(self.match.code2.content)
 
         # 初始化进程
         self.params = params
@@ -31,11 +36,8 @@ class BaseProcess:
         match_dir = path.join(settings.PAIRMATCH_DIR, match_name)
         self.process = Process(
             target=self.process_run,
-            args=(codes, match_dir, params, self.output),
+            args=([code1, code2], match_dir, params, self.output),
             daemon=1)
-
-        # 获取match对象
-        self.match = models.PairMatch.objects.get(name=match_name)
 
     def start(self):
         '''启动进程'''
