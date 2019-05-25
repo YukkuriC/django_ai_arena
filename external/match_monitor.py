@@ -158,6 +158,7 @@ def unit_monitor(type, name, data):
 def start_match(AI_type, code1, code2, param_form, ranked=False):
     from match_sys import models
     from . import helpers
+    from django.db import connections
 
     # 生成随机match名称
     while 1:
@@ -184,12 +185,13 @@ def start_match(AI_type, code1, code2, param_form, ranked=False):
     # 传送参数至进程 (AI_type,code1,code2,match_name,params)
     match_proc = Process(
         target=unit_monitor, args=('match', match_name, [AI_type, params]))
+    connections.close_all()  # 用于主进程MySQL保存所有更改
     match_proc.start()
-    print('Sent: ' + match_name)
 
     # 返回match对象名称
     return match_name
 
 
-def kill_match(match_name):
-    send_command('kill_match ' + match_name)
+def kill_match(type, match_name):
+    conn = init_db()
+    _db_unload(conn, type, match_name)
