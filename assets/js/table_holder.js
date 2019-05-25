@@ -168,7 +168,7 @@ class TableHolder {
                 if (callback != null) callback()
             },
             error: function (x, e) {
-                tbody.innerHTML = ''
+                thisRef.tbody.innerHTML = ''
                 thisRef.tbody_error(url, e, x, '链接异常<br>' + url)
                 if (callback != null) callback()
             },

@@ -5,7 +5,7 @@
 {{ block.super }}
 <style>
     #canvas {
-        background-color: #1D40B5;
+        background-color: rgb(230, 245, 255);
     }
 </style>
 {% endblock %}
@@ -33,8 +33,19 @@
         <input id="id" type="number" value="0" min=0 step=1 onchange="changeTarget()" />
     </span>
 </div>
-<div class='x_block'>
-    比赛解说会有的
+<div class='row x_block'>
+    <div class='col-sm-1' id='frame_display'></div>
+    <div class='col-sm-5' id='speaker'>比赛解说会有的</div>
+    <div class='col-sm-6' id='settings'>
+        <label for="set_1">形变效果</label>
+        <input type="checkbox" id='set_1' checked>
+        <span id='set_1_inner'>
+            <label for="set_2">暂停时形变</label>
+            <input type="checkbox" id='set_2'>
+        </span>
+        <label for="set_3">拖尾效果</label>
+        <input type="checkbox" id='set_3'>
+    </div>
 </div>
 {% endblock %}
 
@@ -51,6 +62,49 @@
     SCROLL_DRAGGING = false
     CURR_FRAME = 0
     PLAYING_SPEED = 1
+    SPEEDY_SHAPE = 1
+    SPEEDY_SHAPE_PAUSE = 0
+    TRACE = 0
+
+</script>
+
+<!-- 比赛解说 -->
+<script>
+    function show_frame() {
+        document.getElementById('frame_display').innerHTML = (CURR_FRAME + 1) + '/' + TOTAL_FRAMES
+    }
+</script>
+
+
+<!-- 辅助函数 -->
+<script>
+    function linear_color(rgb1, rgb2, min, max = null, pos = null) {
+        if (pos == null) pos = min
+        else if (min == max) pos = 0.5
+        else pos = (pos - min) / (max - min)
+        // pos = Math.max(1, Math.min(0, pos))
+        var tmp = []
+        for (var i = 0; i < 3; i++)
+            tmp.push(rgb1[i] + (rgb2[i] - rgb1[i]) * pos)
+        return tmp
+    }
+    function linear_alpha(rgba, min, max = null, pos = null) {
+        if (pos == null) pos = min
+        else if (min == max) pos = 0.5
+        else pos = (pos - min) / (max - min)
+        if (typeof rgba == 'string') {
+            rgba = rgba.slice(rgba.indexOf('(') + 1, rgba.lastIndexOf(')')).split(',').map(parseFloat)
+        }
+        pos = Math.max(1, Math.min(0, pos))
+        var tmp = rgba.slice(0, 3)
+        var alpha = (rgba[3] || 1) * pos
+        // if(tmp[0]>1||tmp[1]>1||tmp[2]>1)alpha=Math.floor(pos*255)
+        tmp.push(alpha)
+        return 'rgba(' + tmp.join(',') + ')'
+    }
+    function parse_color(clr) {
+        return 'rgba'.slice(0, clr.length) + '(' + clr.join(',') + ')'
+    }
 </script>
 
 <!-- canvas可视化 -->
@@ -73,7 +127,41 @@
             for (var i = min_x; i <= max_x; i++) {
                 for (var j = min_y; j <= max_y; j++) {
                     ctx.beginPath();
-                    ctx.arc(this.scale * (X - this.center[0]) + canvas.width / 2 + i * 1000 * this.scale, this.scale * (Y - this.center[1]) + canvas.height / 2 + j * 500 * this.scale, this.scale * R, 0, Math.PI * 2, true);
+                    ctx.arc(this.scale * (X - this.center[0] + i * 1000) + canvas.width / 2, this.scale * (Y - this.center[1] + j * 500) + canvas.height / 2, this.scale * R, 0, Math.PI * 2, true);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+            }
+        },
+        arc_speed: function (ctx, X, Y, VX, VY, R) {
+            if (!(PLAYING || SPEEDY_SHAPE_PAUSE)) return this.arc(ctx, X, Y, R)
+            if (this.target != null) {
+                var tmp = record_obj.data[CURR_FRAME][this.target]
+                VX -= tmp[2]
+                VY -= tmp[3]
+            }
+            min_x = Math.ceil((-this.scale * R - (this.scale * (X - this.center[0]) + canvas.width / 2)) / (1000 * this.scale));
+            max_x = Math.floor((canvas.width + this.scale * R - (this.scale * (X - this.center[0]) + canvas.width / 2)) / (1000 * this.scale));
+            min_y = Math.ceil((-this.scale * R - (this.scale * (Y - this.center[1]) + canvas.height / 2)) / (500 * this.scale));
+            max_y = Math.floor((canvas.height + this.scale * R - (this.scale * (Y - this.center[1]) + canvas.height / 2)) / (500 * this.scale));
+            var v = Math.sqrt(VX * VX + VY * VY)
+            var ra = R + v * 1.7, rb = R - v * 0.1
+            var dr = Math.atan2(VY, VX)
+            var nsplit = Math.max(10, Math.floor(R * this.scale * 0.4))
+            for (var i = min_x; i <= max_x; i++) {
+                for (var j = min_y; j <= max_y; j++) {
+                    var NX = this.scale * (X - this.center[0] + i * 1000) + canvas.width / 2
+                    var NY = this.scale * (Y - this.center[1] + j * 500) + canvas.height / 2
+                    ctx.beginPath();
+                    for (var t1 = 0; t1 < nsplit * 2; t1++) {
+                        var theta = t1 * Math.PI / nsplit
+                        var x = ra * Math.cos(theta) * this.scale, y = rb * Math.sin(theta) * this.scale
+                        var x1 = x * Math.cos(dr) - y * Math.sin(dr),
+                            y1 = x * Math.sin(dr) + y * Math.cos(dr)
+                        if (t1) ctx.lineTo(NX + x1, NY + y1)
+                        else ctx.moveTo(NX + x1, NY + y1)
+                        // // (i ? ctx.lineTo : ctx.moveTo)(NX + x1, NY + y1)
+                    }
                     ctx.closePath();
                     ctx.fill();
                 }
@@ -87,22 +175,23 @@
             CURR_FRAME = index
             document.getElementById('video_scroll').value = CURR_FRAME
         }
+        show_frame()
         // 执行查询
         var result = record_obj['data'][index];
         // 解析数据
+        if (index >= TOTAL_FRAMES - 1) {
+            PLAYING = false
+        }
         if (result) draw(result);
         if (PLAYING) {
-            if (index < TOTAL_FRAMES - 1) {
-                setTimeout(function () {
-                    parse_frame(index + 1);
-                }, 1000 / 30 / PLAYING_SPEED);
-            } else {
-                PLAYING = false
-            }
+            setTimeout(function () {
+                parse_frame(index + 1);
+            }, 1000 / 30 / PLAYING_SPEED);
         }
     }
 
-    function draw(frame) {
+    function draw(frame = null) {
+        if (frame == null) frame = record_obj['data'][CURR_FRAME]
         camera.limit = [Math.min(canvas.width, canvas.height) / 3 / 500, Math.min(canvas.width, canvas.height) / 4 / 10];
         if (!camera.adjusted) {
             camera.scale = Math.min(canvas.width / 1000, canvas.height / 500);
@@ -115,9 +204,14 @@
         var ctx = canvas.getContext("2d");
         var shadows = true;
         // Background
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (TRACE) {
+            ctx.fillStyle = PLAYING ? "rgba(230,245,255,0.6)" : "rgb(230,245,255)"
+            ctx.rect(0, 0, canvas.width, canvas.height);
+            ctx.fill();
+        }
+        else ctx.clearRect(0, 0, canvas.width, canvas.height);
         // Level boundary
-        ctx.fillStyle = "#2450E4"; // Background color of the level (inside the boundaries)
+        ctx.fillStyle = "rgba(255,255,255,0.15)"; // Background color of the level (inside the boundaries)
         ctx.beginPath();
         camera.rect(ctx, 0, 0, 1000, 500);
         ctx.closePath();
@@ -130,47 +224,53 @@
             ctx.closePath();
             ctx.stroke();
         }
-        ctx.strokeStyle = "#FFF";
+        ctx.strokeStyle = "rgba(255,255,255,0.3)";
         ctx.lineWidth = 2;
         ctx.beginPath();
         camera.rect(ctx, 0, 0, 1000, 500);
         ctx.closePath();
         ctx.stroke();
-        for (var i = 0; i < frame.length; i++) {
+        for (var i = frame.length - 1; i >= 0; i--) {
             var cell = frame[i]
-            draw_cell(ctx, shadows, i, cell[0], cell[1], cell[4]);
+            draw_cell(ctx, shadows, i, cell[0], cell[1], cell[2], cell[3], cell[4]);
         }
     }
 
-    function draw_cell(ctx, shadow, ID, X, Y, R) {
+    function draw_cell(ctx, shadow, ID, X, Y, VX, VY, R) {
         // Shadow
         if (shadow) {
             ctx.fillStyle = "rgba(0,0,0,0.3)"; // gray
-            camera.arc(ctx, X + 1, Y + 3, R, 0);
+            if (SPEEDY_SHAPE) camera.arc_speed(ctx, X + 1, Y + 3, VX, VY, R)
+            else camera.arc(ctx, X + 1, Y + 3, R, 0);
         }
-        ctx.fillStyle = "rgb(54,182,255)"; // blue
-        if ((camera.target == null && ID <= 1) || ID == camera.target) {
-            ctx.fillStyle = "green";
+        var fill = linear_color([160, 255, 140], [130, 130, 130], 0, 30, R); // linear gray-green
+        if (ID <= 1) {
+            fill = ID ? [255, 50, 35] : [11, 106, 184];
+        }
+        else if (ID == camera.target) {
+            fill = [0, 128, 0]
         }
         else if (camera.radius) {
             if (ID <= 1) {
-                ctx.fillStyle = "rgb(68,255,26)"
+                fill = [68, 255, 26]
             }
-            else if (R > camera.radius) ctx.fillStyle = "rgb(255,68,26)"; // red
+            else if (R > camera.radius) fill = [255, 68, 26]; // red
             else if (camera.radius - R <= 4) {
                 var delta = camera.radius - R;
                 if (delta <= 2) {
                     var ref = [[255, 255], [68, 175], [26, 0]];
-                    ctx.fillStyle = "rgb(" + ref.map(x => x[0] + (x[1] - x[0]) * delta / 4).join(",") + ")";
+                    fill = ref.map(x => x[0] + (x[1] - x[0]) * delta / 4)
                 }
                 else {
                     delta -= 2;
                     var ref = [[255, 54], [175, 182], [0, 255]];
-                    ctx.fillStyle = "rgb(" + ref.map(x => x[0] + (x[1] - x[0]) * delta / 4).join(",") + ")";
+                    fill = ref.map(x => x[0] + (x[1] - x[0]) * delta / 4)
                 }
             }
         }
-        camera.arc(ctx, X, Y, R, 0);
+        ctx.fillStyle = parse_color(fill)
+        if (SPEEDY_SHAPE) camera.arc_speed(ctx, X, Y, VX, VY, R)
+        else camera.arc(ctx, X, Y, R);
     }
 
     canvas.addEventListener("DOMMouseScroll", mouse_scroll, false);
@@ -255,9 +355,11 @@
         SCROLL_DRAGGING = true
         update_scroll()
     })
-    scroller.addEventListener('mouseup', () => {
-        SCROLL_DRAGGING = false
-        scroller.value = CURR_FRAME
+    window.addEventListener('mouseup', () => {
+        if (SCROLL_DRAGGING) {
+            SCROLL_DRAGGING = false
+            scroller.value = CURR_FRAME
+        }
     })
     scroller.addEventListener('mousemove', update_scroll)
 </script>
@@ -278,7 +380,7 @@
         document.getElementById('y').value = tmp[1]
         camera.center = tmp
 
-        draw(record_obj['data'][CURR_FRAME])
+        draw()
     }
     canvas.addEventListener("mousedown", function (e) {
         if (camera.target != null) return
@@ -286,14 +388,53 @@
         CANVAS_DRAGPOS = [e.x, e.y]
         OLD_CAMERA = camera.center
     });
-    canvas.addEventListener('mouseup', function (e) {
-        CANVAS_DRAGGING = false
-        if (camera.target == null)
-            update_drag_canvas(e)
+    window.addEventListener('mouseup', function (e) {
+        if (CANVAS_DRAGGING) {
+            CANVAS_DRAGGING = false
+            if (camera.target == null)
+                update_drag_canvas(e)
+        }
     })
     canvas.addEventListener('mousemove', function (e) {
         if ((!CANVAS_DRAGGING) || camera.target != null) return
         update_drag_canvas(e)
     })
+</script>
+
+<!-- 画面设置API -->
+<script>
+    document.getElementById('set_1').addEventListener('change', function () {
+        SPEEDY_SHAPE = this.checked
+        document.getElementById('set_1_inner').style.display = this.checked ? '' : 'none'
+        draw()
+    })
+    document.getElementById('set_2').addEventListener('change', function () {
+        SPEEDY_SHAPE_PAUSE = this.checked
+        draw()
+    })
+    document.getElementById('set_3').addEventListener('change', function () {
+        TRACE = this.checked
+        draw()
+    })
+</script>
+
+<script>
+    function screenshot(img_name) {
+        var url = canvas.toDataURL('image/png')
+        var a = document.createElement('a')
+        var event = new MouseEvent('click')
+        a.download = img_name
+        a.href = url
+        a.dispatchEvent(event)
+    }
+    function save_images() {
+        PLAYING = false
+        for (var i = 0; i < TOTAL_FRAMES; i++) {
+            parse_frame(i)
+            var tmp = String(i)
+            if (tmp.length < 3) tmp = '0'.repeat(3 - tmp.length) + tmp
+            screenshot('img_' + tmp + '.png')
+        }
+    }
 </script>
 {% endblock %}
