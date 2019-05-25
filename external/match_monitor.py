@@ -1,12 +1,11 @@
 from multiprocessing import Process
-from threading import Thread
-from queue import Queue
 import os, sys, socket, json
+from sqlite3 import connect
 
 
 # 多进程支持
 def setup_django():
-    '''在多进程内挂载django数据库，返回django模块'''
+    '''在多进程内挂载django数据库'''
     import django
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     sys.path.append(BASE_DIR)
@@ -14,53 +13,107 @@ def setup_django():
     django.setup()
 
 
-def send_command(cmd: str):
+def init_db():
     '''
-    向监控进程传递命令
-    若监控进程不存在则创建并挂载socket
+    创建或打开监控进程使用的数据库
+    返回其连接
     '''
-    from django.db import connections
     from django.conf import settings
-    connections.close_all()
+    conn=connect(settings.MONITOR_DB_PATH)
 
-    # 尝试创建监控进程
-    new_socket = False
-    try:
-        serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        serversocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        serversocket.bind(("localhost", settings.MONITOR_SOCKET_PORT))
-        serversocket.listen(10)
-        new_socket = True
-    except OSError:
-        pass
+    # 检查版本是否对应
+    query="select name from sqlite_master where name='%s' and type='table'"%settings.MONITOR_DB_VERSION
 
-    # 从新socket创建监控进程
-    if new_socket:
-        pc = Process(target=monitor, args=(serversocket, ))
-        pc.start()
+    if len(conn.execute(query).fetchall())==0:# 非当前版本
+        print('NEW DATABASE <%s>'%settings.MONITOR_DB_VERSION)
 
-    # 传递参数
-    sock = socket.create_connection(('localhost',
-                                     settings.MONITOR_SOCKET_PORT))
-    sock.sendall(cmd.encode('utf-8', 'ignore'))
-    sock.shutdown(socket.SHUT_WR)
+        # 非当前版本爆破重建
+        q_tables="select name from sqlite_master where type='table' and name<>'sqlite_sequence'"
+        for table in conn.execute(q_tables).fetchall():
+            conn.execute('drop table %s'%table)
+        for query in settings.MONITOR_DB_TABLES:
+            conn.execute(query)
+
+    return conn
+
+def _db_register(type,name):
+    ''' 在数据库内注册指定比赛 '''
+
+def _db_check(type,name):
+    ''' 查看指定比赛是否存活 '''
 
 
-def inner_socket(sock, que):
-    """
-    从socket中读取字节串
-    输出至queue
-    """
+def _db_unload(type,name):
+    '''
+    从数据库中移除指定比赛
+    被移除的比赛将被对应监控进程停止
+    '''
+
+def worker():
+    '''
+    比赛维护进程
+    循环从data_queue表内读取一行并执行
+    直至data_queue为空时退出
+    运行比赛时通过写入并监控running表控制超时、中止等操作
+    '''
+    setup_django()
+    from django.conf import settings
+    from time import perf_counter as pf, sleep
+    from match_sys import models
+    from . import helpers
+    from .factory import Factory
+    print('START MONITOR')
+    conn=init_db()
+    cursor=conn.cursor()
+
+    # 循环读取队列内容
+    # TODO: 线程安全
     while 1:
-        conn, _ = sock.accept()
-        data = b''
-        while 1:
-            new_data = conn.recv(1024)
-            if new_data:
-                data += new_data
-            else:
-                break
-        que.put(data.decode('utf-8', 'ignore'))
+        line=cursor.execute('select * from data_queue limit 1').fetchall()
+        if not line:
+            break
+        line=line[0]
+
+        # 删除已读取行
+        cursor.execute('delete from data_queue where match=?',line[3])
+        conn.commit()
+
+        # 创建新比赛对象
+        AI_type, code1, code2, match_name, params, ranked = line
+        new_match = models.PairMatch()
+        new_match.ai_type = AI_type
+        new_match.name = match_name
+        new_match.code1 = models.Code.objects.get(id=code1)
+        new_match.code2 = models.Code.objects.get(id=code2)
+        new_match.old_score1 = new_match.code1.score
+        new_match.old_score2 = new_match.code2.score
+        new_match.rounds = params['rounds']
+        new_match.is_ranked = ranked
+        new_match.params = json.dumps(params)
+        new_match.save()
+
+        # 读取代码、比赛路径
+        code1 = str(new_match.code1.content)
+        code2 = str(new_match.code2.content)
+        match_dir = os.path.join(settings.PAIRMATCH_DIR, match_name)
+        os.makedirs(match_dir, exist_ok=1)
+
+        # 装载进程
+        new_match = Factory(AI_type, (code1, code2), match_name,
+                            params)
+        new_match.start()
+
+        # 在数据库中记录
+        cursor.execute('insert into running values (?)',match_name)
+        
+        # 循环检测是否执行完毕
+                # match_to_kill = data[1]
+                # print([x.match_name for x in match_pool])
+                # for match in match_pool:
+                #     if match.match_name == match_to_kill:
+                #         match.timeout = -1
+                #         print('Killed: ' + match_to_kill)
+                #         break
 
 
 def monitor(sock):
