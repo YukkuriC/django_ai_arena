@@ -169,7 +169,7 @@
 
 {% block script %}
 <script>
-    //{% if match.status == 1 %}
+    //{% if match.status <= 1 %}
     window.addEventListener('load', () => {
         setTimeout(() => {
             window.location.href = window.location.href.split('#')[0]

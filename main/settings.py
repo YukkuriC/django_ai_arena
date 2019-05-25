@@ -214,11 +214,12 @@ RANKING_RANDOM_RANGE = 10  # 随机前X个得分相近的代码参与匹配
 # 比赛监控进程设置
 MONITOR_CYCLE = 0.5  # 每隔（秒）监测一次比赛进程状态
 MONITOR_DB_PATH = os.path.join(MEDIA_ROOT, 'matches.db')  # 比赛进程数据库路径
-MONITOR_DB_VERSION = 'AA'  # 用于修改数据库结构时删库重建
+MONITOR_DB_VERSION = 'AB'  # 用于修改数据库结构时删库重建
 MONITOR_DB_TABLES = [  # 建库使用的语句
     'CREATE TABLE "%s" ( `n` INTEGER )' % MONITOR_DB_VERSION,  # 版本标识
-    """CREATE TABLE "match" ( `name` TEXT, `endtime` INTEGER )""",
+    """CREATE TABLE "tasks" ( `type` TEXT, `name` TEXT, `endtime` INTEGER )""",
 ]
+MONITOR_DB_CHECK_CYCLE = 3  # 每{}个监测循环检查一次数据库注册状态
 
 # 显示参数
 TABLE_ICON_SIZE = 24  # 显示在表格内的用户头像大小
