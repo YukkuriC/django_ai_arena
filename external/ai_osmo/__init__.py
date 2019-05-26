@@ -134,9 +134,13 @@ if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
                 return '吞噬玩家'
             elif record['cause'] == "RUNTIME_ERROR":
                 return '代码错误'
+            elif record['cause'] == "INVALID_RETURN_VALUE":
+                return '输出格式错误'
             elif record['cause'] == "MAX_FRAME":
-                return '超时结算'
-            return '会有的'
+                return '最大帧数'
+            elif record['cause'] == "TIMEOUT":
+                return '玩家超时'
+            return record['cause']
 
         def r_desc_plus(_, match, record):
             if record['cause'] == 'PLAYER_DEAD':
@@ -148,12 +152,6 @@ if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
                 return dead + '被吞噬'
             elif record['cause'] == "RUNTIME_ERROR":
                 res = list(record['detail'])
-                for i in 0, 1:
-                    if res[i] == True:
-                        res[i] = '输出格式错误'
-                    elif isinstance(res[i], Exception):
-                        tmp = BasePairMatch.stringfy_error(res[i])
-                        res[i] = tmp
                 if record['winner'] != None:
                     res = res[0] or res[1]
                 return res
@@ -161,4 +159,4 @@ if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
                 last_frame = record['data'][-1]
                 return "%s : %s" % (round(last_frame[0][4], 2),
                                     round(last_frame[1][4], 2))
-            return '会有的'
+            return '-'

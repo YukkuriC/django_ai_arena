@@ -44,6 +44,6 @@ a.text-nav:hover{
     padding-top: 10px;
     padding-bottom: 10px;
 }
-.row-hover{
+.bg-hover:hover{
     background-color:rgba(15,155,255,0.2)!important
 }

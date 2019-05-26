@@ -103,8 +103,7 @@ class TableHolder {
             tbody.innerHTML = ''
             data.rows.forEach(row => {
                 var trow = document.createElement('tr')
-                trow.onmouseover = Function("this.style.background='rgba(15,155,255,0.2)'")
-                trow.onmouseout = Function("this.style.background=''")
+                trow.className='bg-hover'
                 trow.onclick = function () { location.href = data.root + row[0] }
                 if (thisRef.add_link) {
                     var link = document.createElement('a')
