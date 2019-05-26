@@ -150,6 +150,8 @@ def unit_monitor(type, name, data):
             if not _db_check(cursor, type, name):  # 外部中止
                 match_process.timeout = -1
 
+        sleep(settings.MONITOR_CYCLE)  # 待机
+
     # 移除注册
     _db_unload(conn, type, name)
     print('END:', type, name)

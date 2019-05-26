@@ -3,7 +3,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.core.files.base import ContentFile
 from django.utils import timezone
-from django.db.models import Q, Count, Max
+from django.db.models import Q, Count, Max, Sum
 from django.http import JsonResponse
 from external import match_monitor
 from external.factory import Factory
@@ -87,6 +87,28 @@ if 'multi-view':
 # 表单页
 if 'forms':
 
+    def _limit_rounds(request, form, my_code):
+        if not form.is_valid():
+            return
+        rounds = form.cleaned_data.get('rounds', 10)
+        near_time = timezone.now() - timezone.timedelta(
+            minutes=settings.LIMIT_COUNT_MINUTES)
+        near_matches = PairMatch.objects.filter(
+            code1=my_code, run_datetime__gte=near_time)
+        n1 = near_matches.filter(status__lte=1).aggregate(
+            Sum('rounds'))['rounds__sum'] or 0
+        n2 = near_matches.filter(status__gt=1).aggregate(
+            Sum('finished_rounds'))['finished_rounds__sum'] or 0
+        n_avail = settings.LIMIT_COUNT_ROUNDS - n1 - n2
+        if n_avail <= 0:
+            return form.add_error('rounds', '%d分钟内发起了超过%d场比赛 (%d进行+%d完成)' %
+                                  (settings.LIMIT_COUNT_MINUTES,
+                                   settings.LIMIT_COUNT_ROUNDS, n1, n2))
+        n_avail += settings.LIMIT_COUNT_BUFFER
+        if n_avail <= rounds:
+            form.cleaned_data['rounds'] = n_avail
+            messages.warning(request, '创建比赛过于频繁')
+
     @login_required(1)
     def upload(request):
         ai_type = request.GET.get('id', '')
@@ -166,6 +188,9 @@ if 'forms':
                 form.errors['code1'] = '非法输入: %s' % my_code
             if not (target_code and target_codes.filter(id=target_code)):
                 form.errors['code2'] = '非法输入: %s' % target_code
+
+            _limit_rounds(request, form, my_code)  # 限制发起局数
+
             if form.is_valid():  # run match
                 match_name = match_monitor.start_match(AI_type, my_code,
                                                        target_code, form)
@@ -213,6 +238,8 @@ if 'forms':
                 )[:settings.RANKING_RANDOM_RANGE]
                 if not target_codes:
                     form.errors['code1'] = '暂无可用的匹配代码'
+
+            _limit_rounds(request, form, my_code)  # 限制发起局数
 
             if form.is_valid():  # run match
                 target = random.choice(target_codes).id

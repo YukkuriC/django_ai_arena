@@ -10,7 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
-import os, multiprocessing
+import os, multiprocessing, json
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -225,3 +225,18 @@ MONITOR_DB_CHECK_CYCLE = 3  # 每{}个监测循环检查一次数据库注册状
 TABLE_ICON_SIZE = 24  # 显示在表格内的用户头像大小
 MAX_LADDER_USER = 10  # 天梯显示最大用户数
 RECENT_MATCH_SHOWN = 100  # 最大显示历史比赛数
+
+# 性能限制参数
+LIMIT_COUNT_MINUTES = 1  # 统计时间长度`
+LIMIT_COUNT_ROUNDS = 10  # 一定时间内最大可发起的对局数
+LIMIT_COUNT_BUFFER = 5  # 超限发起比赛最多可超过局数
+
+# 覆盖设置，动态调整参数
+try:
+    with open(os.path.join(BASE_DIR, 'override.json')) as f:
+        data = json.load(f)
+    for k, v in data.items():
+        i, j = line.split('=')
+        globals()[k] = v
+except:
+    pass

@@ -73,7 +73,7 @@ class PairMatch(models.Model):
     )
     rounds = models.IntegerField('总局数')
     finished_rounds = models.IntegerField('已完成局数', default=0)
-    run_datetime = models.DateTimeField('发布时间', null=True)
+    run_datetime = models.DateTimeField('发布时间')
     finish_datetime = models.DateTimeField('完成时间', null=True)
     status = models.IntegerField(
         '状态', default=0, choices=settings.PAIRMATCH_STATUS.items())
