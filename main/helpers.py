@@ -28,7 +28,10 @@ def auto_admin(model_pool):
             class AutoAdmin(admin.ModelAdmin):
                 list_display = tmp
 
-            admin.site.register(md, AutoAdmin)
+            try:
+                admin.site.register(md, AutoAdmin)
+            except admin.sites.AlreadyRegistered:
+                pass
 
 
 def set_autodelete(local_dict, model, field):
