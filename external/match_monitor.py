@@ -54,7 +54,7 @@ def _db_validate(conn):
     仅在数据库记录已满时运行
     '''
     try:
-        conn.execute('delete from tasks where endtime<?', _db_timestamp())
+        conn.execute('delete from tasks where endtime<?', (_db_timestamp(), ))
         conn.commit()
     except Exception as e:
         print('DB VALIDATE ERROR:', e)
@@ -158,6 +158,7 @@ def unit_monitor(type, name, data):
 def start_match(AI_type, code1, code2, param_form, ranked=False):
     from match_sys import models
     from . import helpers
+    from django.utils import timezone
     from django.db import connections
 
     # 生成随机match名称
@@ -175,6 +176,7 @@ def start_match(AI_type, code1, code2, param_form, ranked=False):
     new_match.name = match_name
     new_match.code1 = models.Code.objects.get(id=code1)
     new_match.code2 = models.Code.objects.get(id=code2)
+    new_match.run_datetime = timezone.now()
     new_match.old_score1 = new_match.code1.score
     new_match.old_score2 = new_match.code2.score
     new_match.rounds = params['rounds']
