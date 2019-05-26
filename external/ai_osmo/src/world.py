@@ -33,15 +33,14 @@ from consts import Consts
 from cell import Cell
 
 class World():
-    def __init__(self, player0, player1, names=None, recorders=None):
+    def __init__(self, player0, player1, names = None, recorders = None):
         # Variables and setup
         self.cells_count = 0
         # Bind stat recorders
         self.recorders = recorders
         # Init
         self.new_game()
-        self.player0 = player0
-        self.player1 = player1
+        self.player = [player0, player1]
         self.names = names
 
     # Methods
@@ -185,7 +184,7 @@ class World():
         """Create new frames.
 
         Args:
-            frame_delta: Time interval between two frames.
+            frame_delta: time interval between two frames.
         Returns:
             
 
@@ -235,43 +234,33 @@ class World():
         allcells = [cell for cell in self.cells if not cell.dead]
         self.cells_count = len(allcells)
 
-        theta0 = theta1 = None
-        flag0 = flag1 = False
+        theta = [None, None]
+        flag = [False, False]
 
-        if self.timer[0] > 0:
+        for i in 0, 1:
             try:
                 ti = pf()
-                theta0 = self.player0.strategy([c.copy() for c in allcells])
+                theta[i] = self.player[i].strategy([c.copy() for c in allcells])
                 tf = pf()
-                self.timer[0] -= tf - ti
+                self.timer[i] -= tf - ti
             except Exception as e:
                 logging.error(traceback.format_exc())
-                flag0 = e
-        if self.timer[1] > 0:
-            try:
-                ti = pf()
-                theta1 = self.player1.strategy([c.copy() for c in allcells])
-                tf = pf()
-                self.timer[1] -= tf - ti
-            except Exception as e:
-                logging.error(traceback.format_exc())
-                flag1 = e
+                flag[i] = e
 
-        if isinstance(theta0, (int, float, type(None))):
-            if self.timer[0] >= 0:
-                self.eject(self.cells[0], theta0)
-        else:
-            flag0 = True
-        if isinstance(theta1, (int, float, type(None))):
-            if self.timer[1] >= 0:
-                self.eject(self.cells[1], theta1)
-        else:
-            flag1 = True
+        if self.check_point(flag[0], flag[1], "RUNTIME_ERROR"):
+            return
 
-        self.check_point(flag0, flag1, "RUNTIME_ERROR")
+        if self.check_point(not isinstance(theta[0], (int, float, type(None))), not isinstance(theta[1], (int, float, type(None))), "INVALID_RETURN_VALUE"):
+            return
+
+        if self.check_point(self.timer[0] < 0, self.timer[1] < 0, "TIMEOUT"):
+            return
+
+        self.eject(self.cells[0], theta[0])
+        self.eject(self.cells[1], theta[1])
 
     def update_recorders(self):
-        """put values into recorders
+        """Put values into recorders.
 
         Args:
         
@@ -281,11 +270,13 @@ class World():
         if not self.recorders:
             return
         for i, rec in enumerate(self.recorders):
-            rec.frame = self.frame_count  # current frame
+            rec.frame = self.frame_count # Current frame
             rec.cells_count = len(self.cells)
+            rec.timer = self.timer[:]
 
 
 class WorldStat:
     def __init__(self, frames):
         self.total_frames = frames
         self.frame = 0
+        self.timer = [Consts["MAX_TIME"]] * 2

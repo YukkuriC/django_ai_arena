@@ -123,7 +123,7 @@ class Cell():
         """Move the cell according to its velocity.
 
         Args:
-            frame_delta: Time interval between two frames.
+            frame_delta: time interval between two frames.
         Returns:
             
 
@@ -136,12 +136,12 @@ class Cell():
         self.limit_speed()
 
     def copy(self):
-        """Returns a copy of current cell
+        """Returns a copy of current cell.
 
         Args:
             
         Returns:
-            the copy
+            the copy of the cell.
 
         """
         res = Cell(self.id, self.pos[:], self.veloc[:], self.radius)

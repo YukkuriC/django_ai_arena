@@ -42,9 +42,9 @@ Consts = {
     # DELTA_VELOC
     "DELTA_VELOC": 5,
     # MAX_TIME
-    "MAX_TIME": 10,
+    "MAX_TIME": 30,
     # MAX_FRAME
-    "MAX_FRAME": 5000,
+    "MAX_FRAME": 2000,
     # SAFE_DIST
     "SAFE_DIST": 30,
 
