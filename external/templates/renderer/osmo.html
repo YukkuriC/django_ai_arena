@@ -1,5 +1,5 @@
 {% extends 'renderer/base.html' %}
-{% load staticfiles %}
+{% load main_filters %}
 
 {% block css %}
 {{ block.super }}
@@ -35,17 +35,36 @@
 </div>
 <div class='row x_block'>
     <div class='col-sm-1' id='frame_display'></div>
-    <div class='col-sm-5' id='speaker'>比赛解说会有的</div>
-    <div class='col-sm-6' id='settings'>
-        <label for="set_1">形变效果</label>
-        <input type="checkbox" id='set_1' checked>
-        <span id='set_1_inner'>
-            <label for="set_2">暂停时形变</label>
-            <input type="checkbox" id='set_2'>
-        </span>
-        <label for="set_3">拖尾效果</label>
-        <input type="checkbox" id='set_3'>
+    <div class='col-sm-6' id='speaker'>比赛解说会有的</div>
+    <div class="col-sm-5 dropdown d-inline-block">
+        <a href="#" class="btn dropdown-toggle" data-toggle="dropdown">设置</a>
+        <ul class="dropdown-menu">
+            <li>
+                <button class='btn btn-sm' id='set_0'>
+                    形变效果
+                </button>
+            </li>
+            <li id='set_1_inner'>
+                <button class='btn btn-sm' id='set_1'>
+                    暂停时形变
+                </button>
+            </li>
+            <li>
+                <button class='btn btn-sm' id='set_2'>
+                    拖尾效果
+                </button>
+            </li>
+            <li>
+                <button class='btn btn-sm' id='set_3'>
+                    显示头像
+                </button>
+            </li>
+        </ul>
     </div>
+    <!-- <div class='col-sm-6' id='settings'>
+        <span>
+        </span>
+    </div> -->
 </div>
 {% endblock %}
 
@@ -63,9 +82,20 @@
     CURR_FRAME = 0
     PLAYING_SPEED = 1
     SPEEDY_SHAPE = 1
-    SPEEDY_SHAPE_PAUSE = 0
-    TRACE = 0
+    SPEEDY_SHAPE_PAUSE = 1
+    TRACE = 1
+    SHOW_ICON = 1
+</script>
 
+<!-- 读取双方头像 -->
+<script>
+    icons = [
+        new Image(),
+        new Image()
+    ]
+    plr2_first = (record_obj.players[0] == 'code2')
+    icons[0 + plr2_first].src = '{{match.code1.author | g_icon:128 | safe}}'
+    icons[1 - plr2_first].src = '{{match.code2.author | g_icon:128 | safe}}'
 </script>
 
 <!-- 比赛解说 -->
@@ -119,22 +149,25 @@
         rect: function (ctx, X1, Y1, dX, dY) {
             ctx.rect(this.scale * (X1 - this.center[0]) + canvas.width / 2, this.scale * (Y1 - this.center[1]) + canvas.height / 2, this.scale * dX, this.scale * dY);
         },
-        arc: function (ctx, X, Y, R) {
+        arc: function (ctx, X, Y, R, ID) {
             min_x = Math.ceil((-this.scale * R - (this.scale * (X - this.center[0]) + canvas.width / 2)) / (1000 * this.scale));
             max_x = Math.floor((canvas.width + this.scale * R - (this.scale * (X - this.center[0]) + canvas.width / 2)) / (1000 * this.scale));
             min_y = Math.ceil((-this.scale * R - (this.scale * (Y - this.center[1]) + canvas.height / 2)) / (500 * this.scale));
             max_y = Math.floor((canvas.height + this.scale * R - (this.scale * (Y - this.center[1]) + canvas.height / 2)) / (500 * this.scale));
             for (var i = min_x; i <= max_x; i++) {
                 for (var j = min_y; j <= max_y; j++) {
+                    var NX = this.scale * (X - this.center[0] + i * 1000) + canvas.width / 2
+                    var NY = this.scale * (Y - this.center[1] + j * 500) + canvas.height / 2
                     ctx.beginPath();
-                    ctx.arc(this.scale * (X - this.center[0] + i * 1000) + canvas.width / 2, this.scale * (Y - this.center[1] + j * 500) + canvas.height / 2, this.scale * R, 0, Math.PI * 2, true);
+                    ctx.arc(NX, NY, this.scale * R, 0, Math.PI * 2, true);
                     ctx.closePath();
                     ctx.fill();
+                    this.player_wrap(ctx, NX, NY, this.scale * R, ID)
                 }
             }
         },
-        arc_speed: function (ctx, X, Y, VX, VY, R) {
-            if (!(PLAYING || SPEEDY_SHAPE_PAUSE)) return this.arc(ctx, X, Y, R)
+        arc_speed: function (ctx, X, Y, VX, VY, R, ID) {
+            if (!(PLAYING || SPEEDY_SHAPE_PAUSE)) return this.arc(ctx, X, Y, R, ID)
             if (this.target != null) {
                 var tmp = record_obj.data[CURR_FRAME][this.target]
                 VX -= tmp[2]
@@ -152,6 +185,7 @@
                 for (var j = min_y; j <= max_y; j++) {
                     var NX = this.scale * (X - this.center[0] + i * 1000) + canvas.width / 2
                     var NY = this.scale * (Y - this.center[1] + j * 500) + canvas.height / 2
+                    var NR = R * this.scale
                     ctx.beginPath();
                     for (var t1 = 0; t1 < nsplit * 2; t1++) {
                         var theta = t1 * Math.PI / nsplit
@@ -160,12 +194,20 @@
                             y1 = x * Math.sin(dr) + y * Math.cos(dr)
                         if (t1) ctx.lineTo(NX + x1, NY + y1)
                         else ctx.moveTo(NX + x1, NY + y1)
-                        // // (i ? ctx.lineTo : ctx.moveTo)(NX + x1, NY + y1)
+                        NR = Math.max(NR, x1, y1)
                     }
                     ctx.closePath();
                     ctx.fill();
+                    this.player_wrap(ctx, NX, NY, NR, ID)
                 }
             }
+        },
+        player_wrap: function (ctx, X, Y, R, ID) {
+            if (!(SHOW_ICON && (ID == 0 || ID == 1))) return
+            ctx.save();
+            ctx.clip();
+            ctx.drawImage(icons[ID], X - R, Y - R, R * 2, R * 2);
+            ctx.restore();
         }
     }
     // 读取数据库数据
@@ -240,8 +282,8 @@
         // Shadow
         if (shadow) {
             ctx.fillStyle = "rgba(0,0,0,0.3)"; // gray
-            if (SPEEDY_SHAPE) camera.arc_speed(ctx, X + 1, Y + 3, VX, VY, R)
-            else camera.arc(ctx, X + 1, Y + 3, R, 0);
+            if (SPEEDY_SHAPE) camera.arc_speed(ctx, X + 1, Y + 3, VX, VY, R, null)
+            else camera.arc(ctx, X + 1, Y + 3, R, null);
         }
         var fill = linear_color([160, 255, 140], [130, 130, 130], 0, 30, R); // linear gray-green
         if (ID <= 1) {
@@ -269,8 +311,8 @@
             }
         }
         ctx.fillStyle = parse_color(fill)
-        if (SPEEDY_SHAPE) camera.arc_speed(ctx, X, Y, VX, VY, R)
-        else camera.arc(ctx, X, Y, R);
+        if (SPEEDY_SHAPE) camera.arc_speed(ctx, X, Y, VX, VY, R, ID)
+        else camera.arc(ctx, X, Y, R, ID);
     }
 
     canvas.addEventListener("DOMMouseScroll", mouse_scroll, false);
@@ -403,19 +445,33 @@
 
 <!-- 画面设置API -->
 <script>
-    document.getElementById('set_1').addEventListener('change', function () {
-        SPEEDY_SHAPE = this.checked
-        document.getElementById('set_1_inner').style.display = this.checked ? '' : 'none'
-        draw()
-    })
-    document.getElementById('set_2').addEventListener('change', function () {
-        SPEEDY_SHAPE_PAUSE = this.checked
-        draw()
-    })
-    document.getElementById('set_3').addEventListener('change', function () {
-        TRACE = this.checked
-        draw()
-    })
+    button_pool = [
+        ['形变效果', 'SPEEDY_SHAPE'],
+        ['暂停时形变', 'SPEEDY_SHAPE_PAUSE'],
+        ['拖尾效果', 'TRACE'],
+        ['显示头像', 'SHOW_ICON'],
+    ]
+    function update_settings() {
+        for (var i = 0; i < button_pool.length; i++) {
+            document.getElementById('set_' + i).innerHTML = button_pool[i][0] + (window[button_pool[i][1]] ? ': 开' : ': 关')
+        }
+        document.getElementById('set_1_inner').style.display = SPEEDY_SHAPE ? '' : 'none'
+    }
+
+    // 注册
+    function tmp(ind) {
+        function inner(e) {
+            e.preventDefault()
+            window[button_pool[ind][1]] = !window[button_pool[ind][1]]
+            update_settings()
+            draw()
+        }
+        return inner
+    }
+    for (var i = 0; i < button_pool.length; i++) {
+        document.getElementById('set_' + i).addEventListener('click', tmp(i))
+    }
+    update_settings()
 </script>
 
 <script>

@@ -36,53 +36,47 @@
 {% endblock %}
 
 {% block display_body %}
-<div class='col-sm-3' style='border-right: 2px solid #E6E9ED; padding-right: 15px'>
-    <div class='row x_title'>
-        <h1 class='col-sm-12'>显示设置</h1>
-    </div>
-    <div class='row x_block'>
-        <div class='col-sm-6'>
-            先手玩家颜色:
+<div class='col-sm-12' style='border-right: 2px solid #E6E9ED; padding-right: 15px'>
+    <div class='btn btn-sm btn-info'>显示设置</div>
+    <div class='row'>
+        <div class='col-sm-4'>
+            <div>
+                先手玩家颜色:
+                <input type="color" value="#FDA761" id="color1">
+                <input type="color" value="#fc7b12" id="color1_1">
+            </div>
+            <div>
+                后手玩家颜色:
+                <input type="color" value="#80D1FF" id="color2">
+                <input type="color" value="#06a8ff" id="color2_1">
+            </div>
         </div>
-        <div class='col-sm-6'>
-            <input type="color" value="#FDA761" id="color1">
-            <input type="color" value="#fc7b12" id="color1_1">
+        <div class='col-sm-4 row'>
+            <div class='col-sm-6'>
+                网格大小 (<label id="grid_size_val">5</label>)
+            </div>
+            <div class='col-sm-6'>
+                <input type="range" min='1' max='10' step='1' value="5" id="grid_size" class='xscroll'>
+            </div>
+            <div class='col-sm-6'>
+                纸带宽度 (<label id="band_width_val">3</label>)
+            </div>
+            <div class='col-sm-6'>
+                <input type="range" min='1' max='10' step='1' value="3" id="band_width" class='xscroll'>
+            </div>
         </div>
-        <div class='col-sm-6'>
-            后手玩家颜色:
-        </div>
-        <div class='col-sm-6'>
-            <input type="color" value="#80D1FF" id="color2">
-            <input type="color" value="#06a8ff" id="color2_1">
-        </div>
-    </div>
-    <div class='row x_block'>
-        <div class='col-sm-6'>
-            网格大小 (<label id="grid_size_val">5</label>)
-        </div>
-        <div class='col-sm-6'>
-            <input type="range" min='1' max='10' step='1' value="5" id="grid_size" class='xscroll'>
-        </div>
-        <div class='col-sm-6'>
-            纸带宽度 (<label id="band_width_val">3</label>)
-        </div>
-        <div class='col-sm-6'>
-            <input type="range" min='1' max='10' step='1' value="3" id="band_width" class='xscroll'>
-        </div>
-        <div class='col-sm-6'>
-            玩家尺寸
-        </div>
-        <div class='col-sm-6'>
-            <select id="player_size" class='form-control-sm'>
-                <option value="0">小</option>
-                <option value="1">大</option>
-            </select>
+        <div class='col-sm-4'>
+            <div>
+                玩家尺寸
+                <select id="player_size" class='form-control-sm'>
+                    <option value="0">小</option>
+                    <option value="1">大</option>
+                </select>
+            </div>
         </div>
     </div>
 </div>
-<div class='screen-pool ml-auto mr-auto'>
-    <canvas id='screen'></canvas>
-</div>
+<canvas id='screen' class='screen-pool ml-auto mr-auto'></canvas>
 {% endblock %}
 
 {% block script %}
