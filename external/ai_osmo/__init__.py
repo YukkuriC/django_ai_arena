@@ -1,6 +1,7 @@
 from external._base import BasePairMatch
 from functools import lru_cache
 from os import path
+import random, time
 if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
     from django.conf import settings
 
@@ -41,6 +42,9 @@ class OsmoMatch(BasePairMatch):
         运行一局比赛
         并返回比赛记录对象
         '''
+        if d_local['who_first'] != "4" or d_local['rid'] % 2 == 0:
+            random.last_seed = int(time.time())
+        random.seed(random.last_seed)
         wld = osmo_api.one_race(d_local['players'], cls.init_params,
                                 d_local['names'])
         if wld.result['winner'] not in (0, 1):
