@@ -9,7 +9,7 @@ from . import models
 class CodeAdmin(admin.ModelAdmin):
     list_display = ['name', 'author', 'ai_type', 'edit_datetime', 'score']
     list_filter = ['ai_type']
-    search_fields = ['name', 'author']
+    search_fields = ['name', 'author__username']
     date_hierarchy = 'edit_datetime'
 
 
@@ -19,7 +19,10 @@ class MatchAdmin(admin.ModelAdmin):
         'ai_type', 'code1', 'code2', 'status', 'run_datetime', 'is_ranked'
     ]
     list_filter = ['ai_type', 'status', 'is_ranked']
-    search_fields = ['code1', 'code2']
+    search_fields = [
+        'code1__name', 'code2__name', 'code1__author__username',
+        'code2__author__username'
+    ]
     date_hierarchy = 'run_datetime'
     actions = ['set_stopped']
 
