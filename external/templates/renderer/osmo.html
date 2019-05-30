@@ -93,6 +93,7 @@
         new Image(),
         new Image()
     ]
+    icons.forEach(function (img) { img.crossOrigin = "Anonymous" })
     plr2_first = (record_obj.players[0] == 'code2')
     icons[0 + plr2_first].src = '{{match.code1.author | g_icon:128 | safe}}'
     icons[1 - plr2_first].src = '{{match.code2.author | g_icon:128 | safe}}'
@@ -483,14 +484,18 @@
         a.href = url
         a.dispatchEvent(event)
     }
-    function save_images() {
+    function save_img_back(step, timeout, frame = null, frame_to = null) {
         PLAYING = false
-        for (var i = 0; i < TOTAL_FRAMES; i++) {
-            parse_frame(i)
-            var tmp = String(i)
-            if (tmp.length < 3) tmp = '0'.repeat(3 - tmp.length) + tmp
-            screenshot('img_' + tmp + '.png')
-        }
+        if (frame == null) frame = CURR_FRAME
+        if (frame_to == null) frame_to = TOTAL_FRAMES
+        if (frame >= frame_to) return;
+        parse_frame(frame)
+        var tmp = String(frame)
+        if (tmp.length < 3) tmp = '0'.repeat(3 - tmp.length) + tmp
+        screenshot('img_' + tmp + '.png')
+        setTimeout(function () {
+            save_img_back(step, timeout, frame + step)
+        }, timeout);
     }
 </script>
 {% endblock %}
