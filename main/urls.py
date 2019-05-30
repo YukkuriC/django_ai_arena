@@ -16,11 +16,14 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from .helpers import sorry
+from django.views.generic.base import RedirectView
 
 handler404 = sorry
 handler500 = sorry
 
 urlpatterns = [
+    path(
+        'favicon.ico', RedirectView.as_view(url=r'assets/images/favicon.png')),
     path('', include('usr_sys.urls')),
     path('', include('match_sys.urls')),
     path('', include('ajax_sys.urls')),

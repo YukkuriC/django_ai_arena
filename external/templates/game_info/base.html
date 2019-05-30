@@ -9,25 +9,29 @@
 </div>
 <div class='row x_block'>
     <div class='col-sm-6'>
-        {% block intro %}我是简介框{% endblock %}
+        <div id='left_inner'>
+            {% block intro %}我是简介框{% endblock %}
+        </div>
     </div>
     <div class='col-sm-6'>
-        {% block images %}我是图片展示框{% endblock %}
+        <div id='right_inner' style='overflow:hidden'>
+            {% block images %}我是图片展示框{% endblock %}
+        </div>
     </div>
 </div>
 <!-- <div class='x_title'>
     <h1>传送门</h1>
 </div> -->
 <div class='row x_block'>
-        <div class='col-sm-4'>
-            <a href="/lobby/ranked_match/{{AI_type}}/" class='btn btn-primary form-control'>匹配对战</a>
-        </div>
-        <div class='col-sm-4'>
-            <a href="/lobby/run_match/{{AI_type}}/" class='btn btn-primary form-control'>自由对战</a>
-        </div>
-        <div class='col-sm-4'>
-            <a href="/lobby/ladder/{{AI_type}}/" class='btn btn-primary form-control'>查看天梯</a>
-        </div>
+    <div class='col-sm-4'>
+        <a href="/lobby/ranked_match/{{AI_type}}/" class='btn btn-primary form-control'>匹配对战</a>
+    </div>
+    <div class='col-sm-4'>
+        <a href="/lobby/run_match/{{AI_type}}/" class='btn btn-primary form-control'>自由对战</a>
+    </div>
+    <div class='col-sm-4'>
+        <a href="/lobby/ladder/{{AI_type}}/" class='btn btn-primary form-control'>查看天梯</a>
+    </div>
 </div>
 
 {% if request.session.userid %}
@@ -59,8 +63,10 @@
 {% block script %}
 {% if request.session.userid %}
 <script>
-    window.addEventListener('load', () => {
+    window.addEventListener('load', function () {
         window.table = new TableHolder('pool', '/table/match/?pre=near_type&aitype={{AI_type}}')
+        var left = document.getElementById('left_inner'), right = document.getElementById('right_inner')
+        right.style.height = left.scrollHeight + 'px'
     })
 </script>
 {% endif %}
