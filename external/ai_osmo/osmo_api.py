@@ -66,9 +66,12 @@ def one_race(modules, storages, plr_names):
     if any(isinstance(e, Exception) for e in plrs):  # 初始化报错
         return FakeWorld(plrs, plr_names)
 
+    extra_mode = consts.Consts.get('extra_mode', '')
+
     wld = world.World(*plrs, plr_names, recorders)
     while not wld.result:
         wld.update(consts.Consts["FRAME_DELTA"])
+        extra_mode_wrap(wld, extra_mode)
     return wld
 
 
@@ -95,3 +98,20 @@ def load_log(path):
     with open(path, 'rb') as f:
         obj = pickle.loads(zlib.decompress(f.read()))
     return obj
+
+
+import math, random
+import cell
+
+
+def extra_mode_wrap(world, mode):
+    if not mode:
+        return
+    Consts = consts.Consts
+    if mode == 'a':
+        r = world.frame_count * 0.1
+        world.cells.append(
+            cell.Cell(
+                len(world.cells),
+                [Consts["WORLD_X"] / 2, Consts["WORLD_Y"] / 2],
+                [6 * math.cos(r), 3 * math.sin(r)], 2))

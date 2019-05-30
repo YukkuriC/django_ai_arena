@@ -6,7 +6,10 @@
 {% block form_override %}
 <div class="form-group">
     <div>
-        <label for="id_code1">我方代码:</label>
+        <div>
+            <label for="id_code1">我方代码:</label>
+            <a class='float-right' href='#' id='random_roll_1'>手气不错</a>
+        </div>
         {%if form.errors.code1%}
         <label style='color:red'>{{form.errors.code1}}</label>
         {%endif%}
@@ -21,8 +24,8 @@
 <div class="form-group">
     <div>
         <div>
-            <label for="id_code1">对方代码:</label>
-            <a class='float-right' href='#' id='random_roll'>手气不错</a>
+            <label for="id_code2">对方代码:</label>
+            <a class='float-right' href='#' id='random_roll_2'>手气不错</a>
         </div>
         {%if form.errors.code2%}
         <label style='color:red'>{{form.errors.code2}}</label>
@@ -38,15 +41,27 @@
 
 <div class='row x_block'>
     {%for elem in form%}
+    {%if elem != form.extra_mode%}
     <div class="form-group col-sm-6">
         {% include "sub/form_element.html" %}
     </div>
-    {%if forloop.counter == 2 or forloop.last%}
+    {%if forloop.counter == 2%}
 </div>
 <div class='row x_block'>
     {%endif%}
+    {%endif%}
     {%endfor%}
 </div>
+
+{% if form.extra_mode.label %}
+<div class='row x_block' id='extra_tab' style='overflow:hidden;height:0px;transition:0.5s all'>
+    {% with elem=form.extra_mode %}
+    <div class="form-group col-sm-12">
+        {% include "sub/form_element.html" %}
+    </div>
+    {% endwith %}
+</div>
+{% endif %}
 
 <div class="form-group">
     <input type="submit" value="发起比赛" class='btn btn-primary form-control'>
@@ -61,19 +76,41 @@
 
 {% block script %}
 <script>
-    window.addEventListener('load', () => {
+    window.addEventListener('load', function () {
         document.getElementById('id_code1').value = "{{my_code}}"
         document.getElementById('id_code2').value = "{{target_code}}"
-        var tmp = document.getElementById('id_code2').children
-        var rand_picker = []
-        for (var i = 1; i < tmp.length; i++) {
-            rand_picker.push(tmp[i].value)
-        }
-        document.getElementById('random_roll').addEventListener('click', e => {
-            e.preventDefault()
-            var randid = randrange(rand_picker.length)
-            document.getElementById('id_code2').value = rand_picker[randid]
-        })
+        for (var x = 1; x <= 2; x++)
+            (function (ind) {
+                var tmp = document.getElementById('id_code' + ind).children
+                var rand_picker = []
+                for (var i = 1; i < tmp.length; i++) {
+                    rand_picker.push(tmp[i].value)
+                }
+                document.getElementById('random_roll_' + ind).addEventListener('click', e => {
+                    e.preventDefault()
+                    var randid = randrange(rand_picker.length)
+                    document.getElementById('id_code' + ind).value = rand_picker[randid]
+                })
+            })(x)
     })
 </script>
+
+{% if form.extra_mode.label %}
+<script>
+    var extra_tab = document.getElementById('extra_tab')
+    oldParent = extra_tab.parentNode
+    extra_tab.parentNode.removeChild(extra_tab)
+    final_code = 'SESSDSA'
+    code = ''
+    document.addEventListener('keydown', function (e) {
+        window.code += e.key
+        if (code == final_code) {
+            oldParent.appendChild(extra_tab)
+            extra_tab.style.height = extra_tab.scrollHeight + 'px'
+        }
+        else if (final_code.substr(0, code.length) != code) code = ''
+    })
+</script>
+{% endif %}
+
 {% endblock %}

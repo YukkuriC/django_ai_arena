@@ -21,12 +21,14 @@
 
 <div class='row x_block'>
     {%for elem in form%}
+    {%if elem != form.extra_mode%}
     <div class="form-group col-sm-6">
         {% include "sub/form_element.html" %}
     </div>
     {%if forloop.counter == 2 or forloop.last%}
 </div>
 <div class='row x_block'>
+    {%endif%}
     {%endif%}
     {%endfor%}
 </div>

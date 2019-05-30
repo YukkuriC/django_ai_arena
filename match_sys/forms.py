@@ -122,6 +122,19 @@ class PairMatch_Osmo(PairMatch_Base):
             'class': 'form-control',
             'value': Consts['MAX_FRAME']
         }))
+    extra_mode = forms.ChoiceField(
+        required=False,
+        label='额外模式',
+        choices=(
+            ('0', '默认'),
+            ('a', '喷泉模式'),
+            # ('b', '磁铁模式'),
+            # ('c', '捉兔子'),
+        ),
+        widget=forms.Select({
+            'class': 'form-control',
+            'value': ''
+        }))
 
 
 class PairMatchFormFactory:
