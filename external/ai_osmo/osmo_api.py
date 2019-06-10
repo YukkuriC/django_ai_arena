@@ -49,7 +49,7 @@ def apply_params(params):
         consts.Consts[k] = v
 
 
-def one_race(modules, storages, plr_names):
+def one_race(modules, storages, plr_names, seed=None):
     '''运行一局比赛并输出结果对象'''
     # 创建World记录对象
     recorders = [world.WorldStat(consts.Consts["MAX_FRAME"]) for i in 'xx']
@@ -68,7 +68,7 @@ def one_race(modules, storages, plr_names):
 
     extra_mode = consts.Consts.get('extra_mode', '')
 
-    wld = world.World(*plrs, plr_names, recorders)
+    wld = world.World(*plrs, plr_names, recorders, seed)
     while not wld.result:
         wld.update(consts.Consts["FRAME_DELTA"])
         extra_mode_wrap(wld, extra_mode)
