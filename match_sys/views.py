@@ -483,4 +483,4 @@ if 'view':
 
         not_last_record = (record_id + 1 != match.finished_rounds)
 
-        return render(request, loader.template_dir, locals())
+        return render(request, 'renderer/%s.html' % match.ai_type, locals())

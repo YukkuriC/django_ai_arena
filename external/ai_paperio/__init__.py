@@ -9,8 +9,6 @@ if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
 
 # 比赛进程
 class PaperIOMatch(BasePairMatch):
-    template_dir = 'renderer/paperio.html'
-
     class Meta(BasePairMatch.Meta):
         required_functions = ['play']
 

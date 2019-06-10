@@ -5,8 +5,6 @@ from functools import lru_cache
 
 
 class PingPongMatch(BasePairMatch):
-    template_dir = 'renderer/pingpong.html'
-
     class Meta(BasePairMatch.Meta):
         required_functions = ('serve', 'play', 'summarize')
 

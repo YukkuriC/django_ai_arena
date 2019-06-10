@@ -9,8 +9,6 @@ from . import osmo_api
 
 
 class OsmoMatch(BasePairMatch):
-    template_dir = 'renderer/osmo.html'
-
     class Meta(BasePairMatch.Meta):
         required_classes = [('Player', ['strategy'])]
 
