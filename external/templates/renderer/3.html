@@ -35,7 +35,7 @@
 </div>
 <div class='row x_block'>
     <div class='col-sm-1' id='frame_display'></div>
-    <div class='col-sm-6' id='speaker'>比赛解说会有的</div>
+    <div class='col-sm-6' id='speaker'></div>
     <div class="col-sm-5 dropdown d-inline-block">
         <a href="#" class="btn dropdown-toggle" data-toggle="dropdown">设置</a>
         <ul class="dropdown-menu">
@@ -95,14 +95,49 @@
     ]
     icons.forEach(function (img) { img.crossOrigin = "Anonymous" })
     plr2_first = (record_obj.players[0] == 'code2')
+    //{% if match %}
     icons[0 + plr2_first].src = '{{match.code1.author | g_icon:128 | safe}}'
     icons[1 - plr2_first].src = '{{match.code2.author | g_icon:128 | safe}}'
+    //{% endif %}
 </script>
 
 <!-- 比赛解说 -->
 <script>
+    player_mapper = {
+        0: '先手玩家',
+        1: '后手玩家',
+        2: '双方同时'
+    }
+    player_mapper[-1] = player_mapper[2]
     function show_frame() {
         document.getElementById('frame_display').innerHTML = (CURR_FRAME + 1) + '/' + TOTAL_FRAMES
+
+        var text = ''
+        if (CURR_FRAME < TOTAL_FRAMES - 1) {
+            var frame = record_obj.data[CURR_FRAME]
+            text = '双方半径: ' + frame[0][4].toFixed(2) + '-' + frame[1][4].toFixed(2)
+        } else {
+            switch (record_obj.cause) {
+                case 'PLAYER_DEAD':
+                    text = player_mapper[1 - record_obj.winner] + '被吃'
+                    break
+                case 'MAX_FRAME':
+                    var frame = record_obj.data[TOTAL_FRAMES - 1]
+                    text = '结算大小: ' + frame[0][4].toFixed(2) + '-' + frame[1][4].toFixed(2)
+                    break
+                case "RUNTIME_ERROR":
+                    text = player_mapper[1 - record_obj.winner] + '报错: ' + (record_obj.winner == -1 ? ('(' + record_obj.detail + ')') : record_obj.detail[1 - record_obj.winner])
+                    break
+                case "INVALID_RETURN_VALUE":
+                    text = player_mapper[1 - record_obj.winner] + '函数返回格式错误'
+                    break
+                case "TIMEOUT":
+                    text = player_mapper[1 - record_obj.winner] + '运行超时'
+                    break
+            }
+            text += ', ' + player_mapper[record_obj.winner] + '获胜'
+        }
+        document.getElementById('speaker').innerHTML = text
     }
 </script>
 

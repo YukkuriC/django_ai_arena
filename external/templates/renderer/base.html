@@ -1,6 +1,13 @@
 {% extends 'layout0.html' %}
 
-{% block title %}查看比赛记录: {{match.code1.name}} vs. {{match.code2.name}} - {{record_id}}{% endblock %}
+{% block title %}
+查看比赛记录: 
+{% if match %}
+{{match.code1.name}} vs. {{match.code2.name}} - {{record_id}}
+{% else %}
+课堂记录复盘
+{% endif %}
+{% endblock %}
 
 {% block css %}
 <style>
@@ -18,10 +25,15 @@
 {% block header %}
 <div class='col-sm-4'>
     <h1>
+        {% if match %}
         <a href='../' title='{{match.code1.name}} vs. {{match.code2.name}}'>返回比赛</a>
+        {% else %}
+        <a href='../'>返回课堂比赛结果</a>
+        {% endif %}
     </h1>
 </div>
 <div class='col-sm-4 text-center'>
+    {% if match %}
     {% if record_id %}
     <h1 class='d-inline-block'>
         <a href='../{{record_id | add:"-1"}}'>
@@ -38,6 +50,7 @@
             下一场
         </a>
     </h1>
+    {% endif %}
     {% endif %}
 </div>
 <div class='col-sm-4'>

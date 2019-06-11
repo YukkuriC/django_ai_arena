@@ -1,0 +1,58 @@
+{% extends 'layout0.html' %}
+
+{% block header %}
+<div class='col-sm-12'>
+    <h1>
+        <a id='bread_root'>{% block title %}比赛结果: {{title}}{% endblock %}</a>
+        /
+        <span id='bread'>{{folder | default_if_none:""}}</span>
+    </h1>
+</div>
+{% endblock %}
+
+{% block body %}
+<!-- <div class='x_title'>
+    <h1>/<span id='bread'>{{folder | default_if_none:""}}</span></h1>
+</div> -->
+{% if folder %}
+<div>
+    <a href=".." class='form-control'>返回</a>
+</div>
+{% endif %}
+{% for f in folders %}
+<div>
+    <a href="./{{f}}/" class='form-control'>目录: {{f}}</a>
+</div>
+{% endfor %}
+{% for f in files %}
+<div>
+    <a href="./{{f}}/" class='form-control'>比赛记录: {{f}}</a>
+</div>
+{% endfor %}
+{% endblock %}
+
+{% block script %}
+<script>
+    var bread = document.getElementById('bread')
+    var bread_route = bread.innerHTML.split('/')
+    var bread_link = ''
+    for (var i = bread_route.length - 1; i >= 0; i--) {
+        var a = document.createElement('a')
+        a.innerHTML = bread_route[i]
+        if (bread_link) {
+            a.href = bread_link
+            bread_link += '/..'
+        } else {
+            bread_link = '..'
+        }
+        bread_route[i] = a
+    }
+    if (bread_link)
+        document.getElementById('bread_root').href = bread_link
+    bread.innerHTML = ''
+    bread_route.forEach(function (a, i) {
+        if (i) bread.innerHTML += ' / '
+        bread.appendChild(a)
+    })
+</script>
+{% endblock %}

@@ -1,7 +1,16 @@
 {% extends 'layout0.html' %}
 {% load staticfiles %}
 
-{% block title %}项目简介 - {{title}}{% endblock %}
+{% block header %}
+<div class='col-sm-6'>
+    <h1>{% block title %}项目简介 - {{title}}{% endblock %}</h1>
+</div>
+<div class='col-sm-6 text-right'>
+    <h1>
+        <a href="/results/{{AI_type}}/">课堂对战结果</a>
+    </h1>
+</div>
+{% endblock %}
 
 {% block body %}
 <div class='x_title'>

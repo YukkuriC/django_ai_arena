@@ -27,5 +27,6 @@ urlpatterns = [
     path('', include('usr_sys.urls')),
     path('', include('match_sys.urls')),
     path('', include('ajax_sys.urls')),
+    path('', include('external.urls')),
     path('1145141919810/', admin.site.urls),
 ]
