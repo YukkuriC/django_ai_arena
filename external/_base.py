@@ -488,3 +488,25 @@ class BasePairMatch(BaseProcess, BaseCodeLoader, BaseRecordLoader):
             d_global: 函数内globals()获取的全局变量
         '''
         pass
+
+
+def seal_module(mod_name):
+    class tmp:
+        def __getattr__(self, attr):
+            res = getattr(module, attr)
+            if isinstance(res, type(module)):
+                return None
+            return res
+
+        def __setattr__(self, k, v):
+            pass
+
+        def __dir__(self):
+            return dir(module)
+
+    module = __import__(mod_name)
+    modules[mod_name] = tmp()
+
+
+for x in BasePairMatch.Meta.module_whitelist:
+    seal_module(x)
