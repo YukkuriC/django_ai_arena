@@ -356,7 +356,9 @@ if 'view code':
 
             # 尝试读取代码
             try:
-                loader.load_code(new_code, True, True)
+                ast, warnings = loader.load_code(new_code, True, True)
+                for line in warnings:
+                    messages.warning(request, '注意: ' + line)
                 validated = True
                 res['code_status'] = 0
             except Exception as e:

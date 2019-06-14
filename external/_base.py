@@ -105,11 +105,12 @@ class BaseCodeLoader:
         return AssertionError(text)
 
     @classmethod
-    def verify_code(cls, code_raw):
+    def verify_code(cls, code_raw, warnings):
         '''
         通过AST检查代码合法性
         params:
             code_raw: 代码整体字符串
+            warnings: 代码规范警告内容
         '''
         if isinstance(code_raw, bytes):
             code_raw = code_raw.decode('utf-8', 'ignore')
@@ -126,6 +127,8 @@ class BaseCodeLoader:
             if isinstance(node, ast.ImportFrom):
                 if cls.Meta.invalid_import(node.module):
                     raise cls._ast_error(node, 0, node.module)
+                elif node.names[0].name == '*':
+                    warnings.append('第%s行 请写明import内容' % node.lineno)
             if isinstance(node, ast.Call):
                 func = node.func
                 func_name = getattr(func, 'attr', getattr(func, 'id', None))
@@ -163,7 +166,7 @@ class BaseCodeLoader:
         params:
             code_raw: 代码文件路径或代码整体字符串
             raw: 是否为直接的代码字串
-            to_ast: 仅输出至AST为止
+            to_ast: 仅输出至AST为止 (同时返回代码风格检查警告)
         '''
         # 直接读取字符串
         if raw:
@@ -179,11 +182,12 @@ class BaseCodeLoader:
                 raise SyntaxError('文件读取失败: ' + str(e))
 
         # 检查代码合法性
-        code_tree = cls.verify_code(code_raw)
+        warnings=[]
+        code_tree = cls.verify_code(code_raw, warnings)
 
         # 输出AST，不继续执行
         if to_ast:
-            return code_tree
+            return code_tree, warnings
 
         # 加载模块并输出
         try:
