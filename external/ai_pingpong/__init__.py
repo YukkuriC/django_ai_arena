@@ -40,7 +40,8 @@ class PingPongMatch(BasePairMatch):
         返回比赛结果元组
         '''
         res = log['winner']
-        res = 0 if res[0] == 'W' else 1
+        if res != None:
+            res = 0 if res[0] == 'W' else 1
         return (res, )
 
     @classmethod
@@ -50,6 +51,27 @@ class PingPongMatch(BasePairMatch):
         '''
         log_name = path.join(d_local['match_dir'], 'logs/%02d.zlog' % round_id)
         pingpong_api.save_log(log, log_name)
+
+    @classmethod
+    def runner_fail_log(cls, winner, descrip, d_local, d_global):
+        ''' 内核错误 '''
+        descrip = [cls.stringfy_error(e) for e in descrip]
+        if winner != None:
+            descrip = descrip[1 - winner]
+        from table import Table, DIM, TMAX
+        main_table = Table()
+        return {
+            'DIM': DIM,
+            'TMAX': TMAX,
+            'tick_step': main_table.tick_step,
+            'West': d_local['names'][0],
+            'East': d_local['names'][1],
+            'tick_total': main_table.tick,
+            'winner': winner,
+            'winner_life': -1,
+            'reason': descrip,
+            'log': []
+        }
 
     @classmethod
     @lru_cache()
@@ -73,7 +95,10 @@ class PingPongMatch(BasePairMatch):
         for rec in records:
             if rec == None:
                 continue
-            winner = rec[rec['winner']] == 'code2'
+            if rec['winner'] == None:
+                winner = None
+            else:
+                winner = rec[rec['winner']] == 'code2'
             result_stat[winner] += 1
         return {
             'stat': result_stat,
@@ -96,6 +121,8 @@ if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
             return '%s回合 (%s Tick)' % (nround, ntick)
 
         def r_winner(_, match, record):
+            if record['winner'] == None:
+                return '平局'
             code2_hold = (record['West'] == 'code2')
             holder_win = (record['winner'] == 'West')
             code2_win = (code2_hold == holder_win)

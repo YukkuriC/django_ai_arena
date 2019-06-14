@@ -68,6 +68,11 @@ class OsmoMatch(BasePairMatch):
         osmo_api.save_log(world, log_name)
 
     @classmethod
+    def runner_fail_log(cls, winner, descrip, d_local, d_global):
+        ''' 内核错误 '''
+        return osmo_api.FakeWorld(descrip, d_local['names'])
+
+    @classmethod
     @lru_cache()
     def load_record(cls, match_dir, rec_id):
         log_name = path.join(match_dir, 'logs/%02d.zlog' % rec_id)

@@ -335,7 +335,13 @@ class BasePairMatch(BaseProcess, BaseCodeLoader, BaseRecordLoader):
             output: 用于输出比赛结果的multiprocessing.Queue对象
         '''
         # 读取参数
-        players = [cls.load_code(code) for code in codes]  # 读取代码模块
+        players, plr_loaded = [], True
+        for code in codes:  # 读取代码模块
+            try:
+                players.append(cls.load_code(code))
+            except Exception as e:
+                players.append(e)
+                plr_loaded = False
         names = ('code1', 'code2')
         rounds = params['rounds']
         who_first = params['who_first']
@@ -344,19 +350,38 @@ class BasePairMatch(BaseProcess, BaseCodeLoader, BaseRecordLoader):
         # 初始化环境
         cls.init_params = cls.pre_run(locals(), globals())
 
+        # 若玩家代码加载失败则直接判断胜负
+        if not plr_loaded:
+            plr_errors = [
+                e if isinstance(e, Exception) else None for e in players
+            ]
+            if all(plr_errors):
+                winner = None
+            else:
+                winner = not plr_errors[1]
+
         # 运行多局比赛
         last_invert = 0  # 上一局是否对方先手
         for rid in range(rounds):
-            # 处理交换场地情况
-            now_invert = first_sequence[rid]
-            if now_invert != last_invert:
-                players = players[::-1]
-                names = names[::-1]
-                cls.swap_fields(locals(), globals())
-            last_invert = now_invert
+            # 正常比赛
+            if plr_loaded:
+                # 处理交换场地情况
+                now_invert = first_sequence[rid]
+                if now_invert != last_invert:
+                    players = players[::-1]
+                    names = names[::-1]
+                    cls.swap_fields(locals(), globals())
+                last_invert = now_invert
 
-            # 获取比赛记录
-            log = cls.run_once(locals(), globals())
+                # 获取比赛记录
+                try:
+                    log = cls.run_once(locals(), globals())
+                except Exception as e:
+                    log = cls.runner_fail_log(None, e, locals(), globals())
+            else:  # 全部为无错误方胜利
+                now_invert = 0
+                log = cls.runner_fail_log(winner, plr_errors, locals(),
+                                          globals())
 
             # 统计结果
             result = cls.output_queue(log)
@@ -488,6 +513,18 @@ class BasePairMatch(BaseProcess, BaseCodeLoader, BaseRecordLoader):
             d_global: 函数内globals()获取的全局变量
         '''
         pass
+
+    @classmethod
+    def runner_fail_log(cls, winner, descrip, d_local, d_global):
+        '''
+        抽象接口，返回比赛进程出错时的占位比赛对象
+        Params:
+            winner: 胜者
+            descrip: 
+            d_local: 函数内locals()获取的本地变量
+            d_global: 函数内globals()获取的全局变量
+        '''
+        return {}
 
 
 def seal_module(mod_name):
