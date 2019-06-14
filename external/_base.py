@@ -531,6 +531,7 @@ class BasePairMatch(BaseProcess, BaseCodeLoader, BaseRecordLoader):
         return {}
 
 
+# 白名单模块只读化
 def seal_module(mod_name):
     class tmp:
         def __getattr__(self, attr):
@@ -544,6 +545,8 @@ def seal_module(mod_name):
 
         def __dir__(self):
             return dir(module)
+
+        __all__ = property(__dir__)
 
     module = __import__(mod_name)
     modules[mod_name] = tmp()
