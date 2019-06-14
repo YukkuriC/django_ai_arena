@@ -97,6 +97,12 @@ class BaseCodeLoader:
     '''
     比赛代码载入、检查功能
     '''
+    _ast_errors = ['非法import', '非法函数调用']
+
+    @classmethod
+    def _ast_error(cls, node, info, content):
+        text = '第%s行 %s: %s' % (node.lineno, cls._ast_errors[info], content)
+        return AssertionError(text)
 
     @classmethod
     def verify_code(cls, code_raw):
@@ -115,16 +121,16 @@ class BaseCodeLoader:
         for node in ast.walk(code_tree):
             if isinstance(node, ast.Import):
                 for module in node.names:
-                    assert module.name not in cls.Meta.module_blacklist, (
-                        node.lineno, '非法import: ' + module.name)
+                    if cls.Meta.invalid_import(module.name):
+                        raise cls._ast_error(node, 0, module.name)
             if isinstance(node, ast.ImportFrom):
-                assert node.module not in cls.Meta.module_blacklist, (
-                    node.lineno, '非法import: ' + node.module)
+                if cls.Meta.invalid_import(node.module):
+                    raise cls._ast_error(node, 0, node.module)
             if isinstance(node, ast.Call):
                 func = node.func
                 func_name = getattr(func, 'attr', getattr(func, 'id', None))
-                assert func_name not in cls.Meta.func_blacklist, (
-                    node.lineno, '非法函数调用: ' + func_name)
+                if func_name in cls.Meta.func_blacklist:
+                    raise cls._ast_error(node, 1, func_name)
 
         # 检查是否已导入必要函数与类
         all_func = set()
@@ -143,8 +149,9 @@ class BaseCodeLoader:
         for clas, funcs in cls.Meta.required_classes:  # 查找需求类
             assert clas in all_classes, '缺少必要类定义: ' + clas
             for func in funcs:
-                assert func in all_classes[clas], '类%s中缺少必要函数: %s' % (clas,
-                                                                      func)
+                if func not in all_classes[clas]:
+                    info = '类%s中缺少必要函数: %s' % (clas, func)
+                    raise AssertionError(info)
 
         # 返回AST
         return code_tree
@@ -195,11 +202,21 @@ class BaseCodeLoader:
         return '%s: %s' % (type(e).__name__, e)
 
     class Meta:
-        module_blacklist = ['os', 'sys', 'builtins', 'subprocess']  # 禁止导入的模块
+        module_whitelist = [
+            'math', 'random', 'copy', 'numpy', 'time', 'collections',
+            'itertools', 'functools'
+        ]  # 允许使用的库
         func_blacklist = ['eval', 'exec', 'compile', '__import__',
                           'open']  # 禁止使用的函数
+        game_whitelist = []  # 各项目分别需要引用的库
         required_functions = []  # 必要的函数接口 (名称)
         required_classes = []  # 必要的类定义 (名称,函数名称列表)
+
+        @classmethod
+        def invalid_import(cls, mod):
+            mod = mod.split('.')[0]
+            return not (mod in cls.module_whitelist
+                        or mod in cls.game_whitelist)
 
 
 class BaseRecordLoader:
@@ -264,7 +281,6 @@ class BasePairMatch(BaseProcess, BaseCodeLoader, BaseRecordLoader):
     增加比赛记录统计与天梯分计算部分
     '''
     init_params = None  # 用于容纳赛前准备参数
-    template_dir = NotImplemented  # 前端渲染页地址
     __repr__ = __str__ = lambda self: '<%s: %s>' % (type(self).__name__, self.match_name)
 
     # 默认的获取比赛参数函数

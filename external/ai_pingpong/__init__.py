@@ -6,7 +6,8 @@ from functools import lru_cache
 
 class PingPongMatch(BasePairMatch):
     class Meta(BasePairMatch.Meta):
-        required_functions = ('serve', 'play', 'summarize')
+        game_whitelist = ['table']
+        required_functions = ['serve', 'play', 'summarize']
 
     @classmethod
     def pre_run(cls, d_local, d_global):

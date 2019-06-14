@@ -10,6 +10,7 @@ from . import osmo_api
 
 class OsmoMatch(BasePairMatch):
     class Meta(BasePairMatch.Meta):
+        game_whitelist = ['consts', 'world', 'cell']
         required_classes = [('Player', ['strategy'])]
 
     def get_timeout(self):
