@@ -10,6 +10,7 @@ from . import osmo_api
 
 class OsmoMatch(BasePairMatch):
     class Meta(BasePairMatch.Meta):
+        game_whitelist = ['consts', 'world', 'cell']
         required_classes = [('Player', ['strategy'])]
 
     def get_timeout(self):
@@ -65,6 +66,11 @@ class OsmoMatch(BasePairMatch):
         match_dir = d_local['match_dir']
         log_name = path.join(match_dir, 'logs/%02d.zlog' % round_id)
         osmo_api.save_log(world, log_name)
+
+    @classmethod
+    def runner_fail_log(cls, winner, descrip, d_local, d_global):
+        ''' 内核错误 '''
+        return osmo_api.FakeWorld(descrip, d_local['names'])
 
     @classmethod
     @lru_cache()

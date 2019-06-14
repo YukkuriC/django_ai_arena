@@ -72,6 +72,25 @@ class PaperIOMatch(BasePairMatch):
         match_interface.save_compact_log(log, log_name)
 
     @classmethod
+    def runner_fail_log(cls, winner, descrip, d_local, d_global):
+        ''' 内核错误 '''
+        if winner != None:
+            descrip = descrip[1 - winner]
+        match_core.init_field(
+            cls.init_params.get('k', 51), cls.init_params.get('h', 101),
+            cls.init_params.get('max_turn', 2000),
+            cls.init_params.get('max_time', 30))
+        match_result = (winner, -1, descrip)
+        return {
+            'players': d_local['names'],
+            'size': (match_core.WIDTH, match_core.HEIGHT),
+            'maxturn': match_core.MAX_TURNS,
+            'maxtime': match_core.MAX_TIME,
+            'result': match_result,
+            'log': match_core.LOG_PUBLIC
+        }
+
+    @classmethod
     @lru_cache()
     def load_record(cls, match_dir, rec_id):
         return match_interface.load_match_log(
