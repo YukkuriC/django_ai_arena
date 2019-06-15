@@ -14,12 +14,17 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, re_path, include
 from .helpers import sorry
 from django.views.generic.base import RedirectView
 
 handler404 = sorry
 handler500 = sorry
+
+
+def missing_route(request, route):
+    return sorry(request, text=['不存在的地址:', route])
+
 
 urlpatterns = [
     path(
@@ -29,4 +34,5 @@ urlpatterns = [
     path('', include('ajax_sys.urls')),
     path('', include('external.urls')),
     path('1145141919810/', admin.site.urls),
+    re_path('(.+)/$', missing_route)
 ]

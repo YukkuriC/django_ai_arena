@@ -236,7 +236,6 @@ try:
     with open(os.path.join(BASE_DIR, 'override.json')) as f:
         data = json.load(f)
     for k, v in data.items():
-        i, j = line.split('=')
         globals()[k] = v
 except:
     pass
