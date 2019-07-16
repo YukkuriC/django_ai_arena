@@ -5,25 +5,25 @@
 
 {% block css %}
 <!-- codemirror base -->
-<link rel="stylesheet" href="/assets/codemirror/lib/codemirror.css" />
-<script src="/assets/codemirror/lib/codemirror.js"></script>
+<link rel="stylesheet" href="{% static 'codemirror/lib/codemirror.css' %}" />
+<script src="{% static 'codemirror/lib/codemirror.js' %}"></script>
 
 <!-- codemirror python -->
-<script src="/assets/codemirror/mode/python/python.js"></script>
+<script src="{% static 'codemirror/mode/python/python.js' %}"></script>
 
 <!-- 代码折叠 -->
-<link rel="stylesheet" href="/assets/codemirror/addon/fold/foldgutter.css" />
-<script src="/assets/codemirror/addon/fold/foldcode.js"></script>
-<script src="/assets/codemirror/addon/fold/foldgutter.js"></script>
-<script src="/assets/codemirror/addon/fold/indent-fold.js"></script>
+<link rel="stylesheet" href="{% static 'codemirror/addon/fold/foldgutter.css' %}" />
+<script src="{% static 'codemirror/addon/fold/foldcode.js' %}"></script>
+<script src="{% static 'codemirror/addon/fold/foldgutter.js' %}"></script>
+<script src="{% static 'codemirror/addon/fold/indent-fold.js' %}"></script>
 
 <!-- 括号 -->
-<script src="/assets/codemirror/addon/edit/closebrackets.js"></script>
-<script src="/assets/codemirror/addon/edit/matchbrackets.js"></script>
+<script src="{% static 'codemirror/addon/edit/closebrackets.js' %}"></script>
+<script src="{% static 'codemirror/addon/edit/matchbrackets.js' %}"></script>
 
 <!-- 注释 -->
-<script src="/assets/codemirror/addon/comment/comment.js"></script>
-<script src="/assets/codemirror/keymap/sublime.js"></script>
+<script src="{% static 'codemirror/addon/comment/comment.js' %}"></script>
+<script src="{% static 'codemirror/keymap/sublime.js' %}"></script>
 
 <style>
     .CodeMirror {

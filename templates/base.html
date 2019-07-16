@@ -1,16 +1,18 @@
+{% load staticfiles %}
+
 <html>
 
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" type="text/css" href="/assets/lib/bootstrap/bootstrap.min.css">
-  <script src="/assets/lib/jquery.min.js"></script>
-  <script src="/assets/lib/popper.min.js"></script>
-  <script src="/assets/lib/bootstrap/bootstrap.min.js"></script>
-  <link rel="stylesheet" type="text/css" href="/assets/css/view_base.css">
-  <script src='/assets/js/table_holder.js'></script>
-  <script src='/assets/js/helpers.js'></script>
+  <link rel="stylesheet" type="text/css" href="{% static 'lib/bootstrap/bootstrap.min.css' %}">
+  <script src="{% static 'lib/jquery.min.js' %}"></script>
+  <script src="{% static 'lib/popper.min.js' %}"></script>
+  <script src="{% static 'lib/bootstrap/bootstrap.min.js' %}"></script>
+  <link rel="stylesheet" type="text/css" href="{% static 'css/view_base.css' %}">
+  <script src="{% static 'js/table_holder.js' %}"></script>
+  <script src="{% static 'js/helpers.js' %}"></script>
   <title>{% block title %}base{% endblock %} | 代码竞技场</title>
   {% block css %}{% endblock %}
 </head>
