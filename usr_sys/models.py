@@ -12,7 +12,7 @@ class User(models.Model):
     pw_hash = models.CharField('密码hash', max_length=128)
     stu_code = models.CharField('学号', max_length=10)
     real_name = models.CharField('真实姓名', max_length=32)
-    register_datetime = models.DateTimeField('注册时间')
+    register_datetime = models.DateTimeField('注册时间', auto_now_add=True)
     login_datetime = models.DateTimeField('上次登录时间', null=True)
     email_validated = models.BooleanField('已验证电子邮箱', default=False)
     is_admin = models.BooleanField('管理员马甲', default=False)

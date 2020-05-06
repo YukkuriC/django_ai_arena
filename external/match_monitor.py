@@ -178,7 +178,6 @@ def start_match(AI_type, code1, code2, param_form, ranked=False):
     new_match.name = match_name
     new_match.code1 = models.Code.objects.get(id=code1)
     new_match.code2 = models.Code.objects.get(id=code2)
-    new_match.run_datetime = timezone.now()
     new_match.old_score1 = new_match.code1.score
     new_match.old_score2 = new_match.code2.score
     new_match.rounds = params['rounds']

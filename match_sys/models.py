@@ -73,15 +73,15 @@ class PairMatch(models.Model):
     )
     rounds = models.IntegerField('总局数')
     finished_rounds = models.IntegerField('已完成局数', default=0)
-    run_datetime = models.DateTimeField('发布时间')
+    run_datetime = models.DateTimeField('发布时间', auto_now_add=True)
     finish_datetime = models.DateTimeField('完成时间', null=True)
     status = models.IntegerField(
         '状态', default=0, choices=settings.PAIRMATCH_STATUS.items())
 
     # 匹配赛参数
     is_ranked = models.BooleanField('是否计分', default=0)
-    old_score1=models.FloatField('发起方等级分', null=True, default=1000)
-    old_score2=models.FloatField('接收方等级分', null=True, default=1000)
+    old_score1 = models.FloatField('发起方等级分', null=True, default=1000)
+    old_score2 = models.FloatField('接收方等级分', null=True, default=1000)
     delta_score = models.FloatField('发起方等级分变化', null=True, default=0)
     delta_score_code2 = models.FloatField('接收方等级分变化', null=True, default=0)
     params = models.TextField('对局参数', null=True, default='{}', max_length=512)

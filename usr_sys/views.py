@@ -37,7 +37,6 @@ def register(request):
             new_user.username = form.cleaned_data['username']
             new_user.stu_code = form.cleaned_data['stu_code']
             new_user.real_name = form.cleaned_data['name']
-            new_user.register_datetime = timezone.now()
             new_user.set_passwd(form.cleaned_data['passwd'])
             set_user(request, new_user)
             messages.info(request, '注册成功')
