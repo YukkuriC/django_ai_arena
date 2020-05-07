@@ -61,7 +61,6 @@ class Platform:
                         result = None
                         self.states[isFirst]['error'] = True
                         self.states[isFirst]['exception'] = traceback.format_exc()
-                        print(self.states[isFirst]['exception'])
                     return result
                 return wrappedFunc
             return decorator
@@ -145,9 +144,19 @@ class Platform:
         '''
         进行比赛
         '''
-        
+
+        def if_position(isFirst):
+            return not (self.board.getNone(True) == [] and self.board.getNone(False) == [])
+
+        def if_direction(isFirst):
+            if self.board.getNone(isFirst) != []: return True  # 加快判定
+            for _ in range(4):
+                if self.board.copy().move(isFirst, _): return True
+            return False
+            
         def get_position(isFirst, currentRound):
             self.next = self.board.getNext(isFirst, currentRound)  # 按照随机序列得到下一个位置
+            self.board.updateTime(isFirst, self.maxtime - self.states[isFirst]['time'])  # 更新剩余时间
             position = self.states[isFirst]['player'].output(currentRound, self.board.copy(), 'position')  # 获取输出
             if self.checkState(isFirst): return True  # 判断运行状态
             self.log.add('&d%d:%s set position %s' % (currentRound, c.PLAYERS[isFirst], str(position)))  # 记录
@@ -157,6 +166,7 @@ class Platform:
             return False
 
         def get_direction(isFirst, currentRound):
+            self.board.updateTime(isFirst, self.maxtime - self.states[isFirst]['time'])  # 更新剩余时间
             direction = self.states[isFirst]['player'].output(currentRound, self.board.copy(), 'direction')  # 获取输出
             if self.checkState(isFirst): return True  # 判断运行状态
             self.log.add('&d%d:%s set direction %s' % (currentRound, c.PLAYERS[isFirst], c.DIRECTIONS[direction]))  # 记录
@@ -167,10 +177,10 @@ class Platform:
 
         # 进行比赛
         for _ in range(self.rounds):
-            if get_position(True, _): break
-            if get_position(False, _): break
-            if get_direction(True, _): break
-            if get_direction(False, _): break
+            if if_position(True) and get_position(True, _): break
+            if if_position(False) and get_position(False, _): break
+            if if_direction(True) and get_direction(True, _): break
+            if if_direction(False) and get_direction(False, _): break
 
         # 记录总轮数
         self.currentRound = _ + 1
