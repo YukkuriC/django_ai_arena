@@ -4,6 +4,7 @@ from django.utils import timezone
 from .models import Code, PairMatch
 from external.factory import Factory
 from external.ai_osmo.src.consts import Consts
+from external.ai_2048.src import constants as c_2048
 
 
 # 上传代码表单
@@ -137,11 +138,32 @@ class PairMatch_Osmo(PairMatch_Base):
         }))
 
 
+class PairMatch_2048(PairMatch_Base):
+    '''osmo参数'''
+    max_time = forms.FloatField(
+        label='总思考时间（秒）',
+        max_value=10,
+        min_value=0.1,
+        widget=forms.NumberInput({
+            'class': 'form-control',
+            'value': c_2048.MAXTIME
+        }))
+    max_turn = forms.IntegerField(
+        label='最大帧数',
+        max_value=10000,
+        min_value=100,
+        widget=forms.NumberInput({
+            'class': 'form-control',
+            'value': c_2048.ROUNDS
+        }))
+
+
 class PairMatchFormFactory:
     '''分发表单工厂类'''
     mapper = {
         2: PairMatch_PaperIO,
         3: PairMatch_Osmo,
+        4: PairMatch_2048,
     }
 
     @staticmethod

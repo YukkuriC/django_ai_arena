@@ -182,7 +182,7 @@ class BaseCodeLoader:
                 raise SyntaxError('文件读取失败: ' + str(e))
 
         # 检查代码合法性
-        warnings=[]
+        warnings = []
         code_tree = cls.verify_code(code_raw, warnings)
 
         # 输出AST，不继续执行

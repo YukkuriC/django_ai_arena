@@ -2,11 +2,13 @@ from ._base import BasePairMatch
 from .ai_pingpong import PingPongMatch
 from .ai_paperio import PaperIOMatch
 from .ai_osmo import OsmoMatch
+from .ai_2048 import _2048Match
 
 _mapper = {
     1: PingPongMatch,
     2: PaperIOMatch,
     3: OsmoMatch,
+    4: _2048Match,
 }
 
 
