@@ -107,30 +107,21 @@ class PingPongMatch(BasePairMatch):
 
 # 比赛记录显示模板
 if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
-    from external.tag_loader import RecordMeta
+    from external.tag_loader import RecordBase, RecordMeta
 
-    class PingPongRecord(metaclass=RecordMeta(1)):
-        def r_holder(_, match, record):
-            if record['West'] == 'code1':
-                return match.code1.name
-            return match.code2.name
+    class PingPongRecord(RecordBase, metaclass=RecordMeta(1)):
+        def i_holder(_, match, record):
+            return record['West'] == 'code2'
+
+        def i_winner(_, match, record):
+            if record['winner'] == None:
+                return None
+            return record['winner'] == 'West'
 
         def r_length(_, match, record):
             nround = len(record['log']) - 1
             ntick = record['tick_total']
             return '%s回合 (%s Tick)' % (nround, ntick)
-
-        def r_winner(_, match, record):
-            if record['winner'] == None:
-                return '平局'
-            code2_hold = (record['West'] == 'code2')
-            holder_win = (record['winner'] == 'West')
-            code2_win = (code2_hold == holder_win)
-            return '%s (%s, %s)' % (
-                match.code2.name if code2_win else match.code1.name,
-                ('发起方', '接收方')[code2_win],
-                ('后手', '先手')[holder_win],
-            )
 
         def r_win_desc(_, match, record):
             return record['reason']

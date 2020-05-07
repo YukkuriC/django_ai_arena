@@ -130,30 +130,20 @@ class PaperIOMatch(BasePairMatch):
 
 # 比赛记录显示模板
 if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
-    from external.tag_loader import RecordMeta
+    from external.tag_loader import RecordBase, RecordMeta
 
-    class PaperIORecord(metaclass=RecordMeta(2)):
-        def r_holder(_, match, record):
-            if record['players'][0] == 'code1':
-                return match.code1.name
-            return match.code2.name
+    class PaperIORecord(RecordBase, metaclass=RecordMeta(2)):
+        def i_holder(_, match, record):
+            return record['players'][0] == 'code2'
+
+        def i_winner(_, match, record):
+            res = record['result']
+            if res[0] == None:
+                return None
+            return not res[0]
 
         def r_length(_, match, record):
             return len(record['timeleft'][0]) - 1
-
-        def r_winner(_, match, record):
-            res = record['result']
-            if res[0] == None:
-                return '平手'
-
-            code2_hold = (record['players'][0] == 'code2')
-            holder_win = not res[0]
-            code2_win = (code2_hold == holder_win)
-            return '%s (%s, %s)' % (
-                match.code2.name if code2_win else match.code1.name,
-                ('发起方', '接收方')[code2_win],
-                ('后手', '先手')[holder_win],
-            )
 
         desc_pool = [
             '回合数耗尽，结算得分', '运行超时', 'AI函数报错', '玩家撞墙', '玩家撞击纸带', '侧碰', '正碰，结算得分',
