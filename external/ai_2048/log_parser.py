@@ -53,12 +53,8 @@ if 'PARSERS':
         读取盘面
         范围：5-7
         """
-        return {
-            'r':
-            int(grps[6]),
-            'd': [[int(x) for x in line.split()[:8]]
-                  for line in grps[7].split('\n')[:4]]
-        }
+        return [[int(x) for x in line.split()[:8]]
+                for line in grps[7].split('\n')[:4]]
 
     def parse_E(grps):
         """
