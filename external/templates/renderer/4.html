@@ -14,6 +14,20 @@
         margin: auto;
     }
 
+    #ending {
+        width: 800px;
+        height: 400px;
+        background-color: rgba(255, 255, 255, 0.5);
+        opacity: 0;
+        margin: auto;
+        position: absolute;
+        z-index: 1000;
+        transition: 0.5s all;
+        display: flex;
+        align-items: center;
+        font-size: 20px;
+    }
+
     .node {
         width: 80px;
         height: 80px;
@@ -34,23 +48,8 @@
         box-shadow: gray 0px 5px 10px;
     }
 
-    @keyframes tile_left {
-        0% {}
-
-        100% {
-            opacity: 0%;
-            transform: translate(-100px, 0px);
-        }
-    }
-
     div p {
         margin: auto;
-        text-align: center;
-    }
-
-    .c_button_upload {
-        margin: auto;
-        margin-top: 30px;
         text-align: center;
     }
 </style>
@@ -66,6 +65,7 @@
 {% block display_body %}
 <div class='col-sm-12'>
     <div id="main">
+        <div id='ending'></div>
     </div>
 </div>
 {% endblock %}
@@ -161,12 +161,30 @@
         }
     }
 
+    // 更新结果显示
+    var ending_mask = document.getElementById('ending')
+    function update_ending(events) {
+        if (!events) {
+            ending_mask.style.opacity = 0
+            return
+        }
+        ending_mask.style.opacity = 1
+        ending_mask.innerHTML = ''
+        var tmp = document.createElement('p')
+        events.forEach((x, i) => {
+            if (i) tmp.appendChild(document.createElement('br'))
+            tmp.appendChild(new Text(x))
+        })
+        ending_mask.appendChild(tmp)
+    }
+
     // 绘制接口
     function draw_frame(index = CURR_FRAME) {
         frame = record_obj.logs[index]
         if (!frame) return
         update_descrip(frame.D)
         update_board(pick_data(index))
+        update_ending(frame.E)
     }
 </script>
 {% endblock %}
