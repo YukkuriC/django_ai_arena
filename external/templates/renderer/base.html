@@ -1,7 +1,7 @@
 {% extends 'layout0.html' %}
 
 {% block title %}
-查看比赛记录: 
+查看比赛记录:
 {% if match %}
 {{match.code1.name}} vs. {{match.code2.name}} - {{record_id}}
 {% else %}
@@ -56,7 +56,8 @@
 <div class='col-sm-4'>
     <div class='float-right'>
         {% block control_buttons %}
-        <button class='btn btn-sm btn-success' id='btn_play'>播放/暂停</button>
+        <button class='btn btn-sm btn-success' id='btn_play' onclick='play_pause()'>播放/暂停</button>
+        <button class='btn btn-sm btn-success' id='btn_speed' onclick='switch_speed()'>播放速度: 1x</button>
         {% endblock %}
     </div>
 </div>
@@ -77,6 +78,106 @@
 
 {% block script %}
 <script>
+    // 读入数据
     record_obj = JSON.parse(document.getElementById('record_receiver').innerHTML)
+
+    // 定义全局变量
+    CURR_FRAME = 0 // 当前渲染帧
+    TOTAL_FRAMES = 500 // 帧总数
+
+    ANIMATION_HANDLE = null // 播放所用AnimationHandler
+    TIME = LAST_TIME = null // 播放系统计时
+    REAL_FRAME = null // 根据时间计算真实帧位置
+    IS_PLAYING = false // 是否正在播放
+    PLAYING_SPEED = 1 // 播放速率
+    PLAYING_FPS = 50 // 1倍速对应FPS
+
+    // 定位控件
+    var scroller = document.getElementById('video_scroll')
+    SCROLL_DRAGGING = false // 进度条是否处于拖动状态
+
+    // 播放事件
+    function anim(timestamp) { // AnimationHandler内，根据时间戳更新帧数
+        var old_frame = CURR_FRAME
+        if (TIME == null) {
+            TIME = LAST_TIME = timestamp
+            REAL_FRAME = CURR_FRAME
+        }
+        else {
+            TIME = timestamp
+            REAL_FRAME = REAL_FRAME + (TIME - LAST_TIME) * PLAYING_SPEED * PLAYING_FPS / 1000
+            CURR_FRAME = Math.floor(REAL_FRAME)
+            LAST_TIME = timestamp
+        }
+        scroller.value = CURR_FRAME
+        if (CURR_FRAME > TOTAL_FRAMES - 1) { // 结束后自动停止
+            CURR_FRAME = TOTAL_FRAMES - 1
+            pause()
+            draw_frame()
+        } else { // 下一轮动画帧
+            if (old_frame != CURR_FRAME) draw_frame()
+            ANIMATION_HANDLE = requestAnimationFrame(anim)
+        }
+    }
+    function play() {
+        // initialize
+        cancelAnimationFrame(ANIMATION_HANDLE)
+        REAL_FRAME = TIME = LAST_TIME = null
+
+        // run process
+        if (CURR_FRAME >= TOTAL_FRAMES - 1) CURR_FRAME = 0
+        ANIMATION_HANDLE = requestAnimationFrame(anim)
+        IS_PLAYING = true
+    }
+    function pause() {
+        cancelAnimationFrame(ANIMATION_HANDLE)
+        IS_PLAYING = false
+    }
+
+    // 按钮事件
+    function play_pause() {
+        if (IS_PLAYING) pause()
+        else play()
+    }
+    function switch_speed() {
+        PLAYING_SPEED *= 2
+        if (PLAYING_SPEED > 8) PLAYING_SPEED = 0.25
+        document.getElementById('btn_speed').innerHTML = `播放速度: ${PLAYING_SPEED}x`
+    }
+
+    // 进度条拖动事件
+    function update_scroll() {
+        if (SCROLL_DRAGGING) {
+            var new_frame = scroller.value * 1
+            if (new_frame == CURR_FRAME) return
+            CURR_FRAME = new_frame
+            draw_frame()
+        }
+    }
+    scroller.addEventListener('mousedown', () => {
+        pause()
+        SCROLL_DRAGGING = true
+        update_scroll()
+    })
+    scroller.addEventListener('mouseup', () => {
+        SCROLL_DRAGGING = false
+        scroller.value = CURR_FRAME
+    })
+    scroller.addEventListener('mousemove', update_scroll)
+
+    // 初始化事件
+    window.addEventListener('load', () => {
+        init()
+        scroller.max = TOTAL_FRAMES - 1
+        draw_frame()
+        play_pause()
+    })
+
+    // 通用接口
+    function init() {// 初始化
+    }
+    function draw_frame(index = CURR_FRAME) {// 绘制指定帧
+        console.log(document.title = index)
+    }
 </script>
 {% endblock %}

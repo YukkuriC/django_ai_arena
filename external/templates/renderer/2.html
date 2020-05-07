@@ -1,10 +1,5 @@
 {% extends 'renderer/base.html' %}
 
-{% block control_buttons %}
-{{ block.super }}
-<button class='btn btn-sm btn-success' id='btn_speed'>播放速度: 1x</button>
-{% endblock %}
-
 {% block descriptions %}
 <div class='row x_block'>
     <div class='col-sm-4'>
@@ -122,9 +117,7 @@
 
         // canvas vars
         RENDER_RAW = []
-        FRAME_DISPLAY = 0
         FRAME_BUFFER = []
-        TOTAL_FRAMES = record_obj.timeleft[0].length
         document.getElementById('num_frame_total').innerHTML = TOTAL_FRAMES
     }
 
@@ -297,8 +290,8 @@
 
         function update_description() {
             var text = '我是比赛描述'
-            if (FRAME_DISPLAY >= TOTAL_FRAMES - 1) text = end_text(record_obj.result)
-            else text = round_text(FRAME_DISPLAY, FRAME_DISPLAY > 0)
+            if (CURR_FRAME >= TOTAL_FRAMES - 1) text = end_text(record_obj.result)
+            else text = round_text(CURR_FRAME, CURR_FRAME > 0)
             document.getElementById('description').textContent = text
         }
     }
@@ -317,15 +310,15 @@
             cv.width = cv.width
 
             // can't be rendered
-            if (FRAME_DISPLAY >= RENDER_RAW.length) {
+            if (CURR_FRAME >= RENDER_RAW.length) {
                 cv.style.background = '#666666'
                 return
             }
 
             // draw buffer
-            if (FRAME_BUFFER[FRAME_DISPLAY] == undefined) {
+            if (FRAME_BUFFER[CURR_FRAME] == undefined) {
                 cv.style.background = '#ffffff'
-                var frame_raw = RENDER_RAW[FRAME_DISPLAY]
+                var frame_raw = RENDER_RAW[CURR_FRAME]
                 colorA = [grab("color1"), grab("color2")]
                 colorB = [grab("color1_1"), grab("color2_1")]
                 band_width = grab("band_width")
@@ -381,19 +374,19 @@
                     pen.strokeRect(params[0], params[1], params[2], params[3])
                 })
 
-                FRAME_BUFFER[FRAME_DISPLAY] = pen.getImageData(0, 0, cv.width, cv.height)
-                FRAME_BUFFER[FRAME_DISPLAY].scores = scores
+                FRAME_BUFFER[CURR_FRAME] = pen.getImageData(0, 0, cv.width, cv.height)
+                FRAME_BUFFER[CURR_FRAME].scores = scores
             }
 
             // load finished buffer
-            else pen.putImageData(FRAME_BUFFER[FRAME_DISPLAY], 0, 0)
+            else pen.putImageData(FRAME_BUFFER[CURR_FRAME], 0, 0)
 
             // update UI
-            document.getElementById('num_frame_cur').innerHTML = FRAME_DISPLAY + 1
+            document.getElementById('num_frame_cur').innerHTML = CURR_FRAME + 1
             record_obj.timeleft.forEach((lst, i) => {
-                document.getElementById('timeleft' + i).innerHTML = Math.round(lst[FRAME_DISPLAY] * 100) / 100
+                document.getElementById('timeleft' + i).innerHTML = Math.round(lst[CURR_FRAME] * 100) / 100
             })
-            scores = FRAME_BUFFER[FRAME_DISPLAY].scores
+            scores = FRAME_BUFFER[CURR_FRAME].scores
             cv_s.title = scores[0] + ' : ' + scores[1]
             cv_s.width = 120
             var offset = 0
@@ -416,70 +409,13 @@
         }
     }
 
-    // playing system
-    {
-        ANIMATION_HANDLE = null
-        REAL_FRAME = null
-        TIME = LAST_TIME = null
-        IS_PLAYING = false
-        PLAYING_SPEED = 1
-        function do_frame(timestamp) {
-            if (TIME == null) {
-                TIME = LAST_TIME = timestamp
-                REAL_FRAME = FRAME_DISPLAY
-            }
-            else {
-                TIME = timestamp
-                REAL_FRAME = REAL_FRAME + (TIME - LAST_TIME) * PLAYING_SPEED * 0.1
-                FRAME_DISPLAY = Math.floor(REAL_FRAME)
-                LAST_TIME = timestamp
-            }
-            scroller.value = FRAME_DISPLAY
-            if (FRAME_DISPLAY > TOTAL_FRAMES - 1) {
-                FRAME_DISPLAY = TOTAL_FRAMES - 1
-                pause()
-                draw_frame()
-            } else {
-                draw_frame()
-                ANIMATION_HANDLE = requestAnimationFrame(do_frame)
-            }
-        }
-        function play() {
-            // initialize
-            cancelAnimationFrame(ANIMATION_HANDLE)
-            REAL_FRAME = TIME = LAST_TIME = null
-
-            // run process
-            if (FRAME_DISPLAY >= TOTAL_FRAMES - 1) FRAME_DISPLAY = 0
-            ANIMATION_HANDLE = requestAnimationFrame(do_frame)
-            IS_PLAYING = true
-        }
-        function pause() {
-            cancelAnimationFrame(ANIMATION_HANDLE)
-            IS_PLAYING = false
-        }
-
-        // button functions
-        function play_pause() {
-            if (IS_PLAYING) pause()
-            else play()
-        }
-        function switch_speed() {
-            PLAYING_SPEED *= 2
-            if (PLAYING_SPEED > 8) PLAYING_SPEED = 0.25
-            document.getElementById('btn_speed').innerHTML = '播放速度: @x'.replace('@', PLAYING_SPEED)
-        }
-        document.getElementById('btn_play').addEventListener('click', play_pause)
-        document.getElementById('btn_speed').addEventListener('click', switch_speed)
-    }
-
     // event binding
     {
         var scroller = document.getElementById('video_scroll')
         SCROLL_DRAGGING = false
         function update_scroll() {
             if (SCROLL_DRAGGING) {
-                FRAME_DISPLAY = grab('video_scroll') * 1
+                CURR_FRAME = grab('video_scroll') * 1
                 draw_frame()
             }
         }
@@ -491,7 +427,7 @@
         })
         scroller.addEventListener('mouseup', () => {
             SCROLL_DRAGGING = false
-            scroller.value = FRAME_DISPLAY
+            scroller.value = CURR_FRAME
         })
         scroller.addEventListener('mousemove', update_scroll)
 
@@ -512,16 +448,14 @@
         })
     }
 
-    // load page
-    {
-        document.getElementById("video_scroll").max = TOTAL_FRAMES - 1
+    function init() {
+        TOTAL_FRAMES = record_obj.timeleft[0].length
         RENDER_RAW.push(snapshot())
         for (var i = 0; i < TOTAL_FRAMES - 1; i++) {
             forward(i % 2)
             RENDER_RAW.push(snapshot())
         }
         update_widgets()
-        play_pause()
     }
 </script>
 {% endblock %}
