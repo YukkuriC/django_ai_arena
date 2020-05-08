@@ -21,6 +21,7 @@ class Code(models.Model):
     content = models.FileField('上传代码', upload_to=get_path)
     public = models.BooleanField('是否公开', default=False)
     edit_datetime = models.DateTimeField('最后修改时间')
+    locked = models.BooleanField('分数锁定', default=False)
 
     if 'records':
         num_matches = models.IntegerField('参与比赛场数', default=0)

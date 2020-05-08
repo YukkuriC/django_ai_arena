@@ -433,6 +433,12 @@ class BasePairMatch(BaseProcess, BaseCodeLoader, BaseRecordLoader):
             score1 *= settings.SCORE_FACTOR_NORANK
             score2 *= settings.SCORE_FACTOR_NORANK
 
+        # 得分锁定
+        if code1.locked:
+            score1 = 0
+        if code2.locked:
+            score2 = 0
+
         return score1, score2
 
     def summary(self, timeout):
