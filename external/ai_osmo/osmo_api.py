@@ -5,6 +5,7 @@ sys.path.append(osmo_path)
 
 import world, consts
 import pickle, zlib
+from .. import helpers_core
 
 world.print = lambda *a, **kw: None
 
@@ -25,17 +26,6 @@ class FakeWorld:
             "detail": detail,
             "data": [],
         }
-
-
-def _repr_e(e):
-    """ 将异常转化为带行号报错信息 """
-    res = '%s: %s' % (type(e).__name__, e)
-    if e.__traceback__:
-        tb = e.__traceback__
-        while tb.tb_next:
-            tb = tb.tb_next
-        res = 'Line %s %s' % (tb.tb_lineno, res)
-    return res
 
 
 def apply_params(params):
@@ -87,7 +77,8 @@ def save_log(wld, path):
     ] for cell in frame if not cell.dead] for frame in tmp['data']]
 
     # 将异常转换为带行号的信息
-    tmp["detail"] = [(_repr_e(e) if isinstance(e, Exception) else e)
+    tmp["detail"] = [(helpers_core.stringfy_error(e)
+                      if isinstance(e, Exception) else e)
                      for e in tmp["detail"]]
 
     with open(path, 'wb') as f:

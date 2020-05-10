@@ -5,6 +5,7 @@ from sys import modules
 from datetime import datetime
 from functools import lru_cache
 import ast, random, json
+from . import helpers_core
 if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
     from django.conf import settings
 
@@ -203,7 +204,7 @@ class BaseCodeLoader:
 
     @staticmethod
     def stringfy_error(e):
-        return '%s: %s' % (type(e).__name__, e)
+        return helpers_core.stringfy_error(e)
 
     class Meta:
         module_whitelist = [
