@@ -108,7 +108,7 @@ def unit_monitor(type, name, data):
     from match_sys import models
     from . import helpers
     from .factory import Factory
-    print('START:', type, name)
+    # print('START:', type, name)
     conn = init_db()
     cursor = conn.cursor()
 
@@ -154,7 +154,7 @@ def unit_monitor(type, name, data):
 
     # 移除注册
     _db_unload(conn, type, name)
-    print('END:', type, name)
+    # print('END:', type, name)
 
 
 def start_match(AI_type, code1, code2, param_form, ranked=False):
