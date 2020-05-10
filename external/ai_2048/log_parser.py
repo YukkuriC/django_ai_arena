@@ -81,7 +81,6 @@ def parse_header(raw):
     for k in 'id0', 'id1':
         raw[k] = int(raw[k])
 
-    print(raw)
     return raw
 
 
