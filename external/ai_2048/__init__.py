@@ -101,5 +101,9 @@ if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
             return record['cause']
 
         def r_desc_plus(_, match, record):
+            # 获取报错信息
+            if record['cause'] == "error" and 'error' in record:
+                return record['error']
+            # 默认获取结束事件倒数第2行
             raw = record['logs'][-1]['E']
             return raw[-2]

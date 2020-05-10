@@ -1,5 +1,7 @@
 import re
 
+PLR_DICT = {True: 'player 0', False: 'player 1', None: 'None', 'both': 'both'}
+
 if 'REGEXP':
     HEADER = re.compile(r"""
         (?#文件头)

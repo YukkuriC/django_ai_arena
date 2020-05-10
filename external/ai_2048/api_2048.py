@@ -3,10 +3,10 @@ import os, sys
 src_path = os.path.join(os.path.dirname(__file__), 'src')
 sys.path.append(src_path)
 
-import re, time
+import re, time, json
 import constants as c
 from plat import Platform
-from .log_parser import parse_header, parse_logs
+from .log_parser import parse_header, parse_logs, PLR_DICT
 
 
 # 根据给定参数生成Platform所需数据
@@ -76,7 +76,7 @@ def trans_winner(orig):
     return orig
 
 
-# 输出比赛记录至文件
+# 输出比赛记录至文件 - 已更新为JSON格式存储
 def dump_log(self, path):
     """
     Params:
@@ -97,34 +97,37 @@ def dump_log(self, path):
         scores[True][level] = results[True].count(level)
         scores[False][level] = results[False].count(level)
 
+    # 组装记录文件
+    raw = {
+        'id0': self.states[True]['index'][0],
+        'name0': self.states[True]['path'],
+        'id1': self.states[False]['index'][0],
+        'name1': self.states[False]['path'],
+        'time': time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()),
+        'logs': list(parse_logs('\n'.join(self.log))),  # 解析所有比赛记录
+        'cause': '',  # 默认为得分结算
+    }
+    headers = ('timeout', 'violator', 'error', 'winner')
+    tmp = (PLR_DICT[self.timeout], PLR_DICT[self.violator],
+           PLR_DICT[self.error], PLR_DICT[self.winner])
+    raw['winner'] = None if tmp[-1] == 'None' else int(tmp[-1][-1])
+
+    for h, x in zip(headers[:-1], tmp[:-1]):
+        if x != 'None':
+            raw['cause'] = h
+            break
+
     with open(path, 'w', encoding='utf-8') as file:
-        myDict = {
-            True: 'player 0',
-            False: 'player 1',
-            None: 'None',
-            'both': 'both'
-        }  # 协助转换为字符串
-        title = 'player0: %d from path %s\n' % (self.states[True]['index'][0], self.states[True]['path']) + \
-                'player1: %d from path %s\n' % (self.states[False]['index'][0], self.states[False]['path']) + \
-                'time: %s\n' % time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()) + \
-                '{:*^45s}\n'.format('basic record')
-        file.write(title)
-        file.write('=' * 45 + '\n|{:^10s}|{:^10s}|{:^10s}|{:^10s}|\n'.format('timeout', 'violator', 'error', 'winner') + \
-                   '-' * 45 + '\n|{:^10s}|{:^10s}|{:^10s}|{:^10s}|\n'.format(myDict[self.timeout], myDict[self.violator], myDict[self.error], myDict[self.winner]) + \
-                   '=' * 45 + '\n')
-        file.write('=' * 60 + '\n|%6s|%3d|%3d|%3d|%3d|%3d|%3d|%3d|%3d|%3d|%3d|%3d|%3d|%3d|\n' % ('player', *range(1, c.MAXLEVEL)) + \
-                   '-' * 60 + '\n|%6d|%3d|%3d|%3d|%3d|%3d|%3d|%3d|%3d|%3d|%3d|%3d|%3d|%3d|\n' % (0, *[scores[True][_] for _ in range(1, c.MAXLEVEL)]) + \
-                   '-' * 60 + '\n|%6d|%3d|%3d|%3d|%3d|%3d|%3d|%3d|%3d|%3d|%3d|%3d|%3d|%3d|\n' % (1, *[scores[False][_] for _ in range(1, c.MAXLEVEL)]) + \
-                   '=' * 60 + '\n')
-        file.write('{:*^45s}\n'.format('complete record'))
-        for log in self.log:
-            file.write(log + '\n')  # '&'表示一条log的开始
+        json.dump(raw, file, separators=',:')
 
 
 # 读取比赛记录至json
 def load_log(path):
     with open(path, 'r', encoding='utf-8') as f:
         raw = f.read()
-    res = parse_header(raw)
-    res['logs'] = list(parse_logs(raw))
+    if raw.startswith('{'):  # 直接读取JSON
+        res = json.loads(raw)
+    else:  # 解析文本存储格式
+        res = parse_header(raw)
+        res['logs'] = list(parse_logs(raw))
     return res
