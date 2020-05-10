@@ -7,6 +7,7 @@ import re, time, json
 import constants as c
 from plat import Platform
 from .log_parser import parse_header, parse_logs, PLR_DICT
+from ..helpers_core import stringfy_error
 
 
 # 根据给定参数生成Platform所需数据
@@ -65,6 +66,8 @@ def fake_runner(winner, params, names):
     # 手动写入比赛结果
     plat.winner = trans_winner(winner)
     plat.error = 'both' if winner == None else 'player %d' % (1 - winner)
+    plat.log.add(f'&e:{plat.error} run time error')
+    plat.log.add(f'&e:{plat.winner} win')
 
     return plat
 
@@ -116,6 +119,16 @@ def dump_log(self, path):
         if x != 'None':
             raw['cause'] = h
             break
+
+    # 导出报错信息
+    errors = []
+    for k in (1, 0):
+        if self.exception[k]:
+            errors.append(stringfy_error(self.exception[k]))
+    if len(errors) == 1:
+        errors = errors[0]
+    if errors:
+        raw['error'] = errors
 
     with open(path, 'w', encoding='utf-8') as file:
         json.dump(raw, file, separators=',:')
