@@ -33,14 +33,12 @@
 1. 加载、验证比赛代码等辅助功能及接口
 
 ### 比赛项目
-1. [漂移乒乓](https://github.com/chbpku/pingpong.sessdsa)
-    1. 上传代码、比赛、保存记录
-1. [纸带圈地](https://github.com/chbpku/paper.io.sessdsa)
-    1. 上传代码、比赛、保存记录
-    1. 前端查看比赛记录
-1. [OSMO](https://github.com/chbpku/osmo.sessdsa)
-    1. 上传代码、比赛、保存记录
-    1. 前端查看比赛记录
+项目|上传代码+运行比赛|保存比赛记录|前端可视化记录
+-|-|-|-
+[漂移乒乓](https://github.com/chbpku/pingpong.sessdsa)|√|√|
+[纸带圈地](https://github.com/chbpku/paper.io.sessdsa)|√|√|√
+[OSMO](https://github.com/chbpku/osmo.sessdsa)|√|√|√
+[2048](https://github.com/pkulab409/sessdsa.2048)|√|√|√
 
 ## 待实现功能：
 
@@ -62,7 +60,6 @@
     1. 前端查看比赛记录
 1. 纸带圈地
     1. 前端页面布局修改
-1. OSMO
 
 ### 天梯赛
 1. 后台自动匹配赛
