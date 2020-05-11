@@ -16,6 +16,7 @@ class User(models.Model):
     login_datetime = models.DateTimeField('上次登录时间', null=True)
     email_validated = models.BooleanField('已验证电子邮箱', default=False)
     is_admin = models.BooleanField('管理员马甲', default=False)
+    is_team = models.BooleanField('小组账户', default=False)
 
     def __str__(self):
         return '%s (%s, %s)' % (self.username, self.name, self.stu_code)

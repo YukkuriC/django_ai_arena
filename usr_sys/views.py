@@ -92,6 +92,12 @@ def validate(request):
     if user.email_validated:
         return redirect('/home/')
 
+    # 小组用户自动验证
+    if user.is_team:
+        user.email_validated = True
+        user.save()
+        return redirect('/home/')
+
     # update validate link if (re)post
     if request.method == 'POST':
         send_valid_email(user, request)
@@ -226,6 +232,14 @@ def forgotpasswd(request, code=None):
                 except:
                     form.add_error('username', '用户名与学号不匹配')
                     form.add_error('stu_code', '用户名与学号不匹配')
+
+            # 小组用户无邮箱
+            if user.is_team:
+                return sorry(
+                    request, text=[
+                        '小组用户不可通过邮箱重置密码',
+                        '若忘记密码请联系课程团队',
+                    ])
 
             # 发送邮件
             if form.is_valid():

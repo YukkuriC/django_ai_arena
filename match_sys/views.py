@@ -118,9 +118,10 @@ if 'forms':
             form = forms.CodeUploadForm(request.POST, request.FILES)
             if form.is_valid():
                 # 验证用户代码数未超标
-                if user.code_set.filter(
-                        ai_type=form.cleaned_data['ai_type']).count(
-                        ) >= settings.MAX_CODE_PER_GAME:
+                code_count = user.code_set.filter(
+                    ai_type=form.cleaned_data['ai_type']).count()
+                code_max = 1 if user.is_team else settings.MAX_CODE_PER_GAME
+                if code_count >= code_max:
                     return sorry(
                         request,
                         403,
