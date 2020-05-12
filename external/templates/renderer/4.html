@@ -168,6 +168,10 @@
             ending_mask.style.opacity = 0
             return
         }
+        if (events.length > 6) {// 省略显示过长信息
+            events = events.slice(events.length - 6, events.length)
+            events.unshift('...')
+        }
         ending_mask.style.opacity = 1
         ending_mask.innerHTML = ''
         var tmp = document.createElement('p')
