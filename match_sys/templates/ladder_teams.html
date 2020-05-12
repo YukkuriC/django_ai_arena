@@ -1,0 +1,50 @@
+{% extends 'layout0.html' %}
+{% load main_filters %}
+
+{% block header %}
+<div class='col-sm-6'>
+    <h1>{% block title %}小组天梯排行 - {{title}}{% endblock %}</h1>
+</div>
+<div class='col-sm-6 text-right'>
+    <h1>
+        <a href="../">查看所有代码</a>
+    </h1>
+</div>
+{% endblock %}
+
+{% block body%}
+<div class='row'>
+    {% for x in "FN" %}
+    <div class='col-sm-6'>
+        <div class='x_title'>
+            <div style='float:right' id='teams_{{x}}_panel'>
+            </div>
+            <div>
+                <h1>{{x}}组</h1>
+            </div>
+        </div>
+        <table class='table' id='teams_{{x}}'>
+            <thead>
+                <tr>
+                    <th>作者</th>
+                    <th>战绩</th>
+                    <th>天梯积分</th>
+                    <th>传送门</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+    window.addEventListener('load', () => {
+        window.table1 = new TableHolder('teams_F', '/table/code/?pre=ladder_t&type={{AI_type}}&group=F', null, false)
+        window.table2 = new TableHolder('teams_N', '/table/code/?pre=ladder_t&type={{AI_type}}&group=N', null, false)
+    })
+</script>
+{% endblock %}

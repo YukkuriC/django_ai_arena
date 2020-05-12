@@ -83,6 +83,19 @@ if 'multi-view':
 
         return render(request, 'ladder.html', locals())
 
+    def ladder_teams(request, AI_type):
+        """ 小组账号限定天梯 """
+
+        # 读取参数
+        try:
+            AI_type = int(AI_type)
+            assert AI_type in settings.AI_TYPES
+        except:
+            return sorry(request, text='无效的比赛编号')
+        title = settings.AI_TYPES[AI_type]
+        request.session['curr_game'] = AI_type  # 设置当前页面游戏
+
+        return render(request, 'ladder_teams.html', locals())
 
 # 表单页
 if 'forms':

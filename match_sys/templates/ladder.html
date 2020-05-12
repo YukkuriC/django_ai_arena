@@ -1,7 +1,16 @@
 {% extends 'layout0.html' %}
 {% load main_filters %}
 
-{% block title %}天梯排行 - {{title}}{% endblock %}
+{% block header %}
+<div class='col-sm-6'>
+    <h1>{% block title %}天梯排行 - {{title}}{% endblock %}</h1>
+</div>
+<div class='col-sm-6 text-right'>
+    <h1>
+        <a href="./teams/">查看分组代码</a>
+    </h1>
+</div>
+{% endblock %}
 
 {% block body%}
 <div class='x_title'>
