@@ -51,6 +51,12 @@ def one_match(players, params, names):
     return plat
 
 
+# 运行报错时生成假玩家
+class fake_player:
+    def __getattr__(self, a):
+        return lambda *a, **kw: None
+
+
 # 在运行报错时生成备选对象
 def fake_runner(winner, params, names):
     """
@@ -59,7 +65,7 @@ def fake_runner(winner, params, names):
         params: 比赛参数
         names: 参赛双方名称 (记录于path中)
     """
-    states = gen_states('xx', names)
+    states = gen_states([fake_player()] * 2, names)
     plat = Platform(states, '', None, 0, params['max_time'],
                     params['max_turn'])
 
@@ -68,6 +74,16 @@ def fake_runner(winner, params, names):
     plat.error = 'both' if winner == None else 'player %d' % (1 - winner)
     plat.log.add(f'&e:{plat.error} run time error')
     plat.log.add(f'&e:{plat.winner} win')
+
+    # 写入异常
+    if isinstance(params, Exception):  # 平台异常
+        if winner is None:
+            plat.exception[0] = plat.exception[1] = params
+        else:
+            plat.exception[1 - winner] = params
+    else:  # 代码加载出错
+        for i, e in enumerate(params):
+            plat.exception[1 - i] = e
 
     return plat
 
