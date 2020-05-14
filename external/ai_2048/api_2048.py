@@ -58,10 +58,11 @@ class fake_player:
 
 
 # 在运行报错时生成备选对象
-def fake_runner(winner, params, names):
+def fake_runner(winner, error, params, names):
     """
     Params:
         winner: 胜者
+        error: 报错内容
         params: 比赛参数
         names: 参赛双方名称 (记录于path中)
     """
@@ -71,18 +72,18 @@ def fake_runner(winner, params, names):
 
     # 手动写入比赛结果
     plat.winner = trans_winner(winner)
-    plat.error = 'both' if winner == None else 'player %d' % (1 - winner)
-    plat.log.add(f'&e:{plat.error} run time error')
-    plat.log.add(f'&e:{plat.winner} win')
+    plat.error = 'both' if winner == None else (1 - plat.winner)
+    plat.log.add(f'&e:{PLR_DICT[plat.error]} run time error')
+    plat.log.add(f'&e:{PLR_DICT[plat.winner]} win')
 
     # 写入异常
-    if isinstance(params, Exception):  # 平台异常
+    if isinstance(error, Exception):  # 平台异常
         if winner is None:
-            plat.exception[0] = plat.exception[1] = params
+            plat.exception[0] = plat.exception[1] = error
         else:
-            plat.exception[1 - winner] = params
+            plat.exception[1 - winner] = error
     else:  # 代码加载出错
-        for i, e in enumerate(params):
+        for i, e in enumerate(error):
             plat.exception[1 - i] = e
 
     return plat

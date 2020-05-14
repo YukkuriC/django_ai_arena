@@ -29,7 +29,7 @@ class _2048Match(BasePairMatch):
     @classmethod
     def runner_fail_log(cls, winner, descrip, d_local, d_global):
         ''' 内核错误时返回空对象 '''
-        return api_2048.fake_runner(winner, d_local['params'],
+        return api_2048.fake_runner(winner, descrip, d_local['params'],
                                     d_local['names'])
 
     @classmethod

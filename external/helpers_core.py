@@ -5,6 +5,9 @@ MAX_ERR_LENGTH = 50
 
 def stringfy_error(e):
     """ 显示异常类型、内容与行号（如果可行） """
+    if not isinstance(e, Exception):
+        return e
+
     # 显示错误信息
     err_str = str(e).replace('\r', '').replace('\n', r'\n')  # 移除换行符
 
