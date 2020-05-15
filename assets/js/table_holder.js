@@ -53,7 +53,7 @@ class TableHolder {
                         link.href = '/code/' + content[1]
 
                         var icon = document.createElement('img')
-                        icon.style.display = 'inline-block'
+                        icon.className = 'user-icon-24'
                         icon.src = content[2]
                         link.appendChild(icon)
                         link.innerHTML += content[0]
@@ -71,7 +71,6 @@ class TableHolder {
                     link.href = '/user/' + content[1]
 
                     var icon = document.createElement('img')
-                    icon.style.display = 'inline-block'
                     icon.className = 'user-icon-24'
                     icon.src = content[2]
                     link.appendChild(icon)
