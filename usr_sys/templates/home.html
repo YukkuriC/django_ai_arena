@@ -15,12 +15,12 @@
         {% if user.id == request.session.userid %}
         个人主页
         <a {%if not user.is_team%} href="//www.gravatar.com" target='_blank' title='头像使用Gravatar服务'{%endif%}>
-            <img src="{{user | g_icon}}" class='user-icon' style='display:inline-block'>
+            <img src="{{user | g_icon}}" class='user-icon'>
         </a>
         {% else %}
         查看用户:
         {{user.name}}
-        <img src="{{user | g_icon}}" class='user-icon' style='display:inline-block'>
+        <img src="{{user | g_icon}}" class='user-icon'>
         {% endif %}
     </h1>
 </div>
