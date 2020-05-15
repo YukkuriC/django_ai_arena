@@ -156,7 +156,7 @@ if os.sys.platform == 'win32':
     STATICFILES_DIRS = [os.path.join(BASE_DIR, 'assets')]
     del STATIC_ROOT
 
-MEDIA_URL = '/_STORAGE/'
+MEDIA_URL = '/STORAGE/'
 MEDIA_ROOT = os.path.join(BASE_DIR, '_STORAGE')
 
 # 合法字符集合
@@ -175,7 +175,7 @@ EMAIL_VALID_RESEND_MINUTES = 5  # 每{}分钟可重发一次验证邮件
 EMAIL_VALID_LAST_DAYS = 5  # 每封验证邮件内链接有效期为{}天
 
 # 动态文件目录
-CODE_DIR = os.path.join(MEDIA_ROOT, 'code')  # 比赛记录存储目录
+CODE_DIR = 'code'  # 比赛记录存储目录
 PAIRMATCH_DIR = os.path.join(MEDIA_ROOT, 'pairmatch')  # 比赛记录存储目录
 
 MAX_CODE_PER_GAME = 5  # 单用户单游戏最多保存代码数

@@ -97,6 +97,7 @@ if 'multi-view':
 
         return render(request, 'ladder_teams.html', locals())
 
+
 # 表单页
 if 'forms':
 
@@ -381,16 +382,10 @@ if 'view code':
 
             # 保存代码
             if validated:
-                code_path = str(code.content)
-                shutil.copyfile(code_path, code_path + '.bak')
-                with open(code_path, 'w', encoding='utf-8') as f:
-                    f.write(new_code)
+                code.content.open('wb')
+                code.content.write(new_code.encode('utf-8', errors='ignore'))
+                code.content.close()
                 to_update = True
-                code.edit_datetime = timezone.now()
-                try:
-                    os.remove(code_path + '.bak')
-                except:
-                    pass
 
         if to_update:
             messages.info(request, '更新代码"%s"成功' % code.name)

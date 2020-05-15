@@ -28,8 +28,10 @@ class BaseProcess:
 
         # 获取match对象与代码路径
         self.match = models.PairMatch.objects.get(name=match_name)
-        code1 = str(self.match.code1.content)
-        code2 = str(self.match.code2.content)
+        code1 = path.join(settings.MEDIA_ROOT,
+                             str(self.match.code1.content))
+        code2 = path.join(settings.MEDIA_ROOT,
+                             str(self.match.code2.content))
 
         # 初始化进程
         self.params = params
