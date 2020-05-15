@@ -72,6 +72,7 @@ class TableHolder {
 
                     var icon = document.createElement('img')
                     icon.style.display = 'inline-block'
+                    icon.className = 'user-icon-24'
                     icon.src = content[2]
                     link.appendChild(icon)
                     link.innerHTML += content[0]
@@ -103,7 +104,7 @@ class TableHolder {
             tbody.innerHTML = ''
             data.rows.forEach(row => {
                 var trow = document.createElement('tr')
-                trow.className='bg-hover'
+                trow.className = 'bg-hover'
                 trow.onclick = function () { location.href = data.root + row[0] }
                 if (thisRef.add_link) {
                     var link = document.createElement('a')
