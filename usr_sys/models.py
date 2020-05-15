@@ -40,14 +40,15 @@ class User(models.Model):
                 settings.TEAM_ICON_DIR,  # team_icon
                 self.stu_code[:3],  # N19
             )
-            for img in os.listdir(os.path.join(settings.MEDIA_ROOT, icon_dir)):
-                print(img)
-                if img.startswith(self.stu_code[3]):
-                    return sjoin(
-                        settings.MEDIA_URL,
-                        icon_dir,
-                        img,
-                    )
+            icon_folder = os.path.join(settings.MEDIA_ROOT, icon_dir)
+            if os.path.isdir(icon_folder):
+                for img in os.listdir(icon_folder):
+                    if img.startswith(self.stu_code[3]):
+                        return sjoin(
+                            settings.MEDIA_URL,
+                            icon_dir,
+                            img,
+                        )
 
         email = self.stu_code + '@pku.edu.cn'
         hasher = hashlib.md5()
