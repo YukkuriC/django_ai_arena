@@ -177,11 +177,11 @@ def user_settings(request):
     个人设置
     '''
     user = get_user(request)
+    form = forms.SettingsForm(request.POST or user.__dict__)
 
     # GET请求
     if request.method == 'GET':
-        return render(request, 'settings.html',
-                      {'form': forms.SettingsForm(user.__dict__)})
+        return render(request, 'settings.html', locals())
 
     form = forms.SettingsForm(request.POST)
     if form.is_valid():

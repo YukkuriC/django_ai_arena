@@ -6,8 +6,12 @@
 
 {% block footer %}
 <div>
+    {% if user.is_team %}
+    注：小组用户头像为统一设置
+    {% else %}
     注：用户头像根据学号邮箱生成，由Gravatar提供服务，点
     <a href="//www.gravatar.com">这里</a>
     注册用户以替换默认头像
+    {% endif %}
 </div>
 {% endblock %}

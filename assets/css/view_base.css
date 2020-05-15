@@ -47,3 +47,12 @@ a.text-nav:hover{
 .bg-hover:hover{
     background-color:rgba(15,155,255,0.2)!important
 }
+
+.user-icon{
+    max-width: 30px;
+    max-height: 30px;
+}
+.user-icon-24{
+    max-width: 24px;
+    max-height: 24px;
+}
