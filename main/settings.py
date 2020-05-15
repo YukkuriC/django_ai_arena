@@ -177,6 +177,7 @@ EMAIL_VALID_LAST_DAYS = 5  # 每封验证邮件内链接有效期为{}天
 # 动态文件目录
 CODE_DIR = 'code'  # 比赛记录存储目录
 PAIRMATCH_DIR = os.path.join(MEDIA_ROOT, 'pairmatch')  # 比赛记录存储目录
+TEAM_ICON_DIR = 'team_icon'  # 小组用户头像存储目录
 
 MAX_CODE_PER_GAME = 5  # 单用户单游戏最多保存代码数
 

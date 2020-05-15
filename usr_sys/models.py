@@ -2,7 +2,8 @@ from django.db import models
 from django.contrib.auth.hashers import make_password, check_password, hashlib
 from django.conf import settings
 from main.helpers import set_autodelete
-import hashlib
+import os, hashlib
+from posixpath import join as sjoin
 
 
 ### models
@@ -33,6 +34,21 @@ class User(models.Model):
         return self.nickname or self.username
 
     def gravatar_icon(self, size=30):
+        # 小组用户搜索头像覆盖
+        if self.is_team:
+            icon_dir = sjoin(
+                settings.TEAM_ICON_DIR,  # team_icon
+                self.stu_code[:3],  # N19
+            )
+            for img in os.listdir(os.path.join(settings.MEDIA_ROOT, icon_dir)):
+                print(img)
+                if img.startswith(self.stu_code[3]):
+                    return sjoin(
+                        settings.MEDIA_URL,
+                        icon_dir,
+                        img,
+                    )
+
         email = self.stu_code + '@pku.edu.cn'
         hasher = hashlib.md5()
         hasher.update(email.encode('utf-8'))

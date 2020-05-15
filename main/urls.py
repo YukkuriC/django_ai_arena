@@ -17,6 +17,8 @@ from django.contrib import admin
 from django.urls import path, re_path, include
 from .helpers import sorry
 from django.views.generic.base import RedirectView
+from django.conf import settings
+from django.views.static import serve
 
 handler404 = sorry
 handler500 = sorry
@@ -36,3 +38,11 @@ urlpatterns = [
     path('1145141919810/', admin.site.urls),
     re_path('(.+)/$', missing_route)
 ]
+
+if settings.DEBUG:
+    urlpatterns.insert(
+        0,
+        re_path(r'^STORAGE/(?P<path>.*)$', serve, {
+            'document_root': settings.MEDIA_ROOT,
+        }),
+    )
