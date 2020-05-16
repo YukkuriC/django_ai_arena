@@ -232,14 +232,14 @@ def forgotpasswd(request, code=None):
                 except:
                     form.add_error('username', '用户名与学号不匹配')
                     form.add_error('stu_code', '用户名与学号不匹配')
-
-            # 小组用户无邮箱
-            if user.is_team:
-                return sorry(
-                    request, text=[
-                        '小组用户不可通过邮箱重置密码',
-                        '若忘记密码请联系课程团队',
-                    ])
+                else:
+                    # 小组用户无邮箱
+                    if user.is_team:
+                        return sorry(
+                            request, text=[
+                                '小组用户不可通过邮箱重置密码',
+                                '若忘记密码请联系课程团队',
+                            ])
 
             # 发送邮件
             if form.is_valid():
