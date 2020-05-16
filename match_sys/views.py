@@ -385,6 +385,8 @@ if 'view code':
                 code.content.open('wb')
                 code.content.write(new_code.encode('utf-8', errors='ignore'))
                 code.content.close()
+                code.edit_datetime = timezone.now()
+                code.save()
                 to_update = True
 
         if to_update:
