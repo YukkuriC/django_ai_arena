@@ -94,6 +94,7 @@
         nav.classList.add('active')
       }
     }
+    Array.from(document.getElementsByTagName("td")).forEach((e)=>{var t=e.innerText;e.innerHTML=`<div style='max-width:150px;overflow:hidden;'>${t}</div>`;})
   </script>
   {% block script %}{% endblock %}
 </body>
