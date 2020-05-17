@@ -13,7 +13,13 @@ ARRAY = list(range(ROUNDS))  # 随机(?)列表
 NAMES = {_: str(2 ** _).zfill(4) for _ in range(MAXLEVEL)}  # 将内在级别转换为显示对象的字典
 NAMES[0] = '0000'
 
-DIRECTIONS = {0: 'up', 1: 'down', 2: 'left', 3: 'right', None: 'None'}    # 换算方向的字典
+class _DIRECTIONS(list):
+    def __init__(self):
+        super().__init__(['up', 'down', 'left', 'right'])
+    def __getitem__(self, key):
+        return super().__getitem__(key) if key in range(4) else 'unknown'
+DIRECTIONS = _DIRECTIONS()      # 换算方向的字典
+
 PLAYERS = {True: 'player 0', False: 'player 1'}  # 换算先后手名称的字典
 
 PICTURES = ['nanami', 'ayase']  # 游戏图片名称
@@ -81,11 +87,11 @@ class Chessboard:
             delta = [(-1,0), (1,0), (0,-1), (0,1)][direction]
             return (position[0] + delta[0], position[1] + delta[1])
         def conditionalSorted(chessmanList):  # 返回根据不同的条件排序结果
-            if direction == None: return []
             if direction == 0: return sorted(chessmanList, key = lambda x:x[0], reverse = False)
             if direction == 1: return sorted(chessmanList, key = lambda x:x[0], reverse = True )
             if direction == 2: return sorted(chessmanList, key = lambda x:x[1], reverse = False)
             if direction == 3: return sorted(chessmanList, key = lambda x:x[1], reverse = True )
+            return []
         def move_one(chessman, eaten):  # 移动一个棋子并返回是否移动, eaten是已经被吃过的棋子位置
             nowPosition = chessman.position
             nextPosition = theNext(nowPosition)
