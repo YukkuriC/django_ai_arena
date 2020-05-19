@@ -157,7 +157,7 @@ def unit_monitor(type, name, data):
     # print('END:', type, name)
 
 
-def start_match(AI_type, code1, code2, param_form, ranked=False):
+def start_match(AI_type, code1, code2, param_form, ranked=False, join=False):
     from match_sys import models
     from . import helpers
     from django.utils import timezone
@@ -170,7 +170,10 @@ def start_match(AI_type, code1, code2, param_form, ranked=False):
             break
 
     # 获取match参数
-    params = param_form.cleaned_data
+    if isinstance(param_form, dict):
+        params = param_form
+    else:
+        params = param_form.cleaned_data
 
     # 创建未启动比赛对象
     new_match = models.PairMatch()
@@ -190,6 +193,10 @@ def start_match(AI_type, code1, code2, param_form, ranked=False):
         target=unit_monitor, args=('match', match_name, [AI_type, params]))
     connections.close_all()  # 用于主进程MySQL保存所有更改
     match_proc.start()
+
+    # 阻塞参数返回进程本身
+    if join:
+        return match_proc
 
     # 返回match对象名称
     return match_name

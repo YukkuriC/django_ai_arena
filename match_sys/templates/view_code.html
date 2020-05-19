@@ -36,6 +36,7 @@
     </div>
     <div class='col-sm-4'>
         <p>最后修改时间: {{code.edit_datetime|date:"Y/m/d H:i:s"}}</p>
+        {%if not code.author.is_team%}
         <p>对战：
             {%if my_code%}
             <a class='btn-sm btn-info' href="/lobby/ranked_match/{{code.ai_type}}/?code1={{code.id}}">参与匹配</a>
@@ -43,6 +44,7 @@
             {%endif%}
             <a class='btn-sm btn-info' href="/lobby/run_match/{{code.ai_type}}/?code2={{code.id}}">挑战该代码</a>
         </p>
+        {%endif%}
         {%if my_code or code.public%}
         <p>操作：
             {%if my_code%}
