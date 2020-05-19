@@ -334,8 +334,10 @@ if 'view code':
             return _code_editor(request, code, user, False)
 
         # 复制公开代码
-        # elif code_op == 'fork':
-        #     return _code_fork(request, code, user)
+        elif code_op == 'fork':
+            if not settings.CAN_FORK_PUBLIC_CODE:
+                return sorry(request, text='拷贝公开代码功能已关闭')
+            return _code_fork(request, code, user)
 
         return sorry(request, text=['亲亲', '"%s"这样的命令' % code_op, '是不存在的呢'])
 
@@ -492,6 +494,8 @@ if 'view':
                 match_monitor.kill_match('match', match.name)
                 messages.info(request, '比赛已中止')
             elif match.status != 1 and op == 'del':
+                if not settings.CAN_DELETE_MATCH_RESULT:
+                    return sorry(request, text='删除比赛记录功能已关闭')
                 upper = match.code1.id
                 match.delete()
                 messages.info(request, '比赛记录已删除')

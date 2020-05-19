@@ -262,6 +262,10 @@ LIMIT_COUNT_MINUTES = 1  # 统计时间长度
 LIMIT_COUNT_ROUNDS = 10  # 一定时间内最大可发起的对局数
 LIMIT_COUNT_BUFFER = 5  # 超限发起比赛最多可超过局数
 
+# 权限调整参数
+CAN_DELETE_MATCH_RESULT = False  # 是否可以删除自己发起的比赛记录
+CAN_FORK_PUBLIC_CODE = False  # 是否可以复制公开代码
+
 # 覆盖设置，动态调整参数
 try:
     with open(os.path.join(BASE_DIR, 'override.json')) as f:
