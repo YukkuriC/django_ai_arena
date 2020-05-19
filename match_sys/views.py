@@ -87,7 +87,10 @@ if 'multi-view':
         request.session['curr_game'] = AI_type  # 设置当前页面游戏
 
         # 代码排序
-        all_codes = Code.objects.filter(ai_type=AI_type)
+        all_codes = Code.objects.filter(
+            ai_type=AI_type,
+            author__is_team=False,
+        )
 
         # 用户均分统计
         user_info = all_codes.values('author').annotate(
