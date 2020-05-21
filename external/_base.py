@@ -209,7 +209,7 @@ class BaseCodeLoader:
     class Meta:
         module_whitelist = [
             'math', 'random', 'copy', 'numpy', 'time', 'collections',
-            'itertools', 'functools', 'heapq'
+            'itertools', 'functools', 'heapq', 'operator'
         ]  # 允许使用的库
         func_blacklist = ['eval', 'exec', 'compile', '__import__',
                           'open']  # 禁止使用的函数

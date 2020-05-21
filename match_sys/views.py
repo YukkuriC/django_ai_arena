@@ -14,6 +14,22 @@ from .models import Code, PairMatch
 import os, json, shutil, random
 
 
+def _team_user_forbidden(func):
+    """ 限制小组用户访问 """
+
+    def inner(request, *a, **kw):
+        user = get_user(request)
+        if user.is_team:
+            return sorry(
+                request, 403, text=[
+                    '当前页面不可访问',
+                    '小组用户所有比赛由系统自动发起',
+                ])
+        return func(request, *a, **kw)
+
+    return inner
+
+
 def game_info(request, AI_type):
     """列出所有可用的比赛，显示其规则，引用至站内对战入口与github项目"""
     # 验证游戏ID存在
@@ -71,7 +87,10 @@ if 'multi-view':
         request.session['curr_game'] = AI_type  # 设置当前页面游戏
 
         # 代码排序
-        all_codes = Code.objects.filter(ai_type=AI_type)
+        all_codes = Code.objects.filter(
+            ai_type=AI_type,
+            author__is_team=False,
+        )
 
         # 用户均分统计
         user_info = all_codes.values('author').annotate(
@@ -157,6 +176,7 @@ if 'forms':
         form = forms.CodeUploadForm()
         return render(request, 'upload.html', locals())
 
+    @_team_user_forbidden
     @login_required(1)
     def pairmatch(request, AI_type):
         '''启动一对一比赛'''
@@ -171,7 +191,10 @@ if 'forms':
         request.session['curr_game'] = AI_type  # 设置当前页面游戏
 
         # 获取可选AI列表
-        codes = Code.objects.filter(ai_type=AI_type)
+        codes = Code.objects.filter(
+            ai_type=AI_type,
+            author__is_team=False,  # 排除小组代码
+        )
         my_codes = codes.filter(author=request.session['userid'])  # 我方所有
         # 筛选对方代码
         code2_empty = True
@@ -217,6 +240,7 @@ if 'forms':
         form = forms.PairMatchFormFactory.get(AI_type)
         return render(request, 'pairmatch.html', locals())
 
+    @_team_user_forbidden
     @login_required(1)
     def ranked_match(request, AI_type):
         '''积分匹配赛'''
@@ -231,7 +255,10 @@ if 'forms':
         request.session['curr_game'] = AI_type  # 设置当前页面游戏
 
         # 获取可选AI列表
-        codes = Code.objects.filter(ai_type=AI_type)
+        codes = Code.objects.filter(
+            ai_type=AI_type,
+            author__is_team=False,  # 排除小组代码
+        )
         my_codes = codes.filter(author=request.session['userid'])  # 我方所有
 
         # 读取筛选条件
@@ -268,6 +295,7 @@ if 'forms':
         form = forms.PairMatchFormFactory.get(AI_type)
         return render(request, 'ranked_match.html', locals())
 
+    @_team_user_forbidden
     @login_required(1)
     def invite_match(request, AI_type):
         # TODO: 支持向其他用户发起指定参数的比赛
@@ -309,8 +337,10 @@ if 'view code':
             return _code_editor(request, code, user, False)
 
         # 复制公开代码
-        # elif code_op == 'fork':
-        #     return _code_fork(request, code, user)
+        elif code_op == 'fork':
+            if not settings.CAN_FORK_PUBLIC_CODE:
+                return sorry(request, text='拷贝公开代码功能已关闭')
+            return _code_fork(request, code, user)
 
         return sorry(request, text=['亲亲', '"%s"这样的命令' % code_op, '是不存在的呢'])
 
@@ -467,6 +497,8 @@ if 'view':
                 match_monitor.kill_match('match', match.name)
                 messages.info(request, '比赛已中止')
             elif match.status != 1 and op == 'del':
+                if not settings.CAN_DELETE_MATCH_RESULT:
+                    return sorry(request, text='删除比赛记录功能已关闭')
                 upper = match.code1.id
                 match.delete()
                 messages.info(request, '比赛记录已删除')
