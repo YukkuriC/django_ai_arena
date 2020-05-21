@@ -15,34 +15,6 @@
   <script src="{% static 'js/helpers.js' %}"></script>
   <title>{% block title %}base{% endblock %} | 代码竞技场</title>
   {% block css %}{% endblock %}
-  <script>
-    var true_path = "{{request.META.PATH_INFO}}"
-    if (true_path != location.pathname) window.addEventListener('load', () => {
-      // 创建base标签
-      var curr_url = location.href.split('#')[0],
-        abs_url = curr_url.replace(true_path, '')
-      // var base = document.createElement('base')
-      // base.href = abs_url + '/'
-      // document.head.appendChild(base)
-
-      // 重写所有绝对路径链接
-      data_to_override = [
-        ['link', 'href'],
-        ['a', 'href'],
-        ['script', 'src'],
-        ['img', 'src'],
-      ]
-      data_to_override.forEach(([tag, attr]) => {
-        [...document.getElementsByTagName(tag)].forEach(x => {
-          var url = x.getAttribute(attr)
-          if (url[0] == '/' && url[1] != '/') url = abs_url + url
-          x.setAttribute(attr, url)
-          // console.log(x[attr],x.getAttribute(attr))
-          // x[attr] = x[attr].replace(location.origin, abs_url)
-        })
-      })
-    })
-  </script>
 </head>
 
 <body>
