@@ -160,6 +160,9 @@ if os.sys.platform == 'win32':
 MEDIA_URL = '/STORAGE/'
 MEDIA_ROOT = os.path.join(BASE_DIR, '_STORAGE')
 
+# 站点主页重写
+ROOT_HOST = None
+
 # 定时任务配置
 DJANGO_CRON_LOCKFILE_PATH = os.path.join(MEDIA_ROOT, 'tasks')
 CRON_CLASSES = [
@@ -273,4 +276,5 @@ try:
     for k, v in data.items():
         globals()[k] = v
 except:
-    pass
+    import traceback
+    traceback.print_exc()
