@@ -1,9 +1,11 @@
 from django_cron import CronJobBase, Schedule
 from django.conf import settings
+from django.db import connections
 from django.utils import timezone
-from match_sys.models import Code
-from .match_monitor import start_match
-import random
+from match_sys.models import Code, PairMatch
+from .match_monitor import start_match, unit_monitor
+from multiprocessing import Process
+import random, json
 
 
 def expand_markers(targets):
@@ -62,7 +64,6 @@ class TeamLadder(CronJobBase):
     """
     code = 'TeamLadder'
     schedule = Schedule(run_at_times=gen_times(settings.TEAMLADDER_CONFIG))
-    print(schedule.run_at_times)
 
     NMATCH = expand_markers(settings.TEAMLADDER_NMATCH)
 
@@ -126,3 +127,40 @@ class TeamLadder(CronJobBase):
             # 阻塞至进程完成
             for proc in matches:
                 proc.join()
+
+
+class BaseMatch(CronJobBase):
+    code = 'BaseMatch'
+    schedule = Schedule(run_every_mins=1)
+
+    def do(self):
+        """
+        运行比赛
+        从数据库抓取未执行的比赛并执行
+        """
+        logs = []
+
+        # 获取最早的未发起比赛
+        new_matches = PairMatch.objects.filter(
+            status=0).order_by('run_datetime')[:settings.MATCH_POOL_SIZE]
+
+        # 分别发起
+        matches = []
+        for match in new_matches:
+            logs.append('START: ' + match.name)
+            match_proc = Process(
+                target=unit_monitor,
+                args=('match', match.name, [
+                    match.ai_type,
+                    json.loads(match.params),
+                ]))
+            connections.close_all()  # 用于主进程MySQL保存所有更改
+            match_proc.start()
+            matches.append(match_proc)
+
+        # 阻塞至完成
+        for proc in matches:
+            proc.join()
+
+        # 返回记录
+        return '\n'.join(logs)

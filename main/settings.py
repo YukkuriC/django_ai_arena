@@ -167,6 +167,7 @@ ROOT_HOST = None
 DJANGO_CRON_LOCKFILE_PATH = os.path.join(MEDIA_ROOT, 'tasks')
 CRON_CLASSES = [
     "external.cron.TeamLadder",
+    "external.cron.BaseMatch",
 ]
 
 # 已启用自动天梯游戏编号
