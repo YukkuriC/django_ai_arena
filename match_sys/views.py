@@ -121,7 +121,7 @@ if 'multi-view':
 if 'forms':
 
     def _limit_rounds(request, form, my_code):
-        if not form.is_valid():
+        if get_user(request).is_admin or not form.is_valid():
             return
         rounds = form.cleaned_data.get('rounds', 10)
         near_time = timezone.now() - timezone.timedelta(

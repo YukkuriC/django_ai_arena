@@ -41,6 +41,13 @@ def one_match(players, params, names):
     """
     players = [object.__new__(p.Player) for p in players]
 
+    # 尝试使用加速库覆盖
+    try:
+        import constants, libchessboard
+        constants.Chessboard = libchessboard.Chessboard
+    except:
+        pass
+
     # 初始参数
     states = gen_states(players, names)
 
