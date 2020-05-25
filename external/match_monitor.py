@@ -1,6 +1,7 @@
 from multiprocessing import Process
 import os, sys, socket, json
 from sqlite3 import connect
+from .helpers_core import queue_io
 
 
 # 多进程支持
@@ -112,6 +113,11 @@ def unit_monitor(type, name, data, error_logger=None):
     conn = init_db()
     cursor = conn.cursor()
 
+    # 重定向错误输出
+    if error_logger:
+        import sys
+        sys.stdout = sys.stderr = queue_io(error_logger)
+
     # 任务超限时待机
     num_tasks = _db_running(cursor)
     if num_tasks >= settings.MATCH_POOL_SIZE:
@@ -157,7 +163,13 @@ def unit_monitor(type, name, data, error_logger=None):
     # print('END:', type, name)
 
 
-def start_match(AI_type, code1, code2, param_form, ranked=False, join=False, error_logger=None):
+def start_match(AI_type,
+                code1,
+                code2,
+                param_form,
+                ranked=False,
+                join=False,
+                error_logger=None):
     from match_sys import models
     from . import helpers
     from django.utils import timezone
@@ -192,7 +204,8 @@ def start_match(AI_type, code1, code2, param_form, ranked=False, join=False, err
     # 传送参数至进程 (AI_type,code1,code2,match_name,params)
     if join:
         match_proc = Process(
-            target=unit_monitor, args=('match', match_name, [AI_type, params], error_logger))
+            target=unit_monitor,
+            args=('match', match_name, [AI_type, params], error_logger))
         connections.close_all()  # 用于主进程MySQL保存所有更改
         match_proc.start()
         return match_proc

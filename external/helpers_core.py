@@ -23,3 +23,22 @@ def stringfy_error(e):
     if len(res) > MAX_ERR_LENGTH:
         res = res[:MAX_ERR_LENGTH - 3] + '...'
     return res
+
+
+# 重定向输出队列
+class queue_io:
+    def __init__(self, queue):
+        self.buffer = []
+        self.q = queue
+
+    def write(self, data):
+        # self.q.put(data.rstrip('\n'))
+        self.buffer.append(data)
+        return len(data)
+
+    def flush(self):
+        self.q.put(''.join(self.buffer))
+        self.buffer = []
+
+    def __getattr__(self, a):
+        return lambda *a, **kw: None

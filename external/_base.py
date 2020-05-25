@@ -348,7 +348,7 @@ class BasePairMatch(BaseProcess, BaseCodeLoader, BaseRecordLoader):
         # 重定向错误输出
         if error_logger:
             import sys
-            sys.stderr = queue_io(error_logger)
+            sys.stderr = helpers_core.queue_io(error_logger)
 
         # 读取参数
         players, plr_loaded = [], True
@@ -547,25 +547,6 @@ class BasePairMatch(BaseProcess, BaseCodeLoader, BaseRecordLoader):
             d_global: 函数内globals()获取的全局变量
         '''
         return {}
-
-
-# 重定向输出队列
-class queue_io:
-    def __init__(self, queue):
-        self.buffer = []
-        self.q = queue
-
-    def write(self, data):
-        self.buffer.append(data)
-        # print(repr(data), file=sys.__stdout__)
-        return len(data)
-
-    def flush(self):
-        self.q.put(''.join(self.buffer))
-        self.buffer = []
-
-    def __getattr__(self, a):
-        return lambda *a, **kw: None
 
 
 # 白名单模块只读化

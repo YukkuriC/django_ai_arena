@@ -174,7 +174,7 @@ class BaseMatch(CronLogger):
                 args=('match', match.name, [
                     match.ai_type,
                     json.loads(match.params),
-                ]))
+                ], self.error_logger))
             connections.close_all()  # 用于主进程MySQL保存所有更改
             match_proc.start()
             self.matches.append(match_proc)
