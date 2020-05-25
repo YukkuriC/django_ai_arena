@@ -19,7 +19,7 @@ def expand_markers(targets):
         and isinstance(v, int) and 0 <= v <= 60
     }
     if not targets:
-        return []
+        return [0] * 24
 
     # 展开为列表
     first_time = None
