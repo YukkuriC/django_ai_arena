@@ -8,6 +8,7 @@ import ast, random, json
 from . import helpers_core
 if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
     from django.conf import settings
+    from django.db import connections
 
 
 class BaseProcess:
@@ -61,6 +62,7 @@ class BaseProcess:
         if updated:
             self.match.finished_rounds = len(self.result_raw)
             self.match.save()
+            connections.close_all()
 
     def check_active(self, now):
         '''

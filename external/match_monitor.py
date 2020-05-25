@@ -118,6 +118,11 @@ def unit_monitor(type, name, data, error_logger=None):
         import sys
         sys.stdout = sys.stderr = queue_io(error_logger)
 
+    # 设定比赛状态
+    match = models.PairMatch.objects.get(name=name)
+    match.status = -1
+    match.save()
+
     # 任务超限时待机
     num_tasks = _db_running(cursor)
     if num_tasks >= settings.MATCH_POOL_SIZE:
