@@ -4,7 +4,7 @@ from django.db import connections
 from django.utils import timezone
 from match_sys.models import Code, PairMatch
 from .match_monitor import start_match, unit_monitor
-from multiprocessing import Process
+from multiprocessing import Process, Queue
 import random, json
 
 
@@ -19,7 +19,7 @@ def expand_markers(targets):
         and isinstance(v, int) and 0 <= v <= 60
     }
     if not targets:
-        return []
+        return [0] * 24
 
     # 展开为列表
     first_time = None
@@ -58,7 +58,29 @@ def gen_times(targets):
     return res
 
 
-class TeamLadder(CronJobBase):
+class CronLogger(CronJobBase):
+    def __init__(self, *a, **kw):
+        super().__init__(*a, **kw)
+        self.matches = []  # 比赛进程列表
+        self.logs = []  # 输出记录
+        self.error_logger = Queue()  # 错误日志队列
+
+    def post_process(self):
+        """ 完成全部比赛，并组装记录字串 """
+
+        # 阻塞至全部比赛完成
+        for proc in self.matches:
+            proc.join()
+
+        # 读取报错队列内容
+        while not self.error_logger.empty():
+            self.logs.append(self.error_logger.get())
+
+        # 返回记录
+        return '\n'.join(self.logs)
+
+
+class TeamLadder(CronLogger):
     """
     小组天梯后台自动比赛
     """
@@ -84,15 +106,17 @@ class TeamLadder(CronJobBase):
         target = random.choice(codes)
 
         # 发起比赛
-        return start_match(gameid, code.id, target.id, params, True, True)
+        self.logs.append(f'{code.author.stu_code} - {target.author.stu_code}')
+        return start_match(gameid, code.id, target.id, params, True, True,
+                           self.error_logger)
 
     def do(self):
         """ 按游戏类型、组号随机发起比赛 """
         games_to_run = settings.TEAMLADDER_ENABLED
 
         # 按游戏类型遍历
-        matches = []
         for gameid, params in games_to_run:
+            self.logs.append(settings.AI_TYPES[gameid])
             all_codes = Code.objects.filter(
                 ai_type=gameid,
                 author__is_team=True,
@@ -122,14 +146,13 @@ class TeamLadder(CronJobBase):
                     gameid,
                     params,
                 )
-                matches.append(match_proc)
+                self.matches.append(match_proc)
 
-            # 阻塞至进程完成
-            for proc in matches:
-                proc.join()
+        # 返回记录
+        return self.post_process()
 
 
-class BaseMatch(CronJobBase):
+class BaseMatch(CronLogger):
     code = 'BaseMatch'
     schedule = Schedule(run_every_mins=1)
 
@@ -138,16 +161,14 @@ class BaseMatch(CronJobBase):
         运行比赛
         从数据库抓取未执行的比赛并执行
         """
-        logs = []
 
         # 获取最早的未发起比赛
         new_matches = PairMatch.objects.filter(
             status=0).order_by('run_datetime')[:settings.MATCH_POOL_SIZE]
 
         # 分别发起
-        matches = []
         for match in new_matches:
-            logs.append('START: ' + match.name)
+            self.logs.append('START: ' + match.name)
             match_proc = Process(
                 target=unit_monitor,
                 args=('match', match.name, [
@@ -156,11 +177,7 @@ class BaseMatch(CronJobBase):
                 ]))
             connections.close_all()  # 用于主进程MySQL保存所有更改
             match_proc.start()
-            matches.append(match_proc)
-
-        # 阻塞至完成
-        for proc in matches:
-            proc.join()
+            self.matches.append(match_proc)
 
         # 返回记录
-        return '\n'.join(logs)
+        return self.post_process()

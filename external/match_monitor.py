@@ -95,7 +95,7 @@ def _db_unload(conn, type, name):
         print('DB UNLOAD ERROR:', e)
 
 
-def unit_monitor(type, name, data):
+def unit_monitor(type, name, data, error_logger=None):
     '''
     比赛维护进程
     每个监控进程维护一个比赛进程
@@ -128,7 +128,7 @@ def unit_monitor(type, name, data):
         pass
     else:  # 默认type=='match'一对一比赛
         AI_type, params = data
-        match_process = Factory(AI_type, name, params)
+        match_process = Factory(AI_type, name, params, error_logger)
     match_process.start()
 
     # 注册比赛进程
@@ -157,7 +157,7 @@ def unit_monitor(type, name, data):
     # print('END:', type, name)
 
 
-def start_match(AI_type, code1, code2, param_form, ranked=False, join=False):
+def start_match(AI_type, code1, code2, param_form, ranked=False, join=False, error_logger=None):
     from match_sys import models
     from . import helpers
     from django.utils import timezone
@@ -192,7 +192,7 @@ def start_match(AI_type, code1, code2, param_form, ranked=False, join=False):
     # 传送参数至进程 (AI_type,code1,code2,match_name,params)
     if join:
         match_proc = Process(
-            target=unit_monitor, args=('match', match_name, [AI_type, params]))
+            target=unit_monitor, args=('match', match_name, [AI_type, params], error_logger))
         connections.close_all()  # 用于主进程MySQL保存所有更改
         match_proc.start()
         return match_proc
