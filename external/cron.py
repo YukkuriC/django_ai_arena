@@ -124,9 +124,9 @@ class TeamLadder(CronJobBase):
                 )
                 matches.append(match_proc)
 
-            # 阻塞至进程完成
-            for proc in matches:
-                proc.join()
+        # 阻塞至进程完成
+        for proc in matches:
+            proc.join()
 
 
 class BaseMatch(CronJobBase):
