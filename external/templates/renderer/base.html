@@ -165,6 +165,31 @@
     })
     scroller.addEventListener('mousemove', update_scroll)
 
+    // 按键逐帧播放
+    window.addEventListener('keypress', e => {
+        switch (e.code) {
+            // 逐帧移动
+            case "BracketLeft":
+                if (IS_PLAYING) pause()
+                CURR_FRAME = Math.max(CURR_FRAME - 1, 0)
+                scroller.value = CURR_FRAME
+                draw_frame()
+                break
+            case "BracketRight":
+                if (IS_PLAYING) pause()
+                CURR_FRAME = Math.min(CURR_FRAME + 1, TOTAL_FRAMES - 1)
+                scroller.value = CURR_FRAME
+                draw_frame()
+                break
+            // 播放暂停
+            case "Space":
+            case "Enter":
+            case "NumpadEnter":
+                play_pause()
+                break
+        }
+    })
+
     // 初始化事件
     window.addEventListener('load', () => {
         init()
