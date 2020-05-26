@@ -428,7 +428,7 @@ if 'view code':
         '''验证密码删除代码'''
 
         # 权限检测
-        if not code.author == user:
+        if code.author != user or user.is_team:
             return sorry(request, 403, text='没有删除权限')
 
         # 检测密码验证

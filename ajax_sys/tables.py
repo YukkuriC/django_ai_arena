@@ -148,13 +148,12 @@ class MatchTablePage(TablePageBase):
             else:
                 match_list = code.pmatch2.all()
         elif prefab[:4] == 'near':
+            match_list = PairMatch.objects.filter(code1__author__is_team=0)
             if prefab == 'near_type':  # 特定类型
                 aitype = request.GET.get('aitype')
                 aitype = int(aitype)
                 assert aitype in settings.AI_TYPES
-                match_list = PairMatch.objects.filter(ai_type=aitype)
-            else:  # 总体
-                match_list = PairMatch.objects.all()
+                match_list = match_list.filter(ai_type=aitype)
             match_list = match_list[:settings.RECENT_MATCH_SHOWN]
         return match_list, params
 
