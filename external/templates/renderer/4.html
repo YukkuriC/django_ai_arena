@@ -211,7 +211,7 @@
             var move = op.d[1]
             if (move in DIRECTIONS) tmp += `向${DIRECTIONS[move]}移动`
             else if (move == 'None') tmp += "放弃治疗"
-            else tmp += `向"${DIRECTIONS[move]}"移动?`
+            else tmp += `向"${move}"移动?`
         }
         else tmp += `落子于${op.d[1]}`
 
@@ -296,6 +296,12 @@
             if (i) tmp.appendChild(document.createElement('br'))
             tmp.appendChild(new Text(x))
         })
+        if (typeof record_obj.time == 'object' && typeof record_obj.time.map == 'function') {
+            var time_text = '双方用时: '
+            time_text += record_obj.time.map(x => Math.round(x * 1000) / 1000).join(' / ')
+            tmp.appendChild(document.createElement('br'))
+            tmp.appendChild(new Text(time_text))
+        }
         ending_mask.appendChild(tmp)
     }
 

@@ -1,6 +1,6 @@
 from external._base import BasePairMatch
 from functools import lru_cache
-import time, random
+import time
 from os import path
 from . import api_2048
 
@@ -21,9 +21,9 @@ class _2048Match(BasePairMatch):
         '''
         # 定期重设随机种子
         if d_local['who_first'] != "4" or d_local['rid'] % 2 == 0:
-            random.seed(int(time.time()))
+            cls.last_seed = int(time.time())
         plat = api_2048.one_match(d_local['players'], d_local['params'],
-                                  d_local['names'])
+                                  d_local['names'], cls.last_seed)
         return plat
 
     @classmethod
