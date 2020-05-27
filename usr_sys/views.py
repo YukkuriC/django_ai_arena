@@ -179,6 +179,10 @@ def user_settings(request):
     user = get_user(request)
     form = forms.SettingsForm(request.POST or user.__dict__)
 
+    # 小组用户不可修改
+    if user.is_team:
+        return sorry(request, 403, text='小组用户不可改名')
+
     # GET请求
     if request.method == 'GET':
         return render(request, 'settings.html', locals())
