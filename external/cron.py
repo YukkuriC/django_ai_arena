@@ -107,8 +107,7 @@ class TeamLadder(CronLogger):
 
         # 发起比赛
         self.logs.append(f'{code.author.stu_code} - {target.author.stu_code}')
-        return start_match(gameid, code.id, target.id, params, True, True,
-                           self.error_logger)
+        return start_match(gameid, code.id, target.id, params, True)
 
     def do(self):
         """ 按游戏类型、组号随机发起比赛 """
@@ -146,7 +145,7 @@ class TeamLadder(CronLogger):
                     gameid,
                     params,
                 )
-                self.matches.append(match_proc)
+                self.logs.append(match_proc)
 
         # 返回记录
         return self.post_process()
