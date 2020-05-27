@@ -1,6 +1,7 @@
 from django_cron import CronJobBase, Schedule
 from django.conf import settings
 from django.db import connections
+from django.db.models import Q
 from django.utils import timezone
 from match_sys.models import Code, PairMatch
 from .match_monitor import start_match, unit_monitor
@@ -43,21 +44,6 @@ def expand_markers(targets):
     return mapper
 
 
-def gen_times(targets):
-    """
-    将settings.TEAMLADDER_CONFIG转化为django_cron所需格式
-    """
-    mapper = expand_markers(targets)
-
-    # 换算为时间表示
-    res = []
-    for h in range(24):
-        for msep in range(mapper[h]):
-            res.append('%02d:%02d' % (h, 60 * msep // mapper[h]))
-
-    return res
-
-
 class CronLogger(CronJobBase):
     def __init__(self, *a, **kw):
         super().__init__(*a, **kw)
@@ -85,7 +71,12 @@ class TeamLadder(CronLogger):
     小组天梯后台自动比赛
     """
     code = 'TeamLadder'
-    schedule = Schedule(run_at_times=gen_times(settings.TEAMLADDER_CONFIG))
+
+    # 确定当前任务时间间隔
+    density = expand_markers(settings.TEAMLADDER_CONFIG)
+    cur_density = density[timezone.now().hour]
+    cur_gap = 60 / cur_density if cur_density >= 0 else 3600
+    schedule = Schedule(run_every_mins=cur_gap)
 
     NMATCH = expand_markers(settings.TEAMLADDER_NMATCH)
 
@@ -160,10 +151,16 @@ class BaseMatch(CronLogger):
         运行比赛
         从数据库抓取未执行的比赛并执行
         """
+        # 获取当前剩余的任务数
+        num_running = len(PairMatch.objects.filter(Q(status=1) | Q(status=-1)))
+        num_left = settings.MATCH_POOL_SIZE - num_running
+        self.logs.append(f'{num_running} RUNNING, {num_left} LEFT')
+        if num_left <= 0:
+            return
 
         # 获取最早的未发起比赛
         new_matches = PairMatch.objects.filter(
-            status=0).order_by('run_datetime')[:settings.MATCH_POOL_SIZE]
+            status=0).order_by('run_datetime')[:num_left]
 
         # 分别发起
         for match in new_matches:
