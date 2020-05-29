@@ -2,7 +2,7 @@ from time import perf_counter as pf
 from multiprocessing import Process, Queue
 from os import path
 from sys import modules
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import lru_cache
 import ast, random, json
 from . import helpers_core
@@ -48,8 +48,10 @@ class BaseProcess:
         self.timeout = self.get_timeout()
         self.process.start()
         try:
+            now = datetime.now()
             self.match.status = 1
-            self.match.run_datetime = datetime.now()
+            self.match.run_datetime = now
+            self.match.timeout_datetime = now + timedelta(seconds=self.timeout)
             self.match.save()
         except:
             pass

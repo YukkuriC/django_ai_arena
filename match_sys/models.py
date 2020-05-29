@@ -76,6 +76,7 @@ class PairMatch(models.Model):
     finished_rounds = models.IntegerField('已完成局数', default=0)
     run_datetime = models.DateTimeField('发布时间', auto_now_add=True)
     finish_datetime = models.DateTimeField('完成时间', null=True)
+    timeout_datetime = models.DateTimeField('超时时间', null=True)
     status = models.IntegerField(
         '状态', default=0, choices=settings.PAIRMATCH_STATUS.items())
 

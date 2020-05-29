@@ -5,6 +5,7 @@ from django.db.models import Q
 from django.utils import timezone
 from match_sys.models import Code, PairMatch
 from .match_monitor import start_match, unit_monitor
+from datetime import datetime
 from multiprocessing import Process, Queue
 import random, json
 
@@ -151,8 +152,17 @@ class BaseMatch(CronLogger):
         运行比赛
         从数据库抓取未执行的比赛并执行
         """
+        # 自动清除滞留比赛
+        running_match = PairMatch.objects.filter(Q(status=1) | Q(status=-1))
+        invalid_match = running_match.filter(
+            timeout_datetime__lt=datetime.now())  # 比赛内部进程统一使用datetime
+        if invalid_match:
+            l = len(invalid_match)
+            invalid_match.update(status=3)
+            self.logs.append(f'{l} INVALID REMOVED')
+
         # 获取当前剩余的任务数
-        num_running = len(PairMatch.objects.filter(Q(status=1) | Q(status=-1)))
+        num_running = len(running_match)
         num_left = settings.MATCH_POOL_SIZE - num_running
         self.logs.append(f'{num_running} RUNNING, {num_left} LEFT')
         if num_left <= 0:
