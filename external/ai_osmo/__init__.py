@@ -76,12 +76,16 @@ class OsmoMatch(BasePairMatch):
     @lru_cache()
     def load_record(cls, match_dir, rec_id):
         log_name = path.join(match_dir, 'logs/%02d.zlog' % rec_id)
-        return osmo_api.load_log(log_name)
+        return cls.load_record_path(log_name)
 
     @classmethod
     @lru_cache()
-    def stringfy_record(cls, match_dir, rec_id):
-        record = {**cls.load_record(match_dir, rec_id)}
+    def load_record_path(cls, record_path):
+        return osmo_api.load_log(record_path)
+
+    @classmethod
+    def stringfy_record_obj(cls, record):
+        record = {**record}
         if record['cause'] == "RUNTIME_ERROR":  # 将Exception转换为str
             if isinstance(record["detail"], (list, tuple)):
                 tmp = []

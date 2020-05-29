@@ -76,13 +76,16 @@ class PingPongMatch(BasePairMatch):
     @classmethod
     @lru_cache()
     def load_record(cls, match_dir, rec_id):
-        return pingpong_api.load_log(
+        return cls.load_record_path(
             path.join(match_dir, 'logs', '%02d.zlog' % rec_id))
 
     @classmethod
     @lru_cache()
-    def stringfy_record(cls, match_dir, rec_id):
-        record = cls.load_record(match_dir, rec_id)
+    def load_record_path(cls, record_path):
+        return pingpong_api.load_log(record_path)
+
+    @classmethod
+    def stringfy_record_obj(cls, record):
         record_trans = pingpong_api.jsonfy(record)
         return super().stringfy_record_obj(record)
 

@@ -50,7 +50,7 @@ def course_view(request, AI_type, file):
         return sorry(request, text='无效的游戏类型')
     title = settings.AI_TYPES[AI_type]
 
-    with open(file, 'rb') as f:
-        record_content = pickle.loads(zlib.decompress(f.read()))
-        record_content = json.dumps(record_content, separators=(',', ':'))
+    loader = Factory(AI_type)
+    record = loader.load_record_path(file)
+    record_content = loader.stringfy_record_obj(record)
     return render(request, 'renderer/%s.html' % AI_type, locals())

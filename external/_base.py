@@ -254,6 +254,15 @@ class BaseRecordLoader:
         pass
 
     @classmethod
+    def load_record_path(cls, record_path):
+        '''
+        读取指定路径下的比赛记录文件，实现时可lru_cache
+        params:
+            record_path: 比赛记录文件位置
+        '''
+        pass
+
+    @classmethod
     def load_records(cls, match):
         '''
         批量读取比赛存储文件夹内所有文件

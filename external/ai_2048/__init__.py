@@ -53,7 +53,12 @@ class _2048Match(BasePairMatch):
     @lru_cache()
     def load_record(cls, match_dir, rec_id):
         log_name = path.join(match_dir, 'logs/%02d.txt' % rec_id)
-        return api_2048.load_log(log_name)
+        return cls.load_record_path(log_name)
+
+    @classmethod
+    @lru_cache()
+    def load_record_path(cls, record_path):
+        return api_2048.load_log(record_path)
 
     @staticmethod
     def summary_records(records):

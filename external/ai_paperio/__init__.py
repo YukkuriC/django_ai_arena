@@ -93,13 +93,17 @@ class PaperIOMatch(BasePairMatch):
     @classmethod
     @lru_cache()
     def load_record(cls, match_dir, rec_id):
-        return match_interface.load_match_log(
+        return cls.load_record_path(
             path.join(match_dir, 'logs', '%02d.clog' % rec_id))
 
     @classmethod
     @lru_cache()
-    def stringfy_record(cls, match_dir, rec_id):
-        record = {**cls.load_record(match_dir, rec_id)}  # 复制一份
+    def load_record_path(cls, record_path):
+        return match_interface.load_match_log(record_path)
+
+    @classmethod
+    def stringfy_record_obj(cls, record):
+        record = {**record}  # 复制一份
         record['traces'] = list(map(list, record['traces']))
         record['timeleft'] = [[round(x, 3) for x in lst]
                               for lst in record['timeleft']]
