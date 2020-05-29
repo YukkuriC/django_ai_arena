@@ -6,6 +6,16 @@
         <a id='bread_root'>{% block title %}比赛结果: {{title}}{% endblock %}</a>
         /
         <span id='bread'>{{folder | default_if_none:""}}</span>
+        <span class='float-right'>
+            排序方式:
+            {% for sorter in sort_keys.items %}
+            {% if request.session.course_results_sort == sorter.0 %}
+            <b>{{sorter.1}}</b>
+            {% else %}
+            <a href='./?sort={{sorter.0}}'>{{sorter.1}}</a>
+            {% endif %}
+            {% endfor %}
+        </span>
     </h1>
 </div>
 {% endblock %}
@@ -26,7 +36,10 @@
 {% endfor %}
 {% for f in files %}
 <div>
-    <a href="./{{f}}/" class='form-control'>比赛记录: {{f}}</a>
+    <a href="./{{f.name}}/" class='form-control'>
+        比赛记录: {{f.name}}
+        <span class='float-right'>{{f.time}}</span>
+    </a>
 </div>
 {% endfor %}
 {% endblock %}
