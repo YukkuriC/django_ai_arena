@@ -458,6 +458,9 @@ class BasePairMatch(BaseProcess, BaseCodeLoader, BaseRecordLoader):
         '''
         result_stat = self.summary_raw()
 
+        # 重新打开比赛记录文件
+        self.match = PairMatch.objects.get(id=self.match.id)
+
         # 计算等级分变化
         code1 = self.match.code1
         code2 = self.match.code2
