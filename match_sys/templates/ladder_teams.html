@@ -26,10 +26,10 @@
         <table class='table' id='teams_{{x}}'>
             <thead>
                 <tr>
+                    <th>链接</th>
                     <th>作者</th>
                     <th>战绩</th>
                     <th>天梯积分</th>
-                    <th>传送门</th>
                 </tr>
             </thead>
             <tbody>
@@ -43,8 +43,8 @@
 {% block script %}
 <script>
     window.addEventListener('load', () => {
-        window.table1 = new TableHolder('teams_F', '/table/code/?pre=ladder_t&type={{AI_type}}&group=F', null, false, { page_size: 1000 })
-        window.table2 = new TableHolder('teams_N', '/table/code/?pre=ladder_t&type={{AI_type}}&group=N', null, false, { page_size: 1000 })
+        window.table1 = new TableHolder('teams_F', '/table/code/?pre=ladder_t&type={{AI_type}}&group=F', null, true, { page_size: 1000 })
+        window.table2 = new TableHolder('teams_N', '/table/code/?pre=ladder_t&type={{AI_type}}&group=N', null, true, { page_size: 1000 })
     })
 </script>
 {% endblock %}

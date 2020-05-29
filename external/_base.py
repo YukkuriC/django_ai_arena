@@ -8,6 +8,7 @@ import ast, random, json
 from . import helpers_core
 if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
     from django.conf import settings
+    from django.db import connections
 
 
 class BaseProcess:
@@ -19,7 +20,7 @@ class BaseProcess:
         params: 比赛设置参数字典
     '''
 
-    def __init__(self, match_name, params):
+    def __init__(self, match_name, params, error_logger=None):
         from match_sys import models
 
         # 接收队列
@@ -28,10 +29,8 @@ class BaseProcess:
 
         # 获取match对象与代码路径
         self.match = models.PairMatch.objects.get(name=match_name)
-        code1 = path.join(settings.MEDIA_ROOT,
-                             str(self.match.code1.content))
-        code2 = path.join(settings.MEDIA_ROOT,
-                             str(self.match.code2.content))
+        code1 = path.join(settings.MEDIA_ROOT, str(self.match.code1.content))
+        code2 = path.join(settings.MEDIA_ROOT, str(self.match.code2.content))
 
         # 初始化进程
         self.params = params
@@ -39,7 +38,8 @@ class BaseProcess:
         match_dir = path.join(settings.PAIRMATCH_DIR, match_name)
         self.process = Process(
             target=self.process_run,
-            args=([code1, code2], match_dir, params, self.output),
+            args=([code1, code2], match_dir, params, self.output,
+                  error_logger),
             daemon=1)
 
     def start(self):
@@ -62,6 +62,7 @@ class BaseProcess:
         if updated:
             self.match.finished_rounds = len(self.result_raw)
             self.match.save()
+            connections.close_all()
 
     def check_active(self, now):
         '''
@@ -84,7 +85,7 @@ class BaseProcess:
         return res
 
     @classmethod
-    def process_run(cls, codes, match_dir, params, output):
+    def process_run(cls, codes, match_dir, params, output, error_logger=None):
         '''进程运行函数'''
         raise NotImplementedError
 
@@ -211,7 +212,7 @@ class BaseCodeLoader:
     class Meta:
         module_whitelist = [
             'math', 'random', 'copy', 'numpy', 'time', 'collections',
-            'itertools', 'functools'
+            'itertools', 'functools', 'heapq', 'operator'
         ]  # 允许使用的库
         func_blacklist = ['eval', 'exec', 'compile', '__import__',
                           'open']  # 禁止使用的函数
@@ -324,7 +325,7 @@ class BasePairMatch(BaseProcess, BaseCodeLoader, BaseRecordLoader):
                     return [i % 2 for i in range(rounds)]
 
     @classmethod
-    def process_run(cls, codes, match_dir, params, output):
+    def process_run(cls, codes, match_dir, params, output, error_logger=None):
         '''
         默认的比赛运行框架
         结构:
@@ -340,10 +341,16 @@ class BasePairMatch(BaseProcess, BaseCodeLoader, BaseRecordLoader):
             match_dir: 比赛记录文件夹地址
             params: 比赛表单参数
             output: 用于输出比赛结果的multiprocessing.Queue对象
+            error_logger: 用于重定向错误日志输出的multiprocessing.Queue对象
         '''
         # 使模块不可读
         for x in cls.Meta.module_whitelist:
             seal_module(x)
+
+        # 重定向错误输出
+        if error_logger:
+            import sys
+            sys.stderr = helpers_core.queue_io(error_logger)
 
         # 读取参数
         players, plr_loaded = [], True

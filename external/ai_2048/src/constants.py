@@ -13,8 +13,17 @@ ARRAY = list(range(ROUNDS))  # 随机(?)列表
 NAMES = {_: str(2 ** _).zfill(4) for _ in range(MAXLEVEL)}  # 将内在级别转换为显示对象的字典
 NAMES[0] = '0000'
 
-DIRECTIONS = {0: 'up', 1: 'down', 2: 'left', 3: 'right', None: 'None'}    # 换算方向的字典
-PLAYERS = {True: 'player 0', False: 'player 1'}  # 换算先后手名称的字典
+class _DIRECTIONS(list):
+    def __init__(self):
+        super().__init__(['up', 'down', 'left', 'right'])
+    def __getitem__(self, key):
+        return super().__getitem__(key) if key in range(4) else 'unknown'
+DIRECTIONS = _DIRECTIONS()      # 换算方向
+
+POSITIONS = lambda position: str(position) if isinstance(position, tuple) and len(position) == 2 \
+            and position[0] in range(ROWS) and position[1] in range(COLUMNS) else 'unknown'  # 换算位置
+
+PLAYERS = {True: 'player 0', False: 'player 1'}  # 换算先后手名称
 
 PICTURES = ['nanami', 'ayase']  # 游戏图片名称
 LENGTH = 100                    # 格子的边长
@@ -81,7 +90,6 @@ class Chessboard:
             delta = [(-1,0), (1,0), (0,-1), (0,1)][direction]
             return (position[0] + delta[0], position[1] + delta[1])
         def conditionalSorted(chessmanList):  # 返回根据不同的条件排序结果
-            if direction == None: return []
             if direction == 0: return sorted(chessmanList, key = lambda x:x[0], reverse = False)
             if direction == 1: return sorted(chessmanList, key = lambda x:x[0], reverse = True )
             if direction == 2: return sorted(chessmanList, key = lambda x:x[1], reverse = False)
@@ -194,6 +202,13 @@ class Chessboard:
         new.time = self.time.copy()
         new.anime = self.anime.copy()
         return new
+
+    def getRaw(self):
+        '''
+        -> 返回一个代表棋盘的二维列表, 元素为(value, belong)
+        '''
+        return [[(self.getValue((row, column)), self.getBelong((row, column)))
+                 for column in range(COLUMNS)] for row in range(ROWS)]
 
     def __repr__(self):
         '''

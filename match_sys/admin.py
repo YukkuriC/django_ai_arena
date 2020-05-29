@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.db.models.base import ModelBase
+from django.conf import settings
 
 # Register your models here.
 from . import models
@@ -24,10 +25,20 @@ class MatchAdmin(admin.ModelAdmin):
         'code2__author__username'
     ]
     date_hierarchy = 'run_datetime'
-    actions = ['set_stopped']
+
+    actions = []
+    for num, stat in settings.PAIRMATCH_STATUS.items():
+        func_name = f'set_{stat}'
+        exec(f'''
+def {func_name}(self, request, queryset):
+    queryset.update(status={num})
+    self.message_user(request, '已设置: "{stat}"')
+{func_name}.short_description = '设为"{stat}"'
+''')
+        actions.append(func_name)
 
     def set_stopped(self, request, queryset):
-        queryset.filter(status=1).update(status=3)
+        queryset.update(status=3)
         self.message_user(request, '已中止')
 
     set_stopped.short_description = '中止'

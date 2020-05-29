@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_cron',
 ]
 
 MIDDLEWARE = [
@@ -159,6 +160,37 @@ if os.sys.platform == 'win32':
 MEDIA_URL = '/STORAGE/'
 MEDIA_ROOT = os.path.join(BASE_DIR, '_STORAGE')
 
+# 站点主页重写
+ROOT_HOST = None
+
+# 定时任务配置
+DJANGO_CRON_LOCKFILE_PATH = os.path.join(MEDIA_ROOT, 'tasks')
+CRON_CLASSES = [
+    "external.cron.TeamLadder",
+    "external.cron.BaseMatch",
+]
+
+# 已启用自动天梯游戏编号
+# [0]: 游戏编号
+# [1]: 比赛参数字典
+TEAMLADDER_ENABLED = {}
+# 自动小组天梯赛发起时段
+# [0]: 区间起始小时（0-23）
+# [1]: 该区间每小时发起任务数（0-60）
+TEAMLADDER_CONFIG = [
+    [7, 5],
+    [18, 3],
+    [0, 10],
+    [2, 20],
+]
+# 自动小组天梯赛并行比赛数
+# [0]: 区间起始小时（0-23）
+# [1]: 该区间每个任务同时发起比赛数
+TEAMLADDER_NMATCH = [
+    [7, 3],
+    [2, 6],
+]
+
 # 合法字符集合
 RAND_CHARPOOL = 'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz0123456789_'  # 用于生成随机字符串
 USERNAME_CHARPOOL = set(RAND_CHARPOOL)  # 用于匹配用户名
@@ -204,6 +236,7 @@ PAIRMATCH_STATUS = {  # 比赛状态码
     1: '执行中',
     2: '已完成',
     3: '已中止',
+    -1: '排队中',
 }
 DEFAULT_MAX_RUNNING_SEC = 2  # 获取计时函数缺省时每局最大运行{}秒
 
@@ -234,6 +267,10 @@ LIMIT_COUNT_MINUTES = 1  # 统计时间长度
 LIMIT_COUNT_ROUNDS = 10  # 一定时间内最大可发起的对局数
 LIMIT_COUNT_BUFFER = 5  # 超限发起比赛最多可超过局数
 
+# 权限调整参数
+CAN_DELETE_MATCH_RESULT = False  # 是否可以删除自己发起的比赛记录
+CAN_FORK_PUBLIC_CODE = False  # 是否可以复制公开代码
+
 # 覆盖设置，动态调整参数
 try:
     with open(os.path.join(BASE_DIR, 'override.json')) as f:
@@ -241,4 +278,5 @@ try:
     for k, v in data.items():
         globals()[k] = v
 except:
-    pass
+    import traceback
+    traceback.print_exc()

@@ -2,6 +2,7 @@ import os
 
 from django.db import models
 from django.dispatch import receiver
+from django.conf import settings
 from django.contrib import admin, messages
 from django.shortcuts import redirect
 from django.http import JsonResponse, HttpRequest
@@ -147,7 +148,7 @@ if 'user system':
             days=settings.EMAIL_VALID_LAST_DAYS)
 
         http = 'https' if request.is_secure() else 'http'
-        host = request.META['HTTP_HOST']
+        host = settings.ROOT_HOST or request.META['HTTP_HOST']
         if type == 'forgotpw':
             link = '%s://%s/forgotpasswd/%s' % (http, host, checker.check_hash)
             title = '代码竞技场重设密码'

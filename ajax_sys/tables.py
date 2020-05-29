@@ -165,7 +165,7 @@ class CodeTablePage(TablePageBase):
     root_link = '/code/'
     template_prefabs = {
         'ladder': 'name author records score tools'.split(),
-        'ladder_t': 'author records score tools'.split(),
+        'ladder_t': 'author records score'.split(),
         'home': 'name type records score'.split(),
     }
 
@@ -201,9 +201,13 @@ class CodeTablePage(TablePageBase):
             code_list = Code.objects.filter(ai_type=AI_type)
 
             # 分组筛选
+            if prefab == 'ladder':
+                code_list = code_list.filter(author__is_team=False)
             if prefab == 'ladder_t':
                 code_list = code_list.filter(
-                    author__stu_code__startswith=request.GET.get('group'))
+                    author__is_team=True,
+                    author__stu_code__startswith=request.GET.get('group'),
+                )
 
             code_list = code_list.order_by('-score')
         else:

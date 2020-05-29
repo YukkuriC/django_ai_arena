@@ -1,8 +1,9 @@
 # 设置路径
-import os, sys
+import os, sys, random
 src_path = os.path.join(os.path.dirname(__file__), 'src')
 sys.path.append(src_path)
 
+from collections import Counter
 import re, time, json
 import constants as c
 from plat import Platform
@@ -32,17 +33,29 @@ def gen_states(players, names):
 
 
 # 单场比赛函数
-def one_match(players, params, names):
+def one_match(players, params, names, seed=None):
     """
     Params:
         players: 参赛双方代码模块
         params: 比赛参数
         names: 参赛双方名称 (记录于path中)
+        seed: 随机种子
     """
     players = [object.__new__(p.Player) for p in players]
 
+    # 尝试使用加速库覆盖
+    try:
+        import constants, libchessboard
+        constants.Chessboard = libchessboard.Chessboard
+    except:
+        pass
+
     # 初始参数
     states = gen_states(players, names)
+
+    # 设置随机种子
+    if seed != None:
+        random.seed(seed)
 
     # 运行比赛
     plat = Platform(states, '', None, 0, params['max_time'],
@@ -108,14 +121,11 @@ def dump_log(self, path):
         os.makedirs(folder, exist_ok=True)
 
     # 获取所有棋子并计数
-    results = {
-        True: self.board.getScore(True),
-        False: self.board.getScore(False)
-    }
+    results = {x: Counter(self.board.getScore(x)) for x in (0, 1)}
     scores = {True: {}, False: {}}
-    for level in range(1, c.MAXLEVEL):
-        scores[True][level] = results[True].count(level)
-        scores[False][level] = results[False].count(level)
+    for side, res in results.items():
+        for level in range(1, c.MAXLEVEL):
+            scores[side][level] = res[level]
 
     # 组装记录文件
     raw = {
@@ -123,7 +133,7 @@ def dump_log(self, path):
         'name0': self.states[True]['path'],
         'id1': self.states[False]['index'][0],
         'name1': self.states[False]['path'],
-        'time': time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()),
+        'time': [self.states[i]['time'] for i in (1, 0)],  # 记录双方用时
         'logs': list(parse_logs('\n'.join(self.log))),  # 解析所有比赛记录
         'cause': '',  # 默认为得分结算
     }

@@ -33,6 +33,7 @@
         height: 80px;
         margin: 10px;
         font-size: 28px;
+        font-weight: bolder;
         text-align: center;
         display: flex;
         align-items: center;
@@ -52,6 +53,11 @@
         margin: auto;
         text-align: center;
     }
+
+    .large p {
+        color: white;
+        text-shadow: 0px 0px 5px gold;
+    }
 </style>
 {% endblock %}
 
@@ -59,6 +65,22 @@
 <div class='row x_block'>
     <div class='col-sm-2' id='d_turn'>回合</div>
     <div class='col-sm-4' id='d_action'>动作</div>
+    <div class='col-sm-6' id='widget_group'>
+        <input type="color" id='clr1' title='先手颜色'>
+        <input type="color" id='clr2' title='先手颜色 (大数)' name='extra'>
+        <input type="color" id='clr3' title='后手颜色'>
+        <input type="color" id='clr4' title='后手颜色 (大数)' name='extra'>
+        <input type="number" id='clr_curve' name='extra' step="0.1" min="0" max="3" title='色阶曲线'>
+        <select id="clr_mode" title='颜色模式'>
+            <option value="multi">梯度上色</option>
+            <option value="single">单色</option>
+        </select>
+        <select id="num_mode" title='数字显示模式'>
+            <option value="e+2">8-4096</option>
+            <option value="e+0">2-1024</option>
+            <option value="level">显示等级</option>
+        </select>
+    </div>
 </div>
 {% endblock %}
 
@@ -90,6 +112,8 @@
                 main.appendChild(node)
             }
         }
+        // 配置控件
+        init_widgets()
     }
     DIRECTIONS = {
         up: '上',
@@ -97,10 +121,77 @@
         left: '左',
         right: '右',
     }
-    COLORS = [
-        'rgb(239,228,218)',
-        'rgb(242,177,120)',
+    CMIN = 1; CMAX = 10; CCURVE = 0.6
+    COLOR_SCALES = [
+        [
+            [239, 228, 218],
+            [70, 70, 120],
+        ],
+        [
+            [242, 177, 120],
+            [160, 90, 40]
+        ],
     ]
+    COLOR_MODE = 'multi'
+    NUM_MODE = 'e+2'
+    WIDGETS = {} // 存放颜色控件
+
+    // 控件
+    function init_widgets() {
+        // 添加引用
+        for (var x of document.getElementById('widget_group').children) {
+            WIDGETS[x.id] = x
+        }
+
+        // 颜色配置
+        for (var i = 0; i < 4; i++) {
+            var widget = WIDGETS['clr' + (i + 1)],
+                grp = Math.floor(i / 2),
+                ind = i % 2
+            bind_color(widget, grp, ind)
+        }
+
+        // 映射曲线
+        WIDGETS.clr_curve.value = CCURVE
+        WIDGETS.clr_curve.addEventListener('change', e => {
+            CCURVE = e.target.value
+            draw_frame()
+        })
+
+        // 颜色模式
+        WIDGETS.clr_mode.value = COLOR_MODE
+        WIDGETS.clr_mode.addEventListener('change', e => {
+            COLOR_MODE = e.target.value
+            for (var widget of Object.values(WIDGETS)) {
+                if (widget.name == 'extra')
+                    widget.style.display = (COLOR_MODE == 'multi') ? '' : 'none'
+            }
+            draw_frame()
+        })
+
+        // 分数模式
+        WIDGETS.num_mode.value = NUM_MODE
+        WIDGETS.num_mode.addEventListener('change', e => {
+            NUM_MODE = e.target.value
+            draw_frame()
+        })
+    }
+    function bind_color(widget, grp, ind) {
+        widget.value = arr2clr(COLOR_SCALES[grp][ind])
+        widget.addEventListener('change', e => {
+            COLOR_SCALES[grp][ind] = clr2arr(e.target.value)
+            draw_frame()
+        })
+    }
+    function clr2arr(clr) {
+        var arr = []
+        for (var i = 1; i < 7; i += 2)
+            arr.push(parseInt(clr.slice(i, i + 2), 16))
+        return arr
+    }
+    function arr2clr(arr) {
+        return '#' + arr.map(x => x.toString(16)).join('')
+    }
 
     // 更新描述
     var descrips = [
@@ -120,7 +211,7 @@
             var move = op.d[1]
             if (move in DIRECTIONS) tmp += `向${DIRECTIONS[move]}移动`
             else if (move == 'None') tmp += "放弃治疗"
-            else tmp += `向"${DIRECTIONS[move]}"移动?`
+            else tmp += `向"${move}"移动?`
         }
         else tmp += `落子于${op.d[1]}`
 
@@ -128,6 +219,28 @@
     }
 
     // 更新棋盘
+    function pick_score(num) {
+        num = Math.abs(num)
+        switch (NUM_MODE) {
+            case 'e+2':
+                return 1 << (num + 2)
+            case 'e+0':
+                return 1 << num
+            default:
+                return `- ${num} -`
+        }
+    }
+    function pick_color(num, clrs) {
+        num = Math.max(Math.min(num, CMAX), CMIN)
+        var res = []
+        if (COLOR_MODE == 'multi')
+            for (var i = 0; i < 3; i++) {
+                var tmp = clrs[0][i] + (clrs[1][i] - clrs[0][i]) * Math.pow(num - CMIN, CCURVE) / Math.pow(CMAX - CMIN, CCURVE)
+                res.push(Math.floor(tmp))
+            }
+        else res = clrs[0]
+        return `rgb(${res.join(',')})`
+    }
     function pick_data(index) { // 从指定帧向前查找直到获得棋盘
         for (; index >= 0; index--) {
             var tmp = record_obj.logs[index].P
@@ -145,10 +258,14 @@
                     is_plr0 = is_occupied ? (num > 0) : (c < 4)
 
                 // 更新样式
+                cell.classList.remove('large')
                 if (is_occupied) {
                     cell.classList.add('occupied')
                     cell.classList.remove('free')
-                    cell.innerHTML = `<p>${1 << Math.abs(num)}</p>`
+                    var value = pick_score(num)
+                    if (value >= 2048)
+                        cell.classList.add('large')
+                    cell.innerHTML = `<p>${value}</p>`
                 } else {
                     cell.classList.add('free')
                     cell.classList.remove('occupied')
@@ -156,7 +273,7 @@
                 }
 
                 // 更新颜色
-                cell.style.backgroundColor = COLORS[1 - is_plr0]
+                cell.style.backgroundColor = pick_color(Math.abs(num), COLOR_SCALES[1 - is_plr0])
             }
         }
     }
@@ -179,6 +296,12 @@
             if (i) tmp.appendChild(document.createElement('br'))
             tmp.appendChild(new Text(x))
         })
+        if (typeof record_obj.time == 'object' && typeof record_obj.time.map == 'function') {
+            var time_text = '双方用时: '
+            time_text += record_obj.time.map(x => Math.round(x * 1000) / 1000).join(' / ')
+            tmp.appendChild(document.createElement('br'))
+            tmp.appendChild(new Text(time_text))
+        }
         ending_mask.appendChild(tmp)
     }
 

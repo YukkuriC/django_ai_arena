@@ -1,6 +1,7 @@
 from multiprocessing import Process
 import os, sys, socket, json
 from sqlite3 import connect
+from .helpers_core import queue_io
 
 
 # 多进程支持
@@ -95,7 +96,7 @@ def _db_unload(conn, type, name):
         print('DB UNLOAD ERROR:', e)
 
 
-def unit_monitor(type, name, data):
+def unit_monitor(type, name, data, error_logger=None):
     '''
     比赛维护进程
     每个监控进程维护一个比赛进程
@@ -111,6 +112,16 @@ def unit_monitor(type, name, data):
     # print('START:', type, name)
     conn = init_db()
     cursor = conn.cursor()
+
+    # 重定向错误输出
+    if error_logger:
+        import sys
+        sys.stdout = sys.stderr = queue_io(error_logger)
+
+    # 设定比赛状态
+    match = models.PairMatch.objects.get(name=name)
+    match.status = -1
+    match.save()
 
     # 任务超限时待机
     num_tasks = _db_running(cursor)
@@ -128,7 +139,7 @@ def unit_monitor(type, name, data):
         pass
     else:  # 默认type=='match'一对一比赛
         AI_type, params = data
-        match_process = Factory(AI_type, name, params)
+        match_process = Factory(AI_type, name, params, error_logger)
     match_process.start()
 
     # 注册比赛进程
@@ -157,7 +168,13 @@ def unit_monitor(type, name, data):
     # print('END:', type, name)
 
 
-def start_match(AI_type, code1, code2, param_form, ranked=False):
+def start_match(AI_type,
+                code1,
+                code2,
+                param_form,
+                ranked=False,
+                join=False,
+                error_logger=None):
     from match_sys import models
     from . import helpers
     from django.utils import timezone
@@ -170,7 +187,10 @@ def start_match(AI_type, code1, code2, param_form, ranked=False):
             break
 
     # 获取match参数
-    params = param_form.cleaned_data
+    if isinstance(param_form, dict):
+        params = param_form
+    else:
+        params = param_form.cleaned_data
 
     # 创建未启动比赛对象
     new_match = models.PairMatch()
@@ -185,12 +205,17 @@ def start_match(AI_type, code1, code2, param_form, ranked=False):
     new_match.params = json.dumps(params)
     new_match.save()
 
+    # 阻塞参数直接发起比赛
     # 传送参数至进程 (AI_type,code1,code2,match_name,params)
-    match_proc = Process(
-        target=unit_monitor, args=('match', match_name, [AI_type, params]))
-    connections.close_all()  # 用于主进程MySQL保存所有更改
-    match_proc.start()
+    if join:
+        match_proc = Process(
+            target=unit_monitor,
+            args=('match', match_name, [AI_type, params], error_logger))
+        connections.close_all()  # 用于主进程MySQL保存所有更改
+        match_proc.start()
+        return match_proc
 
+    # 否则仅创建
     # 返回match对象名称
     return match_name
 
