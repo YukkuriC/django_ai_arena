@@ -17,7 +17,8 @@
     #ending {
         width: 800px;
         height: 400px;
-        background-color: rgba(255, 255, 255, 0.5);
+        background-color: rgba(255, 255, 255, 0.8);
+        overflow: auto;
         opacity: 0;
         margin: auto;
         position: absolute;
@@ -25,7 +26,13 @@
         transition: 0.5s all;
         display: flex;
         align-items: center;
+    }
+
+    #ending>pre {
+        margin: auto;
         font-size: 20px;
+        text-align: center;
+        font-family: sans-serif;
     }
 
     .node {
@@ -285,24 +292,20 @@
             ending_mask.style.opacity = 0
             return
         }
-        if (events.length > 6) {// 省略显示过长信息
-            events = events.slice(events.length - 6, events.length)
-            events.unshift('...')
-        }
+        events = events.slice()
+
         ending_mask.style.opacity = 1
         ending_mask.innerHTML = ''
-        var tmp = document.createElement('p')
-        events.forEach((x, i) => {
-            if (i) tmp.appendChild(document.createElement('br'))
-            tmp.appendChild(new Text(x))
-        })
         if (typeof record_obj.time == 'object' && typeof record_obj.time.map == 'function') {
             var time_text = '双方用时: '
             time_text += record_obj.time.map(x => Math.round(x * 1000) / 1000).join(' / ')
-            tmp.appendChild(document.createElement('br'))
-            tmp.appendChild(new Text(time_text))
+            events.push('', time_text)
         }
+        events.push('\n\n')
+        var tmp = document.createElement('pre')
+        tmp.appendChild(new Text(events.join('\n')))
         ending_mask.appendChild(tmp)
+        ending_mask.scrollTop = ending_mask.scrollHeight
     }
 
     // 绘制接口
