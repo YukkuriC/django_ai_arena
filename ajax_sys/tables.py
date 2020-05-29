@@ -72,7 +72,10 @@ class TablePageBase:
             return cls.send_error('内容读取错误(%s: %s)' % (type(e).__name__, e))
 
         # 翻页功能
-        page_size = cls.max_page_size  # 先不考虑可变页长
+        try:
+            page_size = max(int(request.GET.get('page_size')), 1)
+        except:
+            page_size = cls.max_page_size
         max_page = (len(item_list) - 1) // page_size + 1
         page = request.GET.get('page')
         try:
@@ -176,8 +179,7 @@ class CodeTablePage(TablePageBase):
             au = item.author
             return [au.name, au.id, au.gravatar_icon(settings.TABLE_ICON_SIZE)]
         elif cell_type == 'records':
-            return '胜率%.1f%% (%s场比赛)' % (item.winning_rate * 100,
-                                         item.num_records)
+            return '%.1f%% in %s' % (item.winning_rate * 100, item.num_records)
         elif cell_type == 'score':
             return item.score_show
         elif cell_type == 'tools':

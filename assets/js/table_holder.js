@@ -1,13 +1,26 @@
 // ajax可翻页表格
 class TableHolder {
-    constructor(id, url, callback = null, add_link = true) {
+    constructor(id, url, callback = null, add_link = true, data = {}) {
         this.table = document.getElementById(id)
         this.tbody = this.table.getElementsByTagName('tbody')[0]
         this.panel = document.getElementById(id + '_panel')
-        this.page = 0
         this.max_page = -1
         this.base_url = url
         this.add_link = add_link
+        this.data = {
+            page: 0
+        }
+        Object.assign(this.data, data)
+
+        // 兼容老代码的page访问
+        Object.defineProperty(this, 'page', {
+            get() {
+                return this.data.page
+            },
+            set(value) {
+                this.data.page = value
+            }
+        })
 
         // create DOM
         this.panel.style.display = 'none'
@@ -148,7 +161,7 @@ class TableHolder {
         this.panel.style.display = ''
     }
     refresh(callback = null) {
-        var url = this.base_url + '&page=' + this.page
+        var url = this.get_url()
         this.panel.style.display = 'none'
         var thisRef = this
         $.ajax({
@@ -188,5 +201,9 @@ class TableHolder {
             this.page = new_page
             this.refresh()
         }
+    }
+    get_url() {
+        var params = Object.entries(this.data).map(x => `${x[0]}=${encodeURIComponent(x[1])}`).join('&')
+        return this.base_url + '&' + params
     }
 }
