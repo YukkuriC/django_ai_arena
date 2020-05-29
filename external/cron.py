@@ -75,7 +75,7 @@ class TeamLadder(CronLogger):
     # 确定当前任务时间间隔
     density = expand_markers(settings.TEAMLADDER_CONFIG)
     cur_density = density[timezone.now().hour]
-    cur_gap = 60 / cur_density if cur_density >= 0 else 3600
+    cur_gap = 60 / cur_density if cur_density > 0 else 3600
     schedule = Schedule(run_every_mins=cur_gap)
 
     NMATCH = expand_markers(settings.TEAMLADDER_NMATCH)
@@ -144,7 +144,7 @@ class TeamLadder(CronLogger):
 
 class BaseMatch(CronLogger):
     code = 'BaseMatch'
-    schedule = Schedule(run_every_mins=1)
+    schedule = Schedule(run_every_mins=0)
 
     def do(self):
         """

@@ -227,7 +227,6 @@ MATCH_TYPES = {  # 生成比赛类型
     0: '我方先手',
     1: '对方先手',
     2: '双方对半先手',
-    # 4:'Override',
 }
 MATCH_CODE_LENGTH = 10  # 比赛记录文件随机编码长度
 MATCH_POOL_SIZE = multiprocessing.cpu_count() - 1  # 最大同时启动比赛数
@@ -236,7 +235,7 @@ PAIRMATCH_STATUS = {  # 比赛状态码
     1: '执行中',
     2: '已完成',
     3: '已中止',
-    -1: '排队中',
+    -1: '待中止',
 }
 DEFAULT_MAX_RUNNING_SEC = 2  # 获取计时函数缺省时每局最大运行{}秒
 
@@ -249,12 +248,6 @@ RANKING_RANDOM_RANGE = 10  # 随机前X个得分相近的代码参与匹配
 
 # 比赛监控进程设置
 MONITOR_CYCLE = 0.5  # 每隔（秒）监测一次比赛进程状态
-MONITOR_DB_PATH = os.path.join(MEDIA_ROOT, 'matches.db')  # 比赛进程数据库路径
-MONITOR_DB_VERSION = 'AB'  # 用于修改数据库结构时删库重建
-MONITOR_DB_TABLES = [  # 建库使用的语句
-    'CREATE TABLE "%s" ( `n` INTEGER )' % MONITOR_DB_VERSION,  # 版本标识
-    """CREATE TABLE "tasks" ( `type` TEXT, `name` TEXT, `endtime` INTEGER )""",
-]
 MONITOR_DB_CHECK_CYCLE = 3  # 每{}个监测循环检查一次数据库注册状态
 
 # 显示参数

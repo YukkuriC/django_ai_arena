@@ -22,19 +22,19 @@ class BaseProcess:
 
     def __init__(self, match_name, params, error_logger=None):
         from match_sys import models
+        self.match_name = match_name
 
         # 接收队列
         self.result_raw = []
         self.output = Queue()
 
         # 获取match对象与代码路径
-        self.match = models.PairMatch.objects.get(name=match_name)
+        self.reload_match()
         code1 = path.join(settings.MEDIA_ROOT, str(self.match.code1.content))
         code2 = path.join(settings.MEDIA_ROOT, str(self.match.code2.content))
 
         # 初始化进程
         self.params = params
-        self.match_name = match_name
         match_dir = path.join(settings.PAIRMATCH_DIR, match_name)
         self.process = Process(
             target=self.process_run,
@@ -55,6 +55,11 @@ class BaseProcess:
             pass
 
     def flush_queue(self):
+        """ 读取任务队列 """
+
+        # 重新打开比赛记录文件
+        self.reload_match()
+
         updated = False
         while not self.output.empty():
             self.result_raw.append(self.output.get())
@@ -83,6 +88,10 @@ class BaseProcess:
 
         # 返回结果
         return res
+
+    def reload_match(self):
+        from match_sys import models
+        self.match = models.PairMatch.objects.get(name=self.match_name)
 
     @classmethod
     def process_run(cls, codes, match_dir, params, output, error_logger=None):
@@ -459,7 +468,7 @@ class BasePairMatch(BaseProcess, BaseCodeLoader, BaseRecordLoader):
         result_stat = self.summary_raw()
 
         # 重新打开比赛记录文件
-        self.match = PairMatch.objects.get(id=self.match.id)
+        self.reload_match()
 
         # 计算等级分变化
         code1 = self.match.code1
