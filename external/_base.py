@@ -302,6 +302,19 @@ class BaseRecordLoader:
         '''
         pass
 
+    @classmethod
+    def analyze_tags(cls, record):
+        '''
+        获取比赛记录特征标签，用于课堂对局结果展示页
+        params:
+            record: 比赛记录对象
+        returns:
+            所有标签的列表
+                [i][0]: 标签名称
+                [i][1]: 标签颜色，留空为蓝色
+        '''
+        return []
+
 
 class BasePairMatch(BaseProcess, BaseCodeLoader, BaseRecordLoader):
     '''

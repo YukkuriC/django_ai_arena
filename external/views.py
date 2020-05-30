@@ -29,7 +29,7 @@ def course_results(request, AI_type, folder):
             return course_view(request, AI_type, file_folder)
         return sorry(request, text='目录不存在')
     pool = os.listdir(file_folder)
-    folders, files = [], []
+    folders, files, errors = [], [], []
     for f in pool:
         f1 = os.path.join(file_folder, f)
         if os.path.isfile(f1):  # 读取记录
@@ -41,9 +41,13 @@ def course_results(request, AI_type, folder):
                 }
                 files.append(rec_unit)
             except Exception as e:
-                messages.warning(request, f'读取{f}时出错: {stringfy_error(e)}')
+                errors.append(f)
         else:
             folders.append(f)
+
+    # 加载tags
+    for record in files:
+        record['tags'] = loader.analyze_tags(record['record'])
 
     # 根据GET参数决定排序方式
     sort_method = request.GET.get(

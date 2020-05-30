@@ -77,6 +77,49 @@ class _2048Match(BasePairMatch):
             'stat': result_stat,
         }
 
+    @classmethod
+    def analyze_tags(cls, record):
+        res = []
+
+        # 统计盘面
+        last_board = None
+        for frame in reversed(record['logs']):
+            if 'P' in frame:
+                last_board = frame['P']
+                break
+        if last_board:
+            board_flatten = [
+                last_board[r][c] for r in range(4) for c in range(8)
+            ]
+            # 统计最大值
+            max_val = max(map(abs, board_flatten))
+            if max_val >= 10:
+                res.append(["4096!", "red"])
+            elif max_val == 9:
+                res.append(["2048!", "orange"])
+
+            # 统计数量
+            n_count = sum(map(bool, board_flatten))
+            if n_count > 28:
+                res.append(["塞爆!", "purple"])
+
+            # 统计局面倾向
+            n_p1, n_p2 = max(board_flatten), -min(board_flatten)
+            n_diff = abs(n_p1 - n_p2)
+            if n_diff >= 3:
+                res.append([f"{n_diff}级压胜!", "green"])
+
+        else:  # 空盘面
+            res.append(["空盘", "gray"])
+
+        # 统计回合数
+        try:
+            res.append([f"{record['logs'][-1]['D']['r']+1}回合"])
+        except:
+            pass
+
+        return res
+
 
 # 比赛记录显示模板
 if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库

@@ -20,6 +20,15 @@
 </div>
 {% endblock %}
 
+{% block css %}
+<style>
+    ul,
+    li {
+        display: inline;
+    }
+</style>
+{% endblock %}
+
 {% block body %}
 <!-- <div class='x_title'>
     <h1>/<span id='bread'>{{folder | default_if_none:""}}</span></h1>
@@ -34,11 +43,20 @@
     <a href="./{{f}}/" class='form-control'>目录: {{f}}</a>
 </div>
 {% endfor %}
-{% for f in files %}
+{% for record in files %}
 <div>
-    <a href="./{{f.name}}/" class='form-control'>
-        比赛记录: {{f.name}}
-        <span class='float-right'>{{f.time}}</span>
+    <a href="./{{record.name}}/" class='form-control'>
+        比赛记录: {{record.name}}
+        <span class='float-right'>
+            {% if record.tags %}
+            <ul>
+                {% for tag in record.tags %}
+                <li style='color:{{tag.1|default:"blue"}}'><b>{{tag.0}}</b></li>
+                {% endfor %}
+            </ul>
+            | {% endif %}
+            {{record.time}}
+        </span>
     </a>
 </div>
 {% endfor %}
