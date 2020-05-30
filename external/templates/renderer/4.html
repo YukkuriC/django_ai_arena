@@ -89,6 +89,9 @@
         </select>
     </div>
 </div>
+<!-- 下面的大概就是需要的div, 相信聪明的你知道要干啥 -->
+<!-- <script src="https://cdn.staticfile.org/echarts/4.3.0/echarts.min.js"></script> -->
+<!-- <div style="height: 50px; width: 100%;background-color: #ddd;" id="chart"></div> -->
 {% endblock %}
 
 {% block display_body %}
@@ -122,6 +125,63 @@
         // 配置控件
         init_widgets()
     }
+    $.getScript("https://cdn.staticfile.org/echarts/4.3.0/echarts.min.js", ()=>{
+        draw_score_chart();
+    });
+    function draw_score_chart(){
+        if(document.getElementById("chart")==null){
+        var dom = document.createElement("div");
+        dom.style.height = "100px";
+        dom.style.width = "100%";
+        dom.style.margin = "10px";
+        dom.id = "chart";
+        document.getElementsByClassName("row x_block")[1].appendChild(dom);}
+
+        var player0 = [];
+        var player1 = [];
+        var idx = [];
+        var i = 0;
+        record_obj.logs.forEach(element => {
+            if(element.P!=null){
+                var p = element.P;
+                var p0=0;
+                var p1=0;
+                for(y=0;y<4;y++){
+                    for(x=0;x<8;x++){
+                        if(p[y][x]>0){
+                            p0+=Math.pow(2,p[y][x]);
+                        }else{
+                            p1+=Math.pow(2,-p[y][x]);
+                        }
+                    }
+                }
+                player0.push(p0);
+                player1.push(p1);
+                idx.push(i);
+                i++;
+            }
+        });
+        var chart=echarts.init(document.getElementById("chart"));
+        var option={
+            xAxis:{show:false, data:idx},
+            yAxis:{},
+            grid:{"left":0,"right":0,"top":0,"bottom":0},
+            series:[{
+                type:'line',
+                data:player0,
+                showSymbol:false,
+                lineStyle:{"color":"#aaaaff"}
+            },{
+                type:'line',
+                data:player1,
+                showSymbol:false,
+                lineStyle:{"color":"#ffaaaa"}
+            }]
+        };
+        //使用刚刚指定的配置项和数据项显示图表
+        chart.setOption(option);
+    }
+
     DIRECTIONS = {
         up: '上',
         down: '下',
