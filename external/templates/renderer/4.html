@@ -93,8 +93,9 @@
             <option value="level">显示等级</option>
         </select>
         <select id="chart_mode" onchange='set_chart(this.value)' title='得分图表'>
-            <option id='chart_dscore' value="dscore">分差</option>
-            <option id='chart_score' value="score">得分</option>
+            <option value="score" title='双方所有棋子等级的2.5次幂求和'>估值得分</option>
+            <option value="dscore" title='双方估值得分之差'>分差</option>
+            <option value="level" title='双方最高等级棋子的面值'>最大等级</option>
             <option value="hide">隐藏</option>
         </select>
     </div>
@@ -138,33 +139,32 @@
         init_score_chart()
     }
     function init_score_chart() {
-        var player0 = [], player1 = [];
-        var dp0 = [], dp1 = [];
+        var player0 = [], player1 = [] // 总分
+        var dp0 = [], dp1 = [] // 分差
+        var lv0 = [], lv1 = [] // 最大等级
         var idx = [];
         var base_score = 0;
         record_obj.logs.forEach((element, i) => {
             if (element.P == null) return
             var p = element.P;
-            var p0 = 0;
-            var p1 = 0;
+            var p0 = 0, p1 = 0;
+            var m0 = 0, m1 = 0
             for (y = 0; y < 4; y++) {
                 for (x = 0; x < 8; x++) {
                     var tmp = p[y][x]
                     if (tmp > 0) {
-                        p0 += Math.pow(2, tmp);
+                        p0 += Math.pow(2.5, tmp);
+                        m0 = Math.max(m0, tmp)
                     } else if (tmp < 0) {
-                        p1 += Math.pow(2, -tmp);
+                        p1 += Math.pow(2.5, -tmp);
+                        m1 = Math.max(m1, -tmp)
                     }
                 }
             }
-            // if ('D' in element && element.D.d[0] == 'position') {
-            //     base_score += 0.5
-            // }
             var dp = p0 - p1
-            player0.push(p0 - base_score);
-            player1.push(p1 - base_score);
-            dp0.push(Math.max(dp, 0));
-            dp1.push(Math.min(dp, 0));
+            player0.push(p0 - base_score); player1.push(p1 - base_score)
+            dp0.push(Math.max(dp, 0)); dp1.push(Math.min(dp, 0))
+            lv0.push(Math.pow(2, m0)); lv1.push(-Math.pow(2, m1))
             idx.push(i);
         });
         console.log(Math.min(...player0), Math.min(...player1))
@@ -178,7 +178,11 @@
         CHART.setOption(option);
 
         // 配置数据包
-        for (var data of [['score', player0, player1], ['dscore', dp0, dp1]]) CHART_SERIES[data[0]] = [
+        for (var data of [
+            ['score', player0, player1],
+            ['dscore', dp0, dp1],
+            ['level', lv0, lv1],
+        ]) CHART_SERIES[data[0]] = [
             {
                 type: 'line',
                 data: data[1],
@@ -196,9 +200,9 @@
                 step: true,
             },
         ]
-        if (idx.length > 1) set_chart('dscore')
+        if (idx.length > 1) set_chart('score')
         else {
-            set_chart(idx.length > 1 ? 'dscore' : 'hide')
+            set_chart('hide')
             $('#chart_mode').hide()
         }
     }
