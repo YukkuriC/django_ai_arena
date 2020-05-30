@@ -1,4 +1,5 @@
 {% extends 'renderer/base.html' %}
+{% load static %}
 {% load main_filters %}
 
 {% block css %}
@@ -65,14 +66,18 @@
         color: white;
         text-shadow: 0px 0px 5px gold;
     }
+
+    #chart {
+        transition: 0.5s all;
+    }
 </style>
 {% endblock %}
 
 {% block descriptions %}
 <div class='row x_block'>
     <div class='col-sm-2' id='d_turn'>回合</div>
-    <div class='col-sm-4' id='d_action'>动作</div>
-    <div class='col-sm-6' id='widget_group'>
+    <div class='col-sm-3' id='d_action'>动作</div>
+    <div class='col-sm-7' id='widget_group'>
         <input type="color" id='clr1' title='先手颜色'>
         <input type="color" id='clr2' title='先手颜色 (大数)' name='extra'>
         <input type="color" id='clr3' title='后手颜色'>
@@ -87,11 +92,14 @@
             <option value="e+0">2-1024</option>
             <option value="level">显示等级</option>
         </select>
+        <select id="chart_mode" onchange='set_chart(this.value)' title='得分图表'>
+            <option id='chart_dscore' value="dscore">分差</option>
+            <option id='chart_score' value="score">得分</option>
+            <option value="hide">隐藏</option>
+        </select>
     </div>
 </div>
-<!-- 下面的大概就是需要的div, 相信聪明的你知道要干啥 -->
-<!-- <script src="https://cdn.staticfile.org/echarts/4.3.0/echarts.min.js"></script> -->
-<!-- <div style="height: 50px; width: 100%;background-color: #ddd;" id="chart"></div> -->
+<div id="chart"></div>
 {% endblock %}
 
 {% block display_body %}
@@ -103,6 +111,7 @@
 {% endblock %}
 
 {% block script %}
+<script src="{% static 'lib/echarts.min.js' %}"></script>
 {{ block.super }}
 <script>
     // 变量配置
@@ -124,62 +133,88 @@
         }
         // 配置控件
         init_widgets()
-    }
-    $.getScript("https://cdn.staticfile.org/echarts/4.3.0/echarts.min.js", ()=>{
-        draw_score_chart();
-    });
-    function draw_score_chart(){
-        if(document.getElementById("chart")==null){
-        var dom = document.createElement("div");
-        dom.style.height = "100px";
-        dom.style.width = "100%";
-        dom.style.margin = "10px";
-        dom.id = "chart";
-        document.getElementsByClassName("row x_block")[1].appendChild(dom);}
 
-        var player0 = [];
-        var player1 = [];
+        // 绘制得分图表
+        init_score_chart()
+    }
+    function init_score_chart() {
+        var player0 = [], player1 = [];
+        var dp0 = [], dp1 = [];
         var idx = [];
-        var i = 0;
-        record_obj.logs.forEach(element => {
-            if(element.P!=null){
-                var p = element.P;
-                var p0=0;
-                var p1=0;
-                for(y=0;y<4;y++){
-                    for(x=0;x<8;x++){
-                        if(p[y][x]>0){
-                            p0+=Math.pow(2,p[y][x]);
-                        }else{
-                            p1+=Math.pow(2,-p[y][x]);
-                        }
+        var base_score = 0;
+        record_obj.logs.forEach((element, i) => {
+            if (element.P == null) return
+            var p = element.P;
+            var p0 = 0;
+            var p1 = 0;
+            for (y = 0; y < 4; y++) {
+                for (x = 0; x < 8; x++) {
+                    var tmp = p[y][x]
+                    if (tmp > 0) {
+                        p0 += Math.pow(2, tmp);
+                    } else if (tmp < 0) {
+                        p1 += Math.pow(2, -tmp);
                     }
                 }
-                player0.push(p0);
-                player1.push(p1);
-                idx.push(i);
-                i++;
             }
+            // if ('D' in element && element.D.d[0] == 'position') {
+            //     base_score += 0.5
+            // }
+            var dp = p0 - p1
+            player0.push(p0 - base_score);
+            player1.push(p1 - base_score);
+            dp0.push(Math.max(dp, 0));
+            dp1.push(Math.min(dp, 0));
+            idx.push(i);
         });
-        var chart=echarts.init(document.getElementById("chart"));
-        var option={
-            xAxis:{show:false, data:idx},
-            yAxis:{},
-            grid:{"left":0,"right":0,"top":0,"bottom":0},
-            series:[{
-                type:'line',
-                data:player0,
-                showSymbol:false,
-                lineStyle:{"color":"#aaaaff"}
-            },{
-                type:'line',
-                data:player1,
-                showSymbol:false,
-                lineStyle:{"color":"#ffaaaa"}
-            }]
+        console.log(Math.min(...player0), Math.min(...player1))
+        CHART = echarts.init(document.getElementById("chart"));
+        var option = {
+            xAxis: { show: false, data: idx },
+            yAxis: {},
+            grid: { "left": 0, "right": 0, "top": 0, "bottom": 0 },
         };
-        //使用刚刚指定的配置项和数据项显示图表
-        chart.setOption(option);
+        CHART.resize({ height: 50 })
+        CHART.setOption(option);
+
+        // 配置数据包
+        for (var data of [['score', player0, player1], ['dscore', dp0, dp1]]) CHART_SERIES[data[0]] = [
+            {
+                type: 'line',
+                data: data[1],
+                showSymbol: false,
+                lineStyle: { "color": "#9999ff" },
+                areaStyle: { "color": "#aaaaff" },
+                step: true,
+            },
+            {
+                type: 'line',
+                data: data[2],
+                showSymbol: false,
+                lineStyle: { "color": "#ff9999" },
+                areaStyle: { "color": "#ffaaaa" },
+                step: true,
+            },
+        ]
+        if (idx.length > 1) set_chart('dscore')
+        else {
+            set_chart(idx.length > 1 ? 'dscore' : 'hide')
+            $('#chart_mode').hide()
+        }
+    }
+
+    function set_chart(mode) {
+        if (mode in CHART_SERIES) {
+            Object.assign(CHART._dom.style, {
+                height: '50px',
+                opacity: 1,
+            })
+            CHART.setOption({ series: CHART_SERIES[mode] })
+        } else Object.assign(CHART._dom.style, {
+            height: 0,
+            opacity: 0,
+        })
+        $('#chart_mode').val(mode)
     }
 
     DIRECTIONS = {
@@ -202,6 +237,8 @@
     COLOR_MODE = 'multi'
     NUM_MODE = 'e+2'
     WIDGETS = {} // 存放颜色控件
+    CHART = null // 得分统计图
+    CHART_SERIES = {} // 统计图数据
 
     // 控件
     function init_widgets() {
