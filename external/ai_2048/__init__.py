@@ -1,6 +1,7 @@
 from external._base import BasePairMatch
 from functools import lru_cache
 import time
+from collections import Counter
 from os import path
 from . import api_2048
 
@@ -98,9 +99,13 @@ class _2048Match(BasePairMatch):
             elif max_val == 9:
                 res.append(["2048!", "orange"])
 
-            # 统计数量
-            n_count = sum(map(bool, board_flatten))
-            if n_count > 28:
+            # 统计双方回合差
+            counter = Counter()
+            for frame in record['logs']:
+                if 'D' in frame:
+                    counter[frame['D']] += 1
+            n_count = abs(counter[0] - counter[1])
+            if n_count > 15:
                 res.append(["塞爆!", "purple"])
 
             # 统计局面倾向
