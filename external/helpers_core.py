@@ -19,9 +19,6 @@ def stringfy_error(e):
             tb = tb.tb_next
         res = 'Line %s %s' % (tb.tb_lineno, res)
 
-    # 过长时省略显示
-    if len(res) > MAX_ERR_LENGTH:
-        res = res[:MAX_ERR_LENGTH - 3] + '...'
     return res
 
 

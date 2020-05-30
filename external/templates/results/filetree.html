@@ -1,4 +1,5 @@
 {% extends 'layout0.html' %}
+{% load tag_loader %}
 
 {% block header %}
 <div class='col-sm-12'>
@@ -18,15 +19,6 @@
         </span>
     </h1>
 </div>
-{% endblock %}
-
-{% block css %}
-<style>
-    ul,
-    li {
-        display: inline;
-    }
-</style>
 {% endblock %}
 
 {% block body %}
@@ -49,11 +41,7 @@
         比赛记录: {{record.name}}
         <span class='float-right'>
             {% if record.tags %}
-            <ul>
-                {% for tag in record.tags %}
-                <li style='color:{{tag.1|default:"blue"}}'><b>{{tag.0}}</b></li>
-                {% endfor %}
-            </ul>
+            {% record_tags record.tags "blue" %}
             | {% endif %}
             {{record.time}}
         </span>

@@ -510,6 +510,15 @@ if 'view':
         result_summary = loader.summary_records(records)
         result_stat = result_summary['stat']
 
+        # 读取tag
+        record_tags=[]
+        for record in records:
+            try:
+                record_tags.append(loader.analyze_tags(record))
+            except:
+                record_tags.append([])
+        record_pairs=zip(records, record_tags)
+
         return render(request, 'view_match.html', locals())
 
     @login_required(1)

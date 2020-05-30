@@ -311,7 +311,7 @@ class BaseRecordLoader:
         returns:
             所有标签的列表
                 [i][0]: 标签名称
-                [i][1]: 标签颜色，留空为蓝色
+                [i][1]: 标签颜色，留空为inherit
         '''
         return []
 

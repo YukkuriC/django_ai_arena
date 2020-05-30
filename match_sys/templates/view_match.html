@@ -124,23 +124,41 @@
             <table class='table'>
                 <thead>
                     <tr>
-                        <th>编号</th>
                         <th>先手方</th>
+                        <th>标签与信息</th>
                         <th>比赛长度</th>
                         <th>胜者</th>
                         <th>胜利原因</th>
-                        <th>补充说明</th>
                         <th>比赛过程</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {%for record in records%}
-                    <tr class='bg-hover' onclick="location.href='./{{forloop.counter0}}'">
-                        <td>
-                            #{{forloop.counter}}
-                        </td>
+                    {%for record,tags in record_pairs%}
+                    <tr>
+                        <!-- <tr class='bg-hover' onclick="location.href='./{{forloop.counter0}}'"> -->
                         <td>
                             {{ match|r_holder:record }}
+                        </td>
+                        <td>
+                            {% with message=match|r_desc_plus:record max_len=30 %}
+                            {% if tags or message|length >= max_len %}
+                            <div class='dropdown'>
+                                <a class='dropdown-toggle' data-toggle="dropdown">
+                                    {% if tags %}
+                                    {% record_tags tags %}
+                                    {% else %}
+                                    {{ message|truncatechars:max_len }}
+                                    {% if message|length >= max_len %}…{% endif %}
+                                    {% endif %}
+                                </a>
+                                <div class="dropdown-menu">
+                                    {{ message }}
+                                </div>
+                            </div>
+                            {% else %}
+                            {{ message }}
+                            {% endif %}
+                            {% endwith %}
                         </td>
                         <td>
                             {{ match|r_length:record }}
@@ -150,9 +168,6 @@
                         </td>
                         <td>
                             {{ match|r_win_desc:record }}
-                        </td>
-                        <td>
-                            {{ match|r_desc_plus:record }}
                         </td>
                         <td>
                             <a href="./{{forloop.counter0}}">查看</a>
