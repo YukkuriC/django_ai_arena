@@ -103,10 +103,10 @@ class _2048Match(BasePairMatch):
             counter = Counter()
             for frame in record['logs']:
                 if 'D' in frame:
-                    counter[frame['D']] += 1
+                    counter[frame['D']['p']] += 1
             n_count = abs(counter[0] - counter[1])
-            if n_count > 15:
-                res.append(["塞爆!", "purple"])
+            if n_count > 20:
+                res.append([f"{n_count}回合塞爆!", "purple"])
 
             # 统计局面倾向
             n_p1, n_p2 = max(board_flatten), -min(board_flatten)
