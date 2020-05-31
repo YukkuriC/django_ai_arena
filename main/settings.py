@@ -237,6 +237,7 @@ PAIRMATCH_STATUS = {  # 比赛状态码
     3: '已中止',
     -1: '待中止',
 }
+DEFAULT_PAIRMATCH_ROUNDS = 10  # 发起对战表单默认局数
 DEFAULT_MAX_RUNNING_SEC = 2  # 获取计时函数缺省时每局最大运行{}秒
 
 # 天梯匹配参数

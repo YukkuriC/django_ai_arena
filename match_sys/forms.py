@@ -58,7 +58,7 @@ class PairMatch_Base(forms.Form):
         min_value=1,
         widget=forms.NumberInput({
             'class': 'form-control',
-            'value': 10,
+            'value': settings.DEFAULT_PAIRMATCH_ROUNDS,
         }))
 
     who_first = forms.ChoiceField(

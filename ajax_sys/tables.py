@@ -165,7 +165,7 @@ class CodeTablePage(TablePageBase):
     root_link = '/code/'
     template_prefabs = {
         'ladder': 'name author records score tools'.split(),
-        'ladder_t': 'author records score'.split(),
+        'ladder_t': 'index author records score'.split(),
         'home': 'name type records score'.split(),
     }
 
@@ -187,6 +187,8 @@ class CodeTablePage(TablePageBase):
             res.append(('自由挑战', '/lobby/run_match/%s/?code2=%s' %
                         (item.ai_type, item.id)))
             return res
+        elif cell_type == 'index':
+            return f'#{item.index}'
         return cell_type
 
     @classmethod
@@ -210,6 +212,8 @@ class CodeTablePage(TablePageBase):
                 )
 
             code_list = code_list.order_by('-score')
+            for i, code in enumerate(code_list):
+                code.index = i + 1
         else:
             code_list = Code.objects.all()
         return code_list, {}

@@ -58,10 +58,6 @@ class BaseProcess:
 
     def flush_queue(self):
         """ 读取任务队列 """
-
-        # 重新打开比赛记录文件
-        self.reload_match()
-
         updated = False
         while not self.output.empty():
             self.result_raw.append(self.output.get())
