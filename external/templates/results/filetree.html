@@ -37,7 +37,7 @@
 {% endfor %}
 {% for record in files %}
 <div>
-    <a href="./{{record.name}}/" class='form-control'>
+    <a href="./{{record.name}}/" target='_blank' class='form-control'>
         比赛记录: {{record.name}}
         <span class='float-right'>
             {% if record.tags %}

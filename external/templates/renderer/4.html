@@ -75,8 +75,9 @@
 
 {% block descriptions %}
 <div class='row x_block'>
-    <div class='col-sm-2' id='d_turn'>回合</div>
-    <div class='col-sm-3' id='d_action'>动作</div>
+    <div class='col-sm-1' id='d_turn'>回合</div>
+    <div class='col-sm-2' id='d_action'>动作</div>
+    <div class='col-sm-2' id='d_score'>得分</div>
     <div class='col-sm-7' id='widget_group'>
         <input type="color" id='clr1' title='先手颜色'>
         <input type="color" id='clr2' title='先手颜色 (大数)' name='extra'>
@@ -214,11 +215,16 @@
                 opacity: 1,
             })
             CHART.setOption({ series: CHART_SERIES[mode] })
-        } else Object.assign(CHART._dom.style, {
-            height: 0,
-            opacity: 0,
-        })
+            DATAS = CHART_SERIES[mode].map(x => x.data)
+        } else {
+            Object.assign(CHART._dom.style, {
+                height: 0,
+                opacity: 0,
+            })
+            DATAS = CHART_SERIES['level'].map(x => x.data)
+        }
         $('#chart_mode').val(mode)
+        update_scores()
     }
 
     DIRECTIONS = {
@@ -243,6 +249,7 @@
     WIDGETS = {} // 存放颜色控件
     CHART = null // 得分统计图
     CHART_SERIES = {} // 统计图数据
+    DATAS = [[], []] // 当前图表对应数据
 
     // 控件
     function init_widgets() {
@@ -305,13 +312,14 @@
     var descrips = [
         document.getElementById('d_turn'),
         document.getElementById('d_action'),
+        document.getElementById('d_score'),
     ]
     function update_descrip(op) {
         if (!op) { // 无操作
             for (var d of descrips) d.innerHTML = ''
             return
         }
-        descrips[0].innerHTML = `第${op.r}回合`
+        descrips[0].innerHTML = `#${op.r}`
 
         // 玩家动作
         var tmp = `${'先后'[op.p]}手玩家`
@@ -324,6 +332,13 @@
         else tmp += `落子于${op.d[1]}`
 
         descrips[1].innerHTML = tmp
+    }
+
+    function update_scores(frame = CURR_FRAME) {
+        // 当前帧分值
+        if (typeof DATAS[0][frame] != 'undefined') descrips[2].innerText = DATAS.map(x => Math.round(x[frame] * 1000) / 1000).join(' : ')
+        else if (frame >= 0) update_scores(CURR_FRAME - 1)
+        else descrips[2].innerText = '无得分数据'
     }
 
     // 更新棋盘
@@ -414,6 +429,7 @@
         frame = record_obj.logs[index]
         if (!frame) return
         update_descrip(frame.D)
+        update_scores()
         update_board(pick_data(index))
         update_ending(frame.E)
     }
