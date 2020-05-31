@@ -35,10 +35,24 @@
     <a href="./{{f}}/" class='form-control'>目录: {{f}}</a>
 </div>
 {% endfor %}
+{% if extra %}
+{% spaceless %}
+<div style='width: 100%;padding-top: .75rem;'>
+    {% for line in extra %}
+    <div>{{line}}</div>
+    {% endfor %}
+</div>
+{% endspaceless %}
+{% endif %}
 {% for record in files %}
 <div>
     <a href="./{{record.name}}/" target='_blank' class='form-control'>
         比赛记录: {{record.name}}
+        {% if record.extra %}
+        <i style='font-size: 70%;'>{{record.extra}}</i>
+        {% else %}
+        test
+        {% endif %}
         <span class='float-right'>
             {% if record.tags %}
             {% record_tags record.tags "blue" %}
