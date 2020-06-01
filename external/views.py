@@ -3,13 +3,14 @@ from django.shortcuts import render, redirect
 from django.utils.safestring import mark_safe
 from django.utils.html import conditional_escape as esc
 from main import settings
-from main.helpers import sorry
+from main.helpers import sorry, login_required
 from .helpers_core import stringfy_error
 from .factory import Factory
 import os, time
 from collections import Counter
 
 
+@login_required(1)
 def course_results(request, AI_type, folder):
     try:
         AI_type = int(AI_type)
@@ -70,6 +71,7 @@ def course_results(request, AI_type, folder):
     return render(request, 'results/filetree.html', locals())
 
 
+@login_required(1)
 def course_view(request, AI_type, file):
     try:
         AI_type = int(AI_type)
