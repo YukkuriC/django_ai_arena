@@ -91,37 +91,71 @@ def extra_info(AI_type, records):
     """
     logs = []
 
+    # 2048: 提取胜者信息
     if AI_type == 4:
-        extra_info_2048(records, logs)
+        extra_info_scores(AI_type, records, logs)  # 整个文件夹统计比分
 
     return logs
 
 
-def extra_info_2048(records, logs):
-    """
-    统计2048双方比分等信息
-    写入每局发起方至extra
-    """
-    score_counter = Counter()  # 计分
+def extra_info_scores(AI_type, records, logs):
+    """ 统计比分信息并输出至记录 """
+    # 计分字典
+    # c[n1,n2] = c[n2,n1] = {n1:0, n2:0}
+    score_counter = {}
 
     for record_pack in records:
         record = record_pack['record']
-        names = [
-            os.path.basename(os.path.splitext(record[f'name{i}'])[0])
-            for i in range(2)
-        ]
+
+        # 获取信息接口
+        names = pick_names(AI_type, record)
+        winner = pick_winner(AI_type, record)
+
+        # 获取计分字典
+        if names in score_counter:
+            curr_counter = score_counter[names]
+        else:
+            curr_counter = {n: 0 for n in names}
+            score_counter[names] = score_counter[names[::-1]] = curr_counter
+
+        # 输出单记录与比分信息
         record_extra = f'发起方: {names[0]}; '
         if record['winner'] == None:
             record_extra += '平局'
             for n in names:
-                score_counter[n] += 0.5
+                curr_counter[n] += 0.5
         else:
-            winner = names[record['winner']]
-            score_counter[winner] += 1
-            record_extra += f'胜者: {winner}'
+            winner_name = names[winner]
+            curr_counter[winner_name] += 1
+            record_extra += f'胜者: {winner_name}'
         record_pack['extra'] = record_extra  # 写入额外信息
 
     # 组装比分字符串
-    base = ' : '.join(f'''<span title='{esc(k)}'>{v}</span>'''
-                      for k, v in score_counter.items())
-    logs.append(mark_safe(f'<h2 style="text-align:center">{base}</h2>'))
+    name_used = set()
+    for names, score_pair in score_counter.items():
+        if names in name_used:
+            continue
+        name_used.add(names[::-1])  # 移除反向键值
+        data = list(score_pair.items())
+        base = f'''<span class='float-left'>{esc(data[0][0])}</span>
+        {data[0][1]} : {data[1][1]}
+        <span class='float-right'>{esc(data[1][0])}</span>'''
+        logs.append(mark_safe(f'<h2 style="text-align:center">{base}</h2>'))
+
+
+def pick_names(AI_type, record):
+    """ 按类型提取双方代码名称 """
+    if AI_type == 4:  # 2048
+        return tuple(
+            os.path.basename(os.path.splitext(record[f'name{i}'])[0])
+            for i in range(2))
+
+    return ('foo', 'bar')
+
+
+def pick_winner(AI_type, record):
+    """ 按类型提取胜者 """
+    if AI_type == 4:  # 2048
+        return record['winner']
+
+    return None
