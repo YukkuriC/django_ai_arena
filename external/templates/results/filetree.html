@@ -32,7 +32,10 @@
 {% endif %}
 {% for f in folders %}
 <div>
-    <a href="./{{f}}/" class='form-control'>目录: {{f}}</a>
+    <a href="./{{f.name}}/" class='form-control'>
+        目录: {{f.name}}
+        <span class='float-right'>{{f.time}}</span>
+    </a>
 </div>
 {% endfor %}
 {% if extra %}
@@ -50,8 +53,6 @@
         比赛记录: {{record.name}}
         {% if record.extra %}
         <i style='font-size: 70%;'>{{record.extra}}</i>
-        {% else %}
-        test
         {% endif %}
         <span class='float-right'>
             {% if record.tags %}

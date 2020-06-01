@@ -47,7 +47,14 @@ def course_results(request, AI_type, folder):
             except Exception as e:
                 errors.append(f)
         else:
-            folders.append(f)
+            try:
+                folder_unit = {
+                    'name': f,  # 记录名称
+                    'time': time.ctime(os.path.getctime(f1)),  # 修改时间
+                }
+                folders.append(folder_unit)
+            except Exception as e:
+                errors.append(f)
 
     # 加载tags
     for record in files:
@@ -66,6 +73,7 @@ def course_results(request, AI_type, folder):
     for key in sort_keys:
         if sort_method == key:
             files.sort(key=lambda x: x[key])
+            folders.sort(key=lambda x: x[key])
             break
 
     return render(request, 'results/filetree.html', locals())
