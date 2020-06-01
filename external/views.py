@@ -138,9 +138,11 @@ def extra_info_scores(AI_type, records, logs):
             continue
         name_used.add(names[::-1])  # 移除反向键值
         data = list(score_pair.items())
-        base = f'''<span class='float-left'>{esc(data[0][0])}</span>
-        {data[0][1]} : {data[1][1]}
-        <span class='float-right'>{esc(data[1][0])}</span>'''
+        base = f'''<div class='row'>
+        <div class='col-sm-4 text-left'>{esc(data[0][0])}</div>
+        <div class='col-sm-4 text-center'>{data[0][1]} : {data[1][1]}</div>
+        <div class='col-sm-4 text-right'>{esc(data[1][0])}</div>
+        </div>'''
         logs.append(mark_safe(f'<h2 style="text-align:center">{base}</h2>'))
 
 
