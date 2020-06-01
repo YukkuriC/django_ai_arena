@@ -91,9 +91,8 @@ def extra_info(AI_type, records):
     """
     logs = []
 
-    # 2048: 提取胜者信息
-    if AI_type == 4:
-        extra_info_scores(AI_type, records, logs)  # 整个文件夹统计比分
+    # 提取胜者信息
+    extra_info_scores(AI_type, records, logs)  # 整个文件夹统计比分
 
     return logs
 
@@ -145,6 +144,8 @@ def extra_info_scores(AI_type, records, logs):
 
 def pick_names(AI_type, record):
     """ 按类型提取双方代码名称 """
+    if AI_type == 3:  # osmo
+        return tuple(record['players'])
     if AI_type == 4:  # 2048
         return tuple(
             os.path.basename(os.path.splitext(record[f'name{i}'])[0])
@@ -155,7 +156,7 @@ def pick_names(AI_type, record):
 
 def pick_winner(AI_type, record):
     """ 按类型提取胜者 """
-    if AI_type == 4:  # 2048
+    if AI_type in (3, 4):  # osmo+2048
         return record['winner']
 
     return None
