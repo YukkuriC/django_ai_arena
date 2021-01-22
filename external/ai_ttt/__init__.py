@@ -18,7 +18,7 @@ class TTTMatch(BasePairMatch):
         运行一局比赛
         并返回比赛记录对象
         '''
-        return ttt.Game(d_local['players'], d_local['names']).match()
+        return ttt.Game(d_local['players'], d_local['names'], 1).match()
 
     @classmethod
     def output_queue(cls, match_log):

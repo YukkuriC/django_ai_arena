@@ -1,1 +1,227 @@
 {% extends 'renderer/base.html' %}
+{% load static %}
+{% load main_filters %}
+
+{% block css %}
+{{ block.super }}
+<style>
+    #main {
+        display: grid;
+        grid-template-columns: repeat(3, 200px);
+        grid-template-rows: repeat(3, 200px);
+        background-color: #ddd;
+        width: 600px;
+        height: 600px;
+        margin: auto;
+    }
+
+    .node {
+        width: 180px;
+        height: 180px;
+        margin: 10px;
+        font-size: 100px;
+        font-weight: bolder;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        border-radius: 5px;
+        transition: 0.1s all;
+    }
+
+    .occupied {
+        box-shadow: gray 0px 5px 10px;
+    }
+
+    .node p {
+        margin: auto;
+        text-align: center;
+        color: red
+    }
+
+    #chart {
+        transition: 0.5s all;
+    }
+</style>
+{% endblock %}
+
+{% block descriptions %}
+<div class='row x_block'>
+    <div class='col-sm-1' id='d_turn'>回合</div>
+    <div class='col-sm-5' id='d_action'>动作</div>
+    <div class='col-sm-6' id='widget_group'>
+        <input type="color" id='clr1' title='先手颜色'>
+        <input type="color" id='clr2' title='后手颜色'>
+    </div>
+</div>
+<div id="chart"></div>
+{% endblock %}
+
+{% block display_body %}
+<div class='col-sm-12'>
+    <div id="main">
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+{{ block.super }}
+<script>
+    // 变量配置
+    function init() {
+        TOTAL_FRAMES = record_obj.orders.length
+        PLAYING_FPS = 2
+        // 创建棋盘
+        var main = document.getElementById('main')
+        for (var c = 0; c < 3; c++) {
+            for (var r = 0; r < 3; r++) {
+                var node = document.createElement('div')
+                Object.assign(node, {
+                    id: `tile${[r, c] + ''}`,
+                    className: 'node',
+                    style: `grid-column: ${c + 1};grid-row: ${r + 1};`
+                })
+                main.appendChild(node)
+            }
+        }
+
+        // 复原棋盘
+        var board = {}
+        record_obj.orders.forEach((pos, i) => {
+            let key = pos + ''
+            board[key] = i % 2
+            board_copy = {}
+            for (let key in board) board_copy[key] = board[key]
+            board_copy.curr = key
+            FRAMES.push(board_copy)
+        })
+        if (record_obj.reason <= -3) {
+            FRAMES.push(board)
+            TOTAL_FRAMES++
+        }
+
+        // 配置控件
+        init_widgets()
+    }
+
+    FRAMES = []
+    COLORS = ['#ffffff', '#000000']
+    WIDGETS = {} // 存放颜色控件
+
+    // 控件
+    function init_widgets() {
+        // 添加引用
+        for (var x of document.getElementById('widget_group').children) {
+            WIDGETS[x.id] = x
+        }
+
+        // 颜色配置
+        for (var i = 0; i < 2; i++) {
+            var widget = WIDGETS['clr' + (i + 1)]
+            bind_color(widget, i)
+        }
+    }
+    function bind_color(widget, ind) {
+        widget.value = COLORS[ind]
+        widget.addEventListener('change', e => {
+            COLORS[ind] = widget.value
+            draw_frame()
+        })
+    }
+
+    // 更新描述
+    var descrips = [
+        document.getElementById('d_turn'),
+        document.getElementById('d_action'),
+    ]
+    function update_descrip(frame, index) {
+        descrips[0].innerHTML = `#${index}`
+        descrips[1].innerHTML = `${'先后'[index % 2]}手玩家落子于${frame.curr}`
+    }
+
+    // 更新棋盘
+    function update_board(data) { // 显示指定棋盘内容
+        console.log(data)
+        for (var r = 0; r < 3; r++) {
+            for (var c = 0; c < 3; c++) {
+                var key = [r, c] + ''
+                var cell = document.getElementById(`tile${key}`),
+                    num = data[key]
+                var is_occupied = (num !== undefined),
+                    is_plr0 = is_occupied ? (num > 0) : (c < 4),
+                    is_curr = (key == data.curr)
+
+                // 更新样式
+                if (is_occupied) {
+                    cell.style.backgroundColor = COLORS[num]
+                    cell.classList.add('occupied')
+                } else {
+                    cell.style.backgroundColor = 'transparent'
+                    cell.classList.remove('occupied')
+                }
+                cell.innerHTML = is_curr ? '<p>Ｘ</p>' : ''
+            }
+        }
+    }
+
+    // 更新结果显示
+    LOOPER = [0, 1, 2]
+    CHECKERS = []
+    LOOPER.forEach(x => {
+        CHECKERS.push(LOOPER.map(y => [x, y] + ''))
+        CHECKERS.push(LOOPER.map(y => [y, x] + ''))
+    })
+    CHECKERS.push(LOOPER.map(x => [x, x] + ''))
+    CHECKERS.push(LOOPER.map(x => [x, 2 - x] + ''))
+    function update_ending(frame, index) {
+        if (index < TOTAL_FRAMES - 1) return
+        for (const line of CHECKERS) {
+            values = line.map(p => frame[p])
+            if (!(values[0] !== undefined && values[1] == values[0] && values[2] == values[0])) continue
+            // 标记单行
+            line.forEach(pos => {
+                if (pos == frame.curr) return
+                var cell = document.getElementById(`tile${pos}`)
+                cell.innerHTML = '<p>Ｏ</p>'
+            })
+        }
+
+        switch (record_obj.reason) {
+            case -4:
+                descrips[1].innerText = `${'先后'[index % 2]}手玩家代码超时落败`
+                break
+            case -3:
+                descrips[1].innerText = `${'先后'[index % 2]}手玩家代码报错: ${record_obj.extra}`
+                break
+            case -2:
+                descrips[1].innerText = `${'先后'[index % 2]}手玩家冲突落子: ${frame.curr}`
+                break
+            case -1:
+                descrips[1].innerText = `${'先后'[index % 2]}手玩家返回非法取值`
+                break
+        }
+        switch (record_obj.reason) {
+            case -4:
+            case -3:
+            case -2:
+            case -1:
+                descrips[1].innerText += `，${'先后'[(index + 1) % 2]}手玩家获胜`
+                break
+            case 1:
+                descrips[1].innerText += '，形成3连获胜'
+                break
+            case 2:
+                descrips[1].innerText += '，填满棋盘平局'
+                break
+        }
+    }
+
+    // 绘制接口
+    function draw_frame(index = CURR_FRAME) {
+        frame = FRAMES[index]
+        if (!frame) return
+        update_board(frame)
+        update_descrip(frame, index)
+        update_ending(frame, index)
+    }
+</script>
+{% endblock %}
