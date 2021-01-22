@@ -107,10 +107,22 @@ class Game:
     接收运行双方代码并收集结果
     codes:
         双方代码模块，其中包含play函数，可接收Board.get_board结果作为参数并返回落子位置
+    names:
+        双方代码模块名称
+    timeout:
+        时间限制
     """
-    def __init__(self, codes, timeout=10):
+    def __init__(self, codes, names=['code1', 'code2'], timeout=10):
         self.codes = codes
+        self.names = names
         self.timeout = timeout
+
+    @staticmethod
+    def _stringfy_error(e):
+        return '%s: %s' % (
+            type(e).__name__,
+            e,
+        )
 
     @staticmethod
     def _thread_wrap(code, board, thr_output: dict):
@@ -137,7 +149,7 @@ class Game:
             res['result'] = output
         except Exception as e:
             t2 = process_time()
-            res['error'] = e
+            res['error'] = Game._stringfy_error(e)
 
         res['dt'] = t2 - t1
         thr_output.update(res)
@@ -155,6 +167,7 @@ class Game:
         "timeouts": 双方使用时间历史
         """
         return {
+            'names': self.names,
             'orders': self.board.history,
             'winner': winner,
             'reason': reason,

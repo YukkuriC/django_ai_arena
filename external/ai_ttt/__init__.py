@@ -1,4 +1,4 @@
-from os import path
+from os import path, makedirs
 from functools import lru_cache
 import json
 from external._base import BasePairMatch
@@ -18,7 +18,7 @@ class TTTMatch(BasePairMatch):
         运行一局比赛
         并返回比赛记录对象
         '''
-        return ttt.Game(d_local['players']).match()
+        return ttt.Game(d_local['players'], d_local['names']).match()
 
     @classmethod
     def output_queue(cls, match_log):
@@ -26,57 +26,48 @@ class TTTMatch(BasePairMatch):
         读取比赛记录
         返回比赛结果元组
         '''
-        return match_log['result']
+        return (match_log['winner'], )
+
+    @classmethod
+    def get_log_path(cls, match_dir, round_id):
+        """ 获取log路径 """
+        return path.join(match_dir, '%02d.json' % round_id)
 
     @classmethod
     def save_log(cls, round_id, log, d_local, d_global):
         '''
         保存比赛记录为.clog文件
         '''
-        log_name = path.join(d_local['match_dir'], 'logs/%02d.clog' % round_id)
-        match_interface.save_compact_log(log, log_name)
+        log_name = cls.get_log_path(d_local['match_dir'], round_id)
+        with open(log_name, 'w', encoding='utf-8') as f:
+            json.dump(log, f, separators=',:')
 
     @classmethod
     def runner_fail_log(cls, winner, descrip, d_local, d_global):
         ''' 内核错误 '''
         if winner != None:
             descrip = descrip[1 - winner]
-        match_core.init_field(cls.init_params.get('k', 51),
-                              cls.init_params.get('h', 101),
-                              cls.init_params.get('max_turn', 2000),
-                              cls.init_params.get('max_time', 30))
-        match_result = (winner, -1, descrip)
         return {
-            'players': d_local['names'],
-            'size': (match_core.WIDTH, match_core.HEIGHT),
-            'maxturn': match_core.MAX_TURNS,
-            'maxtime': match_core.MAX_TIME,
-            'result': match_result,
-            'log': match_core.LOG_PUBLIC
+            'orders': [],
+            'names': ['code1', 'code2'],
+            'winner': winner,
+            'reason': ttt.ERROR,
+            'extra': None,
+            'timeouts': [],
         }
 
     @classmethod
     @lru_cache()
     def load_record(cls, match_dir, rec_id):
-        return cls.load_record_path(
-            path.join(match_dir, 'logs', '%02d.clog' % rec_id))
+        log_name = cls.get_log_path(match_dir, rec_id)
+        return cls.load_record_path(log_name)
 
     @classmethod
     @lru_cache()
     def load_record_path(cls, record_path):
-        return match_interface.load_match_log(record_path)
-
-    @classmethod
-    def stringfy_record_obj(cls, record):
-        record = {**record}  # 复制一份
-        record['traces'] = list(map(list, record['traces']))
-        record['timeleft'] = [[round(x, 3) for x in lst]
-                              for lst in record['timeleft']]
-        if record['result'][1] == -1:  # 将Exception转换为str
-            record['result'] = list(record['result'])
-            e = record['result'][2]
-            record['result'][2] = cls.stringfy_error(e)
-        return super().stringfy_record_obj(record)
+        with open(record_path, encoding='utf-8') as f:
+            res = json.load(f)
+        return res
 
     @staticmethod
     def summary_records(records):
@@ -87,8 +78,8 @@ class TTTMatch(BasePairMatch):
         for rec in records:
             if rec == None:
                 continue
-            winner = rec['result'][0]
-            if winner != None and rec['players'][0] == 'code2':
+            winner = rec['winner']
+            if winner != None and rec['names'][0] == 'code2':
                 winner = 1 - winner
             result_stat[winner] += 1
         result_stat['draw'] = result_stat[None]
@@ -101,36 +92,31 @@ class TTTMatch(BasePairMatch):
 if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
     from external.tag_loader import RecordBase, RecordMeta
 
-    class PaperIORecord(RecordBase, metaclass=RecordMeta(2)):
+    class TTTRecord(RecordBase, metaclass=RecordMeta(0)):
         def i_holder(_, match, record):
-            return record['players'][0] == 'code2'
+            return record['names'][0] == 'code2'
 
         def i_winner(_, match, record):
-            res = record['result']
-            if res[0] == None:
+            res = record['winner']
+            if res == None:
                 return None
-            return not res[0]
+            return not res
 
         def r_length(_, match, record):
-            return len(record['timeleft'][0]) - 1
+            return len(record['orders'])
 
         desc_pool = [
-            '回合数耗尽，结算得分', '运行超时', 'AI函数报错', '玩家撞墙', '玩家撞击纸带', '侧碰', '正碰，结算得分',
-            '领地内互相碰撞'
+            '代码超时',
+            '代码报错',
+            '冲突落子',
+            '非法返回值',
+            '游戏继续',  # 0
+            '形成三连',
+            '棋盘已满平局',
         ]
 
         def r_win_desc(_, match, record):
-            res = record['result']
-            return _.desc_pool[res[1] + 3]
+            return _.desc_pool[record['reason'] + 4]
 
         def r_desc_plus(_, match, record):
-            res = record['result']
-            if abs(res[1]) == 3:
-                return '%s : %s' % tuple(res[2])
-            if res[1] == -1:
-                return res[2]
-            if res[1] == 1:
-                if res[0] == res[2]:
-                    return '对手撞击'
-                return '自己撞击'
-            return '无'
+            return record['extra'] or '无'
