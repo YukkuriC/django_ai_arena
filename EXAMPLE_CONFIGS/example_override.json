@@ -1,0 +1,7 @@
+{
+    "LIMIT_COUNT_MINUTES": 1,
+    "LIMIT_COUNT_ROUNDS": 10,
+    "LIMIT_COUNT_BUFFER": 5,
+    "CAN_DELETE_MATCH_RESULT": false,
+    "CAN_FORK_PUBLIC_CODE": false
+}
