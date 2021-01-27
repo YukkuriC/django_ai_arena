@@ -158,7 +158,7 @@
                     cell.style.backgroundColor = 'transparent'
                     cell.classList.remove('occupied')
                 }
-                cell.innerHTML = is_curr ? '<p>Ｘ</p>' : ''
+                cell.innerHTML = is_curr ? '<p>＋</p>' : ''
             }
         }
     }
@@ -181,7 +181,7 @@
             line.forEach(pos => {
                 if (pos == frame.curr) return
                 var cell = document.getElementById(`tile${pos}`)
-                cell.innerHTML = '<p>Ｏ</p>'
+                cell.innerHTML = '<p>·</p>'
             })
         }
 
