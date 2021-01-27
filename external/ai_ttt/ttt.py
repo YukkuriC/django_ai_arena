@@ -30,15 +30,15 @@ class Board:
         为指定玩家编号返回其局面字典
         字典键为2长度元组，每位数字（0，1，2）分别代表行号与列号
         返回对象中包含3*3棋盘位置，对应值均为字符串，含义如下：
-            "O": 我方落子
-            "X": 对方落子
+            "S": 我方落子
+            "F": 对方落子
             "E": 空
         """
         res = {}
         for x in range(3):
             for y in range(3):
                 if (x, y) in self.pool:
-                    res[x, y] = 'O' if self.pool[x, y] == plr else 'X'
+                    res[x, y] = 'S' if self.pool[x, y] == plr else 'F'
                 else:
                     res[x, y] = 'E'
         return res
