@@ -13,7 +13,7 @@ class User(models.Model):
     pw_hash = models.CharField('密码hash', max_length=128)
     stu_code = models.CharField('学号', max_length=10)
     email_field = models.CharField(
-        '电子邮箱', unique=True, max_length=256, null=True)
+        '电子邮箱', unique=True, max_length=128, null=True)
     real_name = models.CharField('真实姓名', max_length=32)
     register_datetime = models.DateTimeField('注册时间', auto_now_add=True)
     login_datetime = models.DateTimeField('上次登录时间', null=True)
