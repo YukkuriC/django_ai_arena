@@ -12,6 +12,8 @@ class User(models.Model):
     nickname = models.CharField('昵称', max_length=20, null=True)
     pw_hash = models.CharField('密码hash', max_length=128)
     stu_code = models.CharField('学号', max_length=10)
+    email_field = models.CharField(
+        '电子邮箱', unique=True, max_length=256, null=True)
     real_name = models.CharField('真实姓名', max_length=32)
     register_datetime = models.DateTimeField('注册时间', auto_now_add=True)
     login_datetime = models.DateTimeField('上次登录时间', null=True)
@@ -28,6 +30,13 @@ class User(models.Model):
     def set_passwd(self, pw):
         self.pw_hash = make_password(pw)
         self.save()
+
+    @property
+    def email(self):
+        if not self.email_field:
+            self.email_field = self.stu_code + '@pku.edu.cn'
+            self.save()
+        return self.email_field
 
     @property
     def name(self):
@@ -50,7 +59,7 @@ class User(models.Model):
                             img,
                         )
 
-        email = self.stu_code + '@pku.edu.cn'
+        email = self.email.lower()
         hasher = hashlib.md5()
         hasher.update(email.encode('utf-8'))
         email_hash = hasher.hexdigest()

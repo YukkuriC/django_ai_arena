@@ -4,6 +4,7 @@ from django.utils import timezone
 from django.template import loader
 from django.conf import settings
 from django.contrib import messages
+from django.db.models import Q
 from . import forms
 from main.helpers import login_required, get_user, set_user, send_valid_email, sorry
 from .models import User, UserMailCheck, UserResetPwMail
@@ -23,20 +24,20 @@ def register(request):
         form = forms.RegisterForm(request.POST)
 
         # check if user exists
-        if User.objects.filter(username=request.POST.get('username')):
-            form.add_error('username', '用户名已被注册')
-        if User.objects.filter(stu_code=request.POST.get('stu_code')):
-            form.add_error('stu_code', '学号已被注册')
+        for field, label in [
+            ['username', '用户名'],
+            ['email_field', '电子邮箱'],
+            ['stu_code', '学号'],
+        ]:
+            if User.objects.filter(**{field: request.POST.get(field)}):
+                form.add_error(field, label + '已被注册')
         if request.POST.get('passwd') != request.POST.get('pw2'):
             form.add_error('pw2', '两次密码输入不同')
 
         # input validation
         if form.is_valid():
             # register new user
-            new_user = User()
-            new_user.username = form.cleaned_data['username']
-            new_user.stu_code = form.cleaned_data['stu_code']
-            new_user.real_name = form.cleaned_data['name']
+            new_user = form.save()
             new_user.set_passwd(form.cleaned_data['passwd'])
             set_user(request, new_user)
             messages.info(request, '注册成功')
@@ -58,14 +59,8 @@ def login(request):
         key = request.POST.get('username')
         pw = request.POST.get('passwd')
         if key and pw:
-            user = None
-            try:
-                user = User.objects.get(username=key)
-            except:
-                try:
-                    user = User.objects.get(stu_code=key)
-                except:
-                    pass
+            user = User.objects.get(
+                Q(username=key) | Q(email_field=key) | Q(stu_code=key))
             if user and user.match_passwd(pw):
                 set_user(request, user)
                 messages.info(request, '登录成功')

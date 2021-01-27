@@ -20,7 +20,7 @@
     {%if resend_delta%}
     <div class='btn btn-warning form-control disabled'><span id='timer2'>{{resend_delta}}</span>秒后可再次发送验证邮件</div>
     {%else%}
-    <input type="submit" value="发送邮件至{{user.stu_code}}@pku.edu.cn" class='btn btn-primary form-control'>
+    <input type="submit" value="发送邮件至{{user.email}}" class='btn btn-primary form-control'>
     {%endif%}
 </div>
 {% endblock %}

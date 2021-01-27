@@ -162,7 +162,7 @@ if 'user system':
         mail.send_mail(
             title,
             html_content,
-            settings.EMAIL_HOST_USER, [user.stu_code + '@pku.edu.cn'],
+            settings.EMAIL_HOST_USER, [user.email],
             html_message=html_content)
 
         messages.info(request, '邮件发送成功')
