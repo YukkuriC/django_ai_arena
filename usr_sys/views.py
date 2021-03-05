@@ -59,8 +59,11 @@ def login(request):
         key = request.POST.get('username')
         pw = request.POST.get('passwd')
         if key and pw:
-            user = User.objects.get(
-                Q(username=key) | Q(email_field=key) | Q(stu_code=key))
+            try:
+                user = User.objects.get(
+                    Q(username=key) | Q(email_field=key) | Q(stu_code=key))
+            except:
+                user = None
             if user and user.match_passwd(pw):
                 set_user(request, user)
                 messages.info(request, '登录成功')
