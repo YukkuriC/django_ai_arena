@@ -4,3 +4,7 @@
 [submodule "external/ai_ttt/PyTicTacToe"]
 	path = external/ai_ttt/PyTicTacToe
 	url = https://github.com/YukkuriC/PyTicTacToe.git
+[submodule "external/ai_osmo/osmo.sessdsa"]
+	path = external/ai_osmo/osmo.sessdsa
+	url = https://github.com/chbpku/osmo.sessdsa.git
+	branch = for-arena

@@ -1,6 +1,6 @@
 # 设置路径
 import os, sys
-osmo_path = os.path.join(os.path.dirname(__file__), 'src')
+osmo_path = os.path.join(os.path.dirname(__file__), 'osmo.sessdsa', 'src')
 sys.path.append(osmo_path)
 
 import world, consts
