@@ -2,7 +2,7 @@ from os import path, makedirs
 from functools import lru_cache
 import json
 from external._base import BasePairMatch
-from . import ttt
+from .PyTicTacToe import ttt
 if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
     from django.conf import settings
 

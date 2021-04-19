@@ -1,3 +1,6 @@
 [submodule "external/ai_eufloria/dsa2021"]
 	path = external/ai_eufloria/dsa2021
 	url = https://github.com/pkulab409/pkudsa2021.git
+[submodule "external/ai_ttt/PyTicTacToe"]
+	path = external/ai_ttt/PyTicTacToe
+	url = https://github.com/YukkuriC/PyTicTacToe.git
