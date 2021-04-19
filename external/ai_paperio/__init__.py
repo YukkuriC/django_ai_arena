@@ -2,7 +2,13 @@ from os import path
 from sys import modules
 from external._base import BasePairMatch
 from functools import lru_cache
-from . import match_core, match_interface
+
+# 设置路径
+import os, sys
+paperio_path = os.path.join(os.path.dirname(__file__), 'paper.io.sessdsa')
+sys.path.append(paperio_path)
+import match_core, match_interface
+
 if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
     from django.conf import settings
 

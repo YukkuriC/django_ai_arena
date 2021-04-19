@@ -8,3 +8,7 @@
 	path = external/ai_osmo/osmo.sessdsa
 	url = https://github.com/chbpku/osmo.sessdsa.git
 	branch = for-arena
+[submodule "external/ai_paperio/paper.io.sessdsa"]
+	path = external/ai_paperio/paper.io.sessdsa
+	url = https://github.com/chbpku/paper.io.sessdsa.git
+	branch = for-arena
