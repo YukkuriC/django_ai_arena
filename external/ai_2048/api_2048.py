@@ -1,6 +1,7 @@
 # 设置路径
 import os, sys, random
-src_path = os.path.join(os.path.dirname(__file__), 'src')
+src_path = os.path.join(os.path.dirname(__file__), 'sessdsa.2048', 'src',
+                        'tools')
 sys.path.append(src_path)
 
 from collections import Counter
