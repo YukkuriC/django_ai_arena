@@ -3,8 +3,6 @@ from django.conf import settings
 from django.utils import timezone
 from .models import Code, PairMatch
 from external.factory import Factory
-from external.ai_osmo.src.consts import Consts
-from external.ai_2048.src import constants as c_2048
 
 
 # 上传代码表单
@@ -113,7 +111,7 @@ class PairMatch_Osmo(PairMatch_Base):
         min_value=0.1,
         widget=forms.NumberInput({
             'class': 'form-control',
-            'value': Consts['MAX_TIME']
+            'value': 30,
         }))
     MAX_FRAME = forms.IntegerField(
         label='最大帧数',
@@ -121,7 +119,7 @@ class PairMatch_Osmo(PairMatch_Base):
         min_value=100,
         widget=forms.NumberInput({
             'class': 'form-control',
-            'value': Consts['MAX_FRAME']
+            'value': 2000,
         }))
     extra_mode = forms.ChoiceField(
         required=False,
@@ -146,7 +144,7 @@ class PairMatch_2048(PairMatch_Base):
         min_value=0.1,
         widget=forms.NumberInput({
             'class': 'form-control',
-            'value': c_2048.MAXTIME
+            'value': 5,
         }))
     max_turn = forms.IntegerField(
         label='最大帧数',
@@ -154,7 +152,7 @@ class PairMatch_2048(PairMatch_Base):
         min_value=100,
         widget=forms.NumberInput({
             'class': 'form-control',
-            'value': c_2048.ROUNDS
+            'value': 500,
         }))
 
 
