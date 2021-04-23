@@ -15,6 +15,10 @@ from usr_sys import models as usr_models
 import json
 
 
+def attach_settings(request):
+    return {'settings': settings}
+
+
 def auto_admin(model_pool):
     '''一行注册admin'''
     for md_name in dir(model_pool):
@@ -39,7 +43,6 @@ def set_autodelete(local_dict, model, field):
     '''
     使FileField自动清理文件
     '''
-
     def auto_delete_file_on_delete(sender, instance, **kwargs):
         file_field = getattr(instance, field, None)
         if file_field:
@@ -159,11 +162,10 @@ if 'user system':
             template_name = 'email/activation.html'
 
         html_content = loader.render_to_string(template_name, locals())
-        mail.send_mail(
-            title,
-            html_content,
-            settings.EMAIL_HOST_USER, [user.email],
-            html_message=html_content)
+        mail.send_mail(title,
+                       html_content,
+                       settings.EMAIL_HOST_USER, [user.email],
+                       html_message=html_content)
 
         messages.info(request, '邮件发送成功')
         return True
