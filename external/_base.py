@@ -240,23 +240,39 @@ class BaseRecordLoader:
     '''
 
     @classmethod
+    def get_log_path(cls, match_dir, round_id):
+        """
+        获取log路径（默认为JSON）
+        默认实现为读取JSON
+        params:
+            match_dir: 比赛对应存储文件夹
+            rec_id: 比赛记录编号
+        """
+        return path.join(match_dir, '%02d.json' % round_id)
+
+    @classmethod
     def load_record(cls, match_dir, rec_id):
         '''
         读取比赛记录文件，实现时可lru_cache
+        默认实现为读取JSON
         params:
             match_dir: 比赛对应存储文件夹
             rec_id: 比赛记录编号
         '''
-        pass
+        return cls.load_record_path(cls.get_log_path(match_dir, rec_id))
 
     @classmethod
+    @lru_cache()
     def load_record_path(cls, record_path):
         '''
         读取指定路径下的比赛记录文件，实现时可lru_cache
+        默认实现为含缓存读取JSON
         params:
             record_path: 比赛记录文件位置
         '''
-        pass
+        with open(record_path, encoding='utf-8') as f:
+            obj = json.load(f)
+        return obj
 
     @classmethod
     def load_records(cls, match):
@@ -290,13 +306,27 @@ class BaseRecordLoader:
         '''将比赛记录输出为字符串，以传输至前端'''
         return json.dumps(record, separators=(',', ':'))
 
-    @staticmethod
-    def summary_records(records):
+    @classmethod
+    def summary_records(cls, records):
         '''
         将比赛记录汇总统计
         在view_match界面使用
         '''
-        pass
+        result_stat = {0: 0, 1: 0, None: 0}
+        for rec in records:
+            if rec == None:
+                continue
+            winner = cls.get_winner(rec)
+            result_stat[winner] += 1
+        result_stat['draw'] = result_stat[None]
+        return {
+            'stat': result_stat,
+        }
+
+    @classmethod
+    def get_winner(cls, record):
+        ''' 返回给定记录胜者代号 '''
+        raise NotImplementedError
 
     @classmethod
     def analyze_tags(cls, record):
@@ -547,7 +577,7 @@ class BasePairMatch(BaseProcess, BaseCodeLoader, BaseRecordLoader):
             d_local: 函数内locals()获取的本地变量
             d_global: 函数内globals()获取的全局变量
         '''
-        pass
+        raise NotImplementedError
 
     @classmethod
     def output_queue(cls, log):
@@ -557,18 +587,21 @@ class BasePairMatch(BaseProcess, BaseCodeLoader, BaseRecordLoader):
         Params:
             log: 由run_once函数返回的比赛记录对象
         '''
-        return (None, )
+        raise NotImplementedError
 
     @classmethod
     def save_log(cls, round_id, log, d_local, d_global):
         '''
         抽象接口，保存比赛记录至硬盘
+        默认实现为保存JSON
         Params:
             log: 由run_once函数返回的比赛记录对象
             d_local: 函数内locals()获取的本地变量
             d_global: 函数内globals()获取的全局变量
         '''
-        pass
+        log_name = cls.get_log_path(d_local['match_dir'], round_id)
+        with open(log_name, 'w', encoding='utf-8') as f:
+            json.dump(log, f, separators=',:')
 
     @classmethod
     def runner_fail_log(cls, winner, descrip, d_local, d_global):
