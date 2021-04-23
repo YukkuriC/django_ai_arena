@@ -135,9 +135,7 @@ if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
             return record['name0'] == 'code2'
 
         def i_winner(_, match, record):
-            if record['winner'] == None:
-                return None
-            return not record['winner']
+            return record['winner']
 
         def r_length(_, match, record):
             return len(record['logs'])

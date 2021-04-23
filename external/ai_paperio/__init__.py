@@ -82,10 +82,10 @@ class PaperIOMatch(BasePairMatch):
         ''' 内核错误 '''
         if winner != None:
             descrip = descrip[1 - winner]
-        match_core.init_field(
-            cls.init_params.get('k', 51), cls.init_params.get('h', 101),
-            cls.init_params.get('max_turn', 2000),
-            cls.init_params.get('max_time', 30))
+        match_core.init_field(cls.init_params.get('k', 51),
+                              cls.init_params.get('h', 101),
+                              cls.init_params.get('max_turn', 2000),
+                              cls.init_params.get('max_time', 30))
         match_result = (winner, -1, descrip)
         return {
             'players': d_local['names'],
@@ -147,10 +147,7 @@ if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
             return record['players'][0] == 'code2'
 
         def i_winner(_, match, record):
-            res = record['result']
-            if res[0] == None:
-                return None
-            return not res[0]
+            return record['result']
 
         def r_length(_, match, record):
             return len(record['timeleft'][0]) - 1

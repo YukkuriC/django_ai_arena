@@ -119,7 +119,7 @@ if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
         def i_winner(_, match, record):
             if record['winner'] == None:
                 return None
-            return record['winner'] == 'West'
+            return record['winner'] != 'West'
 
         def r_length(_, match, record):
             nround = len(record['log']) - 1

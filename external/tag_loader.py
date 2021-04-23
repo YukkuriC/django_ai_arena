@@ -41,12 +41,10 @@ class RecordBase:
 
     def i_winner(_, match, record):
         """
-        返回先手胜利信息 (holder_win)
+        返回先手胜利信息 (holder_lost)
             0: 先手方胜利
             1: 后手方胜利
             None: 平局
-            [0]: 是否为接收方胜利
-            [1]: 是否为先手胜利
         """
 
     def r_holder(_, match, record):
@@ -55,15 +53,15 @@ class RecordBase:
         return match.code1.name
 
     def r_winner(_, match, record):
-        holder_win = _.i_winner(match, record)
-        if holder_win is None:
+        holder_lose = _.i_winner(match, record)
+        if holder_lose is None:
             return '平手'
         code2_hold = _.i_holder(match, record)
-        code2_win = (code2_hold == holder_win)
+        code2_win = (code2_hold != holder_lose)
         return '%s (%s, %s)' % (
             match.code2.name if code2_win else match.code1.name,
             ('发起方', '接收方')[code2_win],
-            ('后手', '先手')[holder_win],
+            ('先手', '后手')[holder_lose],
         )
 
 

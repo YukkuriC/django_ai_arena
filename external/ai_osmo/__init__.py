@@ -123,9 +123,7 @@ if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
             return record['players'][0] == 'code2'
 
         def i_winner(_, match, record):
-            if record['winner'] == None:
-                return None
-            return not record['winner']
+            return record['winner']
 
         def r_length(_, match, record):
             return len(record['data'])
@@ -158,6 +156,6 @@ if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
                 return res
             elif record['cause'] == "MAX_FRAME":
                 last_frame = record['data'][-1]
-                return "%s : %s" % (round(last_frame[0][4], 2),
-                                    round(last_frame[1][4], 2))
+                return "%s : %s" % (round(last_frame[0][4],
+                                          2), round(last_frame[1][4], 2))
             return '-'
