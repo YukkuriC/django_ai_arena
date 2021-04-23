@@ -7,22 +7,21 @@ register = template.Library()
 
 
 # 模板注册元类
-def RecordMeta(match_type):
-    def _meta(name, root, attrs):
-        res = type.__new__(type, name, root, attrs)
-        RecordMeta.storage[match_type] = res()
-        return res
+def RecordDeco(match_type):
+    def _deco(cls):
+        RecordDeco.storage[match_type] = cls()
+        return cls
 
-    return _meta
+    return _deco
 
 
-RecordMeta.storage = defaultdict(object)
+RecordDeco.storage = defaultdict(object)
 
 
 # 自动注册模板
 def register_record(name):
     def _func(match, record):
-        target = RecordMeta.storage[match.ai_type]
+        target = RecordDeco.storage[match.ai_type]
         func = getattr(target, name, None)
         if func:
             try:

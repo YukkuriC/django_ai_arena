@@ -1,4 +1,5 @@
 from external._base import BasePairMatch
+from external.factory import FactoryDeco
 from functools import lru_cache
 from os import path
 import random, time
@@ -8,6 +9,7 @@ if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
 from . import osmo_api
 
 
+@FactoryDeco(3)
 class OsmoMatch(BasePairMatch):
     class Meta(BasePairMatch.Meta):
         game_whitelist = ['consts', 'world', 'cell']
@@ -116,9 +118,10 @@ class OsmoMatch(BasePairMatch):
 
 # 比赛记录显示模板
 if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
-    from external.tag_loader import RecordBase, RecordMeta
+    from external.tag_loader import RecordBase, RecordDeco
 
-    class OsmoRecord(RecordBase, metaclass=RecordMeta(3)):
+    @RecordDeco(3)
+    class OsmoRecord(RecordBase):
         def i_holder(_, match, record):
             return record['players'][0] == 'code2'
 

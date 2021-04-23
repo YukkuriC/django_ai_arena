@@ -1,9 +1,11 @@
 from . import pingpong_api
 from external._base import BasePairMatch
+from external.factory import FactoryDeco
 from os import path
 from functools import lru_cache
 
 
+@FactoryDeco(1)
 class PingPongMatch(BasePairMatch):
     class Meta(BasePairMatch.Meta):
         game_whitelist = ['table']
@@ -110,9 +112,10 @@ class PingPongMatch(BasePairMatch):
 
 # 比赛记录显示模板
 if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
-    from external.tag_loader import RecordBase, RecordMeta
+    from external.tag_loader import RecordBase, RecordDeco
 
-    class PingPongRecord(RecordBase, metaclass=RecordMeta(1)):
+    @RecordDeco(1)
+    class PingPongRecord(RecordBase):
         def i_holder(_, match, record):
             return record['West'] == 'code2'
 

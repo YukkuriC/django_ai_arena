@@ -2,12 +2,14 @@ from os import path, makedirs
 from functools import lru_cache
 import json
 from external._base import BasePairMatch
+from external.factory import FactoryDeco
 from .PyTicTacToe import ttt
 if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
     from django.conf import settings
 
 
 # 比赛进程
+@FactoryDeco(0)
 class TTTMatch(BasePairMatch):
     class Meta(BasePairMatch.Meta):
         required_functions = ['play']
@@ -90,9 +92,10 @@ class TTTMatch(BasePairMatch):
 
 # 比赛记录显示模板
 if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
-    from external.tag_loader import RecordBase, RecordMeta
+    from external.tag_loader import RecordBase, RecordDeco
 
-    class TTTRecord(RecordBase, metaclass=RecordMeta(0)):
+    @RecordDeco(0)
+    class TTTRecord(RecordBase):
         def i_holder(_, match, record):
             return record['names'][0] == 'code2'
 

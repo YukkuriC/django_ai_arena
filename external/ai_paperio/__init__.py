@@ -1,6 +1,7 @@
 from os import path
 from sys import modules
 from external._base import BasePairMatch
+from external.factory import FactoryDeco
 from functools import lru_cache
 
 # 设置路径
@@ -14,6 +15,7 @@ if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
 
 
 # 比赛进程
+@FactoryDeco(2)
 class PaperIOMatch(BasePairMatch):
     class Meta(BasePairMatch.Meta):
         required_functions = ['play']
@@ -140,9 +142,10 @@ class PaperIOMatch(BasePairMatch):
 
 # 比赛记录显示模板
 if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
-    from external.tag_loader import RecordBase, RecordMeta
+    from external.tag_loader import RecordBase, RecordDeco
 
-    class PaperIORecord(RecordBase, metaclass=RecordMeta(2)):
+    @RecordDeco(2)
+    class PaperIORecord(RecordBase):
         def i_holder(_, match, record):
             return record['players'][0] == 'code2'
 

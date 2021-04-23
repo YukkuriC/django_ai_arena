@@ -1,17 +1,15 @@
 from ._base import BasePairMatch
-from .ai_pingpong import PingPongMatch
-from .ai_paperio import PaperIOMatch
-from .ai_osmo import OsmoMatch
-from .ai_2048 import _2048Match
-from .ai_ttt import TTTMatch
 
-_mapper = {
-    0: TTTMatch,
-    1: PingPongMatch,
-    2: PaperIOMatch,
-    3: OsmoMatch,
-    4: _2048Match,
-}
+
+def FactoryDeco(match_type):
+    def _deco(cls):
+        _mapper[match_type] = cls
+        return cls
+
+    return _deco
+
+
+_mapper = {}
 
 
 def Factory(match_id, *args, **kw):

@@ -1,4 +1,5 @@
 from external._base import BasePairMatch
+from external.factory import FactoryDeco
 from functools import lru_cache
 import time
 from collections import Counter
@@ -6,6 +7,7 @@ from os import path
 from . import api_2048
 
 
+@FactoryDeco(4)
 class _2048Match(BasePairMatch):
     class Meta(BasePairMatch.Meta):
         required_classes = [('Player', ['output'])]
@@ -128,9 +130,10 @@ class _2048Match(BasePairMatch):
 
 # 比赛记录显示模板
 if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
-    from external.tag_loader import RecordBase, RecordMeta
+    from external.tag_loader import RecordBase, RecordDeco
 
-    class _2048Record(RecordBase, metaclass=RecordMeta(4)):
+    @RecordDeco(4)
+    class _2048Record(RecordBase):
         def i_holder(_, match, record):
             return record['name0'] == 'code2'
 
