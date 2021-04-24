@@ -1,19 +1,19 @@
 [submodule "external/ai_eufloria/dsa2021"]
 	path = external/ai_eufloria/dsa2021
-	url = https://github.com/pkulab409/pkudsa2021.git
+	url = https://github.com.cnpmjs.org/pkulab409/pkudsa2021.git
 	branch = for-arena
 [submodule "external/ai_ttt/PyTicTacToe"]
 	path = external/ai_ttt/PyTicTacToe
-	url = https://github.com/YukkuriC/PyTicTacToe.git
+	url = https://github.com.cnpmjs.org/YukkuriC/PyTicTacToe.git
 [submodule "external/ai_osmo/osmo.sessdsa"]
 	path = external/ai_osmo/osmo.sessdsa
-	url = https://github.com/chbpku/osmo.sessdsa.git
+	url = https://github.com.cnpmjs.org/chbpku/osmo.sessdsa.git
 	branch = for-arena
 [submodule "external/ai_paperio/paper.io.sessdsa"]
 	path = external/ai_paperio/paper.io.sessdsa
-	url = https://github.com/chbpku/paper.io.sessdsa.git
+	url = https://github.com.cnpmjs.org/chbpku/paper.io.sessdsa.git
 	branch = for-arena
 [submodule "external/ai_2048/sessdsa.2048"]
 	path = external/ai_2048/sessdsa.2048
-	url = https://github.com/pkulab409/sessdsa.2048.git
+	url = https://github.com.cnpmjs.org/pkulab409/sessdsa.2048.git
 	branch = for-arena
