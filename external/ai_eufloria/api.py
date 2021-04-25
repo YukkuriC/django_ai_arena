@@ -35,7 +35,7 @@ class GameWithModule(Game):
         maps = Generate_Hexagon(4, 0.20, 0.20)
 
         # 父类初始化
-        super().__init__(*names, config.MAX_TIME, config.MAX_TURN, maps)
+        super().__init__(*names, maps)
 
         # 强制初始化
         self.player_func1 = modules[0].player_func
