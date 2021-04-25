@@ -1,8 +1,6 @@
 from external._base import BasePairMatch
 from external.factory import FactoryDeco
 from . import api
-if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
-    from django.conf import settings
 
 
 # 比赛进程
@@ -49,25 +47,3 @@ class EufMatch(BasePairMatch):
         if winner != None and first_player == 'code2':
             winner = 1 - winner
         return winner
-
-
-# 比赛记录显示模板
-if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
-    from external.tag_loader import RecordBase, RecordDeco
-
-    @RecordDeco(5)
-    class EufRecord(RecordBase):
-        def i_holder(_, match, record):
-            return record['player_name']['0'] == 'code2'  # JSON化后数字key转为字符串
-
-        def i_winner(_, match, record):
-            return record['winner']
-
-        def r_length(_, match, record):
-            return len(record['history'])
-
-        def r_win_desc(_, match, record):
-            return record['result']
-
-        def r_desc_plus(_, match, record):
-            return '-'

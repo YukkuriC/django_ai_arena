@@ -4,8 +4,6 @@ import json
 from external._base import BasePairMatch
 from external.factory import FactoryDeco
 from .PyTicTacToe import ttt
-if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
-    from django.conf import settings
 
 
 # 比赛进程
@@ -51,35 +49,3 @@ class TTTMatch(BasePairMatch):
         if winner != None and record['names'][0] == 'code2':
             winner = 1 - winner
         return winner
-
-
-# 比赛记录显示模板
-if __name__ != '__mp_main__':  # 由参赛子进程中隔离django库
-    from external.tag_loader import RecordBase, RecordDeco
-
-    @RecordDeco(0)
-    class TTTRecord(RecordBase):
-        def i_holder(_, match, record):
-            return record['names'][0] == 'code2'
-
-        def i_winner(_, match, record):
-            return record['winner']
-
-        def r_length(_, match, record):
-            return len(record['orders'])
-
-        desc_pool = [
-            '代码超时',
-            '代码报错',
-            '冲突落子',
-            '非法返回值',
-            '游戏继续',  # 0
-            '形成三连',
-            '棋盘已满平局',
-        ]
-
-        def r_win_desc(_, match, record):
-            return _.desc_pool[record['reason'] + 4]
-
-        def r_desc_plus(_, match, record):
-            return record['extra'] or '无'
