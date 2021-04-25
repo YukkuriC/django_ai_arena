@@ -46,7 +46,8 @@ def one_match(players, params, names, seed=None):
 
     # 尝试使用加速库覆盖
     try:
-        import constants, libchessboard
+        import constants
+        from .src import libchessboard
         constants.Chessboard = libchessboard.Chessboard
     except:
         pass
