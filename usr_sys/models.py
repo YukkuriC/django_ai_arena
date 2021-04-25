@@ -63,7 +63,7 @@ class User(models.Model):
         hasher = hashlib.md5()
         hasher.update(email.encode('utf-8'))
         email_hash = hasher.hexdigest()
-        return "//www.gravatar.com/avatar/%s?s=%s&d=retro" % (email_hash, size)
+        return settings.GRAVATAR_SITE + "%s?s=%s&d=retro" % (email_hash, size)
 
     class Meta:
         ordering = ["stu_code"]

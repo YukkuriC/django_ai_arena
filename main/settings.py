@@ -192,6 +192,9 @@ TEAMLADDER_NMATCH = [
     [2, 6],
 ]
 
+# Gravatar网址
+GRAVATAR_SITE="https://gravatar.loli.net/avatar/"
+
 # 合法字符集合
 RAND_CHARPOOL = 'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz0123456789_'  # 用于生成随机字符串
 USERNAME_CHARPOOL = set(RAND_CHARPOOL)  # 用于匹配用户名
