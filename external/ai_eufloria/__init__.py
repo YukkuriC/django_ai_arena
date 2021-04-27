@@ -7,7 +7,7 @@ from . import api
 @FactoryDeco(5)
 class EufMatch(BasePairMatch):
     class Meta(BasePairMatch.Meta):
-        required_functions = ['player_func']
+        required_classes = [['player_class', ['__init__', 'player_func']]]
         game_whitelist = ['GameMap']
 
     @classmethod

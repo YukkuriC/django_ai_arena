@@ -15,6 +15,11 @@ import random
 from external.helpers_core import stringfy_error
 
 
+def output_error(descrip):
+    return stringfy_error(descrip) if isinstance(
+        descrip, Exception) else [*map(stringfy_error, descrip)]
+
+
 class GameWithModule(Game):
     @property
     def map(self):
@@ -37,21 +42,43 @@ class GameWithModule(Game):
         # 父类初始化
         super().__init__(*names, maps)
 
+        # 尝试实例化玩家类
+        players = [None] * 2
+        errors = [None] * 2
+        for i, mod in enumerate(modules):
+            try:
+                players[i] = mod.player_class(i)
+            except Exception as e:
+                errors[i] = e
+        endgame, winner = False, None
+        if any(errors):
+            endgame = True
+            if all(errors):
+                self.map['result'] = output_error(errors)
+            else:
+                winner = int(bool(errors[0]))
+                self.map['result'] = output_error(errors[1 - winner])
+            self.map['result'] = '初始化错误: %s' % self.map['result']
+
         # 强制初始化
-        self.player_func1 = modules[0].player_func
-        self.player_func2 = modules[1].player_func
-        self.__dict__['_Game__game_end'] = False
+        self.__dict__.update(
+            _Game__game_end=endgame,
+            _Game__player=players,
+            _Game__winner=winner,
+        )
 
     def run(self):
         ''' 按平台规范写入胜者 '''
-        winner = super().run()
-        if winner not in (0, 1):
-            winner = None
-        self.map['winner'] = winner
+        if not self._Game__game_end:
+            super().run()
+        if self._Game__winner not in (0, 1):
+            self._Game__winner = None
+        self.map['winner'] = self._Game__winner
 
 
 class NullPlayer:
-    player_func = None
+    class player_class:
+        player_func = None
 
 
 class NullGame(GameWithModule):
@@ -61,5 +88,4 @@ class NullGame(GameWithModule):
         super().__init__(self.null_plr, names, params)
         record = self.map
         record['winner'] = winner
-        record['result'] = stringfy_error(descrip) if isinstance(
-            descrip, Exception) else [*map(stringfy_error, descrip)]
+        record['result'] = output_error(descrip)
