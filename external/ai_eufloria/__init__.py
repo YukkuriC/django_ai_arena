@@ -8,7 +8,7 @@ from . import api
 class EufMatch(BasePairMatch):
     class Meta(BasePairMatch.Meta):
         required_classes = [['player_class', ['__init__', 'player_func']]]
-        game_whitelist = ['GameMap']
+        game_whitelist = ['GameMap', 'config']
 
     @classmethod
     def run_once(cls, d_local, d_global):
