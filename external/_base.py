@@ -19,7 +19,6 @@ class BaseProcess:
         match_name: 比赛名称
         params: 比赛设置参数字典
     '''
-
     def __init__(self, match_name, params, error_logger=None):
         from match_sys import models
         self.match_name = match_name
@@ -36,11 +35,10 @@ class BaseProcess:
         # 初始化进程
         self.params = params
         match_dir = path.join(settings.PAIRMATCH_DIR, match_name)
-        self.process = Process(
-            target=self.process_run,
-            args=([code1, code2], match_dir, params, self.output,
-                  error_logger),
-            daemon=1)
+        self.process = Process(target=self.process_run,
+                               args=([code1, code2], match_dir, params,
+                                     self.output, error_logger),
+                               daemon=1)
 
     def start(self):
         '''启动进程'''
@@ -131,6 +129,7 @@ class BaseCodeLoader:
 
         # 检查非法import与函数
         for node in ast.walk(code_tree):
+            # 非法import
             if isinstance(node, ast.Import):
                 for module in node.names:
                     if cls.Meta.invalid_import(module.name):
@@ -140,6 +139,7 @@ class BaseCodeLoader:
                     raise cls._ast_error(node, 0, node.module)
                 elif node.names[0].name == '*':
                     warnings.append('第%s行 请写明import内容' % node.lineno)
+            # 非法调用函数
             if isinstance(node, ast.Call):
                 func = node.func
                 func_name = getattr(func, 'attr', getattr(func, 'id', None))
@@ -238,7 +238,6 @@ class BaseRecordLoader:
     '''
     在前端加载比赛记录
     '''
-
     @classmethod
     def get_log_path(cls, match_dir, round_id):
         """
@@ -348,7 +347,8 @@ class BasePairMatch(BaseProcess, BaseCodeLoader, BaseRecordLoader):
     增加比赛记录统计与天梯分计算部分
     '''
     init_params = None  # 用于容纳赛前准备参数
-    __repr__ = __str__ = lambda self: '<%s: %s>' % (type(self).__name__, self.match_name)
+    __repr__ = __str__ = lambda self: '<%s: %s>' % (type(self).__name__, self.
+                                                    match_name)
 
     # 默认的获取比赛参数函数
     if 'grabbing parameters':
@@ -486,16 +486,16 @@ class BasePairMatch(BaseProcess, BaseCodeLoader, BaseRecordLoader):
         默认为ELO算法
         '''
         real_score = results[0] + 0.5 * results[None]
-        e_score = sum(results.values()) / (1 + 10**
-                                           ((code2.score - code1.score) / 400))
+        e_score = sum(results.values()) / (1 + 10**(
+            (code2.score - code1.score) / 400))
         score1 = (real_score - e_score) * settings.SCORE_FACTOR_PAIRMATCH
         score2 = -score1
 
         # 归中
-        score1 += (
-            settings.SCORE_NORM - code1.score) * settings.SCORE_NORM_FACTOR
-        score2 += (
-            settings.SCORE_NORM - code2.score) * settings.SCORE_NORM_FACTOR
+        score1 += (settings.SCORE_NORM -
+                   code1.score) * settings.SCORE_NORM_FACTOR
+        score2 += (settings.SCORE_NORM -
+                   code2.score) * settings.SCORE_NORM_FACTOR
 
         # 自由模式得分
         if not self.match.is_ranked:
