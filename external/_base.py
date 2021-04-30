@@ -106,7 +106,40 @@ class BaseCodeLoader:
     '''
     比赛代码载入、检查功能
     '''
-    _ast_errors = ['非法import', '非法函数调用']
+    _ast_errors = ['非法import', '非法调用', '非法删除']
+
+    @classmethod
+    def _raiser(cls, name):
+        """ 生成对应报错函数 """
+        def forbidden(*a, **kw):
+            raise RuntimeError('非法调用: %s' % name)
+
+        return forbidden
+
+    @classmethod
+    def _flatten_ast_list(cls, lst):
+        """ 摊平ast list表达式 """
+        if isinstance(lst, ast.Name):
+            yield lst.id
+            return
+        if isinstance(lst, (ast.List, ast.Tuple)):
+            lst = lst.elts
+        for elem in lst:
+            yield from cls._flatten_ast_list(elem)
+
+    @classmethod
+    def _module_template(cls):
+        """ 生成已配置函数黑名单的默认模块 """
+        pack = type(ast)('code')
+
+        # 覆盖写入所有非法函数
+        for func in cls.Meta.func_blacklist:
+            setattr(pack, func, cls._raiser(func))
+
+        # 屏蔽print功能
+        pack.print = lambda *a, **kw: None
+
+        return pack
 
     @classmethod
     def _ast_error(cls, node, info, content):
@@ -125,7 +158,7 @@ class BaseCodeLoader:
             code_raw = code_raw.decode('utf-8', 'ignore')
 
         # 将待导入代码转换为AST
-        code_tree = ast.parse(code_raw, '<qwq>')
+        code_tree = ast.parse(code_raw, '<code>')
 
         # 检查非法import与函数
         for node in ast.walk(code_tree):
@@ -134,17 +167,25 @@ class BaseCodeLoader:
                 for module in node.names:
                     if cls.Meta.invalid_import(module.name):
                         raise cls._ast_error(node, 0, module.name)
-            if isinstance(node, ast.ImportFrom):
+            elif isinstance(node, ast.ImportFrom):
                 if cls.Meta.invalid_import(node.module):
                     raise cls._ast_error(node, 0, node.module)
                 elif node.names[0].name == '*':
                     warnings.append('第%s行 请写明import内容' % node.lineno)
             # 非法调用函数
-            if isinstance(node, ast.Call):
+            elif isinstance(node, ast.Call):
                 func = node.func
                 func_name = getattr(func, 'attr', getattr(func, 'id', None))
                 if func_name in cls.Meta.func_blacklist:
                     raise cls._ast_error(node, 1, func_name)
+            # 非法删除
+            elif isinstance(node, ast.Delete):
+                for mod in cls._flatten_ast_list(node.targets):
+                    if mod in cls.Meta.func_blacklist:
+                        raise cls._ast_error(node, 2, mod)
+            # 非法调用__builtins__
+            elif isinstance(node, ast.Name) and node.id == '__builtins__':
+                raise cls._ast_error(node, 1, '__builtins__')
 
         # 检查是否已导入必要函数与类
         all_func = set()
@@ -202,13 +243,10 @@ class BaseCodeLoader:
 
         # 加载模块并输出
         try:
-            pack = type(ast)('code')
+            pack = cls._module_template()
             exec(compile(code_tree, '', 'exec'), pack.__dict__)
         except Exception as e:
             raise RuntimeError(cls.stringfy_error(e))
-
-        # 屏蔽print功能
-        pack.print = lambda *a, **kw: None
 
         return pack
 
@@ -221,8 +259,10 @@ class BaseCodeLoader:
             'math', 'random', 'copy', 'numpy', 'time', 'collections',
             'itertools', 'functools', 'heapq', 'operator'
         ]  # 允许使用的库
-        func_blacklist = ['eval', 'exec', 'compile', '__import__',
-                          'open']  # 禁止使用的函数
+        func_blacklist = [
+            'eval', 'exec', 'compile', '__import__', 'open', 'locals',
+            'globals'
+        ]  # 禁止使用的函数
         game_whitelist = []  # 各项目分别需要引用的库
         required_functions = []  # 必要的函数接口 (名称)
         required_classes = []  # 必要的类定义 (名称,函数名称列表)
