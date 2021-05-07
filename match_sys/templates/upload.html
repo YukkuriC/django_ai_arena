@@ -3,12 +3,12 @@
 {% block header %}
 <div class='col-sm-12'>
     <h1>
-        <a>{% block title %}上传代码{% endblock %}</a>
-        {% if empty %}
-        <a class='float-right' href='..'>上传已有代码</a>
-        {% else %}
-        <a class='float-right' href='./empty/'>创建空代码</a>
-        {% endif %}
+        <a>
+            {% block title %}
+            {% if empty %}创建空代码{% else %}上传已有代码{% endif %}
+            {% endblock %}
+        </a>
+        <a class='float-right' href='{% if empty %}..{% else %}./empty/{% endif %}'>切换</a>
     </h1>
 </div>
 {% endblock %}
