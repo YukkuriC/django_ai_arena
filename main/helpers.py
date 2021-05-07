@@ -55,6 +55,8 @@ def set_autodelete(local_dict, model, field):
 
         try:
             old_file = getattr(model.objects.get(pk=instance.pk), field)
+            if not old_file:
+                return
         except model.DoesNotExist:
             return
 
