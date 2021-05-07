@@ -28,43 +28,37 @@ class CodeUploadForm(forms.ModelForm):
         fields = ['name', 'ai_type', 'content', 'public']
         widgets = {
             'name':
-            forms.TextInput({
-                'class': 'form-control'
-            }),
+            forms.TextInput({'class': 'form-control'}),
             'content':
-            forms.FileInput({
-                'class': 'form-control'
-            }),
+            forms.FileInput({'class': 'form-control'}),
             'public':
             forms.CheckboxInput({
                 'class': 'form-control',
                 'title': '是否可以被其他人查看代码及复制'
             }),
             'ai_type':
-            forms.Select({
-                'class': 'form-control'
-            }),
+            forms.Select({'class': 'form-control'}),
         }
 
 
 # 比赛设置参数表单
 class PairMatch_Base(forms.Form):
     '''基础参数表单'''
-    rounds = forms.IntegerField(
-        label='比赛局数',
-        max_value=30,
-        min_value=1,
-        widget=forms.NumberInput({
-            'class': 'form-control',
-            'value': settings.DEFAULT_PAIRMATCH_ROUNDS,
-        }))
+    rounds = forms.IntegerField(label='比赛局数',
+                                max_value=30,
+                                min_value=1,
+                                widget=forms.NumberInput({
+                                    'class':
+                                    'form-control',
+                                    'value':
+                                    settings.DEFAULT_PAIRMATCH_ROUNDS,
+                                }))
 
-    who_first = forms.ChoiceField(
-        label='发起人先手',
-        choices=settings.MATCH_TYPES.items(),
-        widget=forms.Select({
-            'class': 'form-control',
-        }))
+    who_first = forms.ChoiceField(label='发起人先手',
+                                  choices=settings.MATCH_TYPES.items(),
+                                  widget=forms.Select({
+                                      'class': 'form-control',
+                                  }))
 
 
 class PairMatch_PaperIO(PairMatch_Base):
@@ -85,42 +79,38 @@ class PairMatch_PaperIO(PairMatch_Base):
     #         'class': 'form-control',
     #         'value': 101
     #     }))
-    max_turn = forms.IntegerField(
-        label='总回合数',
-        max_value=2000,
-        min_value=100,
-        widget=forms.NumberInput({
-            'class': 'form-control',
-            'value': 2000
-        }))
-    max_time = forms.FloatField(
-        label='总思考时间（秒）',
-        max_value=30,
-        min_value=5,
-        widget=forms.NumberInput({
-            'class': 'form-control',
-            'value': 30
-        }))
+    max_turn = forms.IntegerField(label='总回合数',
+                                  max_value=2000,
+                                  min_value=100,
+                                  widget=forms.NumberInput({
+                                      'class': 'form-control',
+                                      'value': 2000
+                                  }))
+    max_time = forms.FloatField(label='总思考时间（秒）',
+                                max_value=30,
+                                min_value=5,
+                                widget=forms.NumberInput({
+                                    'class': 'form-control',
+                                    'value': 30
+                                }))
 
 
 class PairMatch_Osmo(PairMatch_Base):
     '''osmo参数'''
-    MAX_TIME = forms.FloatField(
-        label='总思考时间（秒）',
-        max_value=30,
-        min_value=0.1,
-        widget=forms.NumberInput({
-            'class': 'form-control',
-            'value': 30,
-        }))
-    MAX_FRAME = forms.IntegerField(
-        label='最大帧数',
-        max_value=10000,
-        min_value=100,
-        widget=forms.NumberInput({
-            'class': 'form-control',
-            'value': 2000,
-        }))
+    MAX_TIME = forms.FloatField(label='总思考时间（秒）',
+                                max_value=30,
+                                min_value=0.1,
+                                widget=forms.NumberInput({
+                                    'class': 'form-control',
+                                    'value': 30,
+                                }))
+    MAX_FRAME = forms.IntegerField(label='最大帧数',
+                                   max_value=10000,
+                                   min_value=100,
+                                   widget=forms.NumberInput({
+                                       'class': 'form-control',
+                                       'value': 2000,
+                                   }))
     extra_mode = forms.ChoiceField(
         required=False,
         label='额外模式',
@@ -138,22 +128,20 @@ class PairMatch_Osmo(PairMatch_Base):
 
 class PairMatch_2048(PairMatch_Base):
     '''osmo参数'''
-    max_time = forms.FloatField(
-        label='总思考时间（秒）',
-        max_value=10,
-        min_value=0.1,
-        widget=forms.NumberInput({
-            'class': 'form-control',
-            'value': 5,
-        }))
-    max_turn = forms.IntegerField(
-        label='最大帧数',
-        max_value=10000,
-        min_value=100,
-        widget=forms.NumberInput({
-            'class': 'form-control',
-            'value': 500,
-        }))
+    max_time = forms.FloatField(label='总思考时间（秒）',
+                                max_value=10,
+                                min_value=0.1,
+                                widget=forms.NumberInput({
+                                    'class': 'form-control',
+                                    'value': 5,
+                                }))
+    max_turn = forms.IntegerField(label='最大帧数',
+                                  max_value=10000,
+                                  min_value=100,
+                                  widget=forms.NumberInput({
+                                      'class': 'form-control',
+                                      'value': 500,
+                                  }))
 
 
 class PairMatchFormFactory:

@@ -16,15 +16,13 @@ import os, json, shutil, random
 
 def _team_user_forbidden(func):
     """ 限制小组用户访问 """
-
     def inner(request, *a, **kw):
         user = get_user(request)
         if user.is_team:
-            return sorry(
-                request, 403, text=[
-                    '当前页面不可访问',
-                    '小组用户所有比赛由系统自动发起',
-                ])
+            return sorry(request, 403, text=[
+                '当前页面不可访问',
+                '小组用户所有比赛由系统自动发起',
+            ])
         return func(request, *a, **kw)
 
     return inner
@@ -126,43 +124,45 @@ if 'forms':
         rounds = form.cleaned_data.get('rounds', 10)
         near_time = timezone.now() - timezone.timedelta(
             minutes=settings.LIMIT_COUNT_MINUTES)
-        near_matches = PairMatch.objects.filter(
-            code1=my_code, run_datetime__gte=near_time)
+        near_matches = PairMatch.objects.filter(code1=my_code,
+                                                run_datetime__gte=near_time)
         n1 = near_matches.filter(status__lte=1).aggregate(
             Sum('rounds'))['rounds__sum'] or 0
         n2 = near_matches.filter(status__gt=1).aggregate(
             Sum('finished_rounds'))['finished_rounds__sum'] or 0
         n_avail = settings.LIMIT_COUNT_ROUNDS - n1 - n2
         if n_avail <= 0:
-            return form.add_error('rounds', '%d分钟内发起了超过%d场比赛 (%d进行+%d完成)' %
-                                  (settings.LIMIT_COUNT_MINUTES,
-                                   settings.LIMIT_COUNT_ROUNDS, n1, n2))
+            return form.add_error(
+                'rounds', '%d分钟内发起了超过%d场比赛 (%d进行+%d完成)' %
+                (settings.LIMIT_COUNT_MINUTES, settings.LIMIT_COUNT_ROUNDS, n1,
+                 n2))
         n_avail += settings.LIMIT_COUNT_BUFFER
         if n_avail <= rounds:
             form.cleaned_data['rounds'] = n_avail
             messages.warning(request, '创建比赛过于频繁')
 
     @login_required(1)
-    def upload(request):
+    def upload(request, empty=False):
         ai_type = request.GET.get('id', '')
         user = get_user(request)
 
+        form = forms.CodeUploadForm(request.POST or None, request.FILES
+                                    or None)
+
         if request.method == 'POST':
-            form = forms.CodeUploadForm(request.POST, request.FILES)
             if form.is_valid():
                 # 验证用户代码数未超标
                 code_count = user.code_set.filter(
                     ai_type=form.cleaned_data['ai_type']).count()
                 code_max = 1 if user.is_team else settings.MAX_CODE_PER_GAME
                 if code_count >= code_max:
-                    return sorry(
-                        request,
-                        403,
-                        text=[
-                            '已超过最大可上传代码数',
-                            '请删除不必要的代码',
-                            '或在已有代码上进行修改',
-                        ])
+                    return sorry(request,
+                                 403,
+                                 text=[
+                                     '已超过最大可上传代码数',
+                                     '请删除不必要的代码',
+                                     '或在已有代码上进行修改',
+                                 ])
 
                 code = form.instance
                 code.author = user
@@ -172,8 +172,7 @@ if 'forms':
                 return redirect('/home/')
             else:
                 messages.warning(request, '请检查非法输入')
-                return render(request, 'upload.html', locals())
-        form = forms.CodeUploadForm()
+
         return render(request, 'upload.html', locals())
 
     @_team_user_forbidden
@@ -276,8 +275,8 @@ if 'forms':
                 target_codes = codes.exclude(author=request.session['userid'])
                 target_codes = sorted(
                     target_codes,
-                    key=lambda code: abs(code.score - my_code_obj.score)
-                )[:settings.RANKING_RANDOM_RANGE]
+                    key=lambda code: abs(code.score - my_code_obj.score
+                                         ))[:settings.RANKING_RANDOM_RANGE]
                 if not target_codes:
                     form.errors['code1'] = '暂无可用的匹配代码'
 
@@ -511,13 +510,13 @@ if 'view':
         result_stat = result_summary['stat']
 
         # 读取tag
-        record_tags=[]
+        record_tags = []
         for record in records:
             try:
                 record_tags.append(loader.analyze_tags(record))
             except:
                 record_tags.append([])
-        record_pairs=zip(records, record_tags)
+        record_pairs = zip(records, record_tags)
 
         return render(request, 'view_match.html', locals())
 
