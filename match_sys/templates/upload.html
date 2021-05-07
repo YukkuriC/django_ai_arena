@@ -1,6 +1,17 @@
 {% extends 'form_base.html' %}
 
-{% block title %}上传代码{% endblock %}
+{% block header %}
+<div class='col-sm-12'>
+    <h1>
+        <a>{% block title %}上传代码{% endblock %}</a>
+        {% if empty %}
+        <a class='float-right' href='..'>上传已有代码</a>
+        {% else %}
+        <a class='float-right' href='./empty/'>创建空代码</a>
+        {% endif %}
+    </h1>
+</div>
+{% endblock %}
 
 {% block form_override %}
 <div class="form-group">
@@ -8,6 +19,23 @@
     {% include "sub/form_element.html" %}
     {% endwith %}
 </div>
+
+{% if empty %}
+<!-- 创建空代码 -->
+<div class="form-group row">
+    <div class="col-sm-8">
+        {% with form.ai_type as elem %}
+        {% include "sub/form_element.html" %}
+        {% endwith %}
+    </div>
+    <div class='col-sm-4'>
+        {% with form.public as elem %}
+        {% include "sub/form_element.html" %}
+        {% endwith %}
+    </div>
+</div>
+{% else %}
+<!-- 上传已有代码 -->
 <div class="form-group">
     {% with form.ai_type as elem %}
     {% include "sub/form_element.html" %}
@@ -25,6 +53,8 @@
         {% endwith %}
     </div>
 </div>
+{% endif %}
+
 <div class="form-group">
     <input type="submit" value="上传" class='btn btn-primary form-control'>
 </div>

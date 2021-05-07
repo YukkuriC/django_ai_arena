@@ -41,6 +41,12 @@ class CodeUploadForm(forms.ModelForm):
         }
 
 
+# 创建空代码表单
+class CodeEmptyForm(CodeUploadForm):
+    class Meta(CodeUploadForm.Meta):
+        fields = ['name', 'ai_type', 'public']
+
+
 # 比赛设置参数表单
 class PairMatch_Base(forms.Form):
     '''基础参数表单'''

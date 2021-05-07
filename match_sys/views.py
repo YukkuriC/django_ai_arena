@@ -146,8 +146,8 @@ if 'forms':
         ai_type = request.GET.get('id', '')
         user = get_user(request)
 
-        form = forms.CodeUploadForm(request.POST or None, request.FILES
-                                    or None)
+        form = (forms.CodeEmptyForm if empty else forms.CodeUploadForm)(
+            request.POST or None, request.FILES or None)
 
         if request.method == 'POST':
             if form.is_valid():
@@ -360,6 +360,12 @@ if 'view code':
                 return redirect('/code/%s/edit/' % code.id)
             elif not code.public:  # 查看非公开代码
                 return sorry(request, 403, text='没有编辑权限')
+
+        # 为空代码自动创建文件
+        if not code.content:
+            init = ContentFile('# 请按游戏要求编写自己的代码'.encode('utf-8'))
+            code.content.save('init', init)
+            code.save()
 
         # GET请求输出代码至编辑器
         if request.method == 'GET':

@@ -7,6 +7,7 @@ urlpatterns = [
     path('match/<str:match_name>/', views.view_pairmatch),
     path('match/<str:match_name>/<str:record_id>/', views.view_record),
     path('upload/', views.upload),
+    path('upload/empty/', lambda r: views.upload(r, True)),
     path('game/<str:AI_type>/', views.game_info),
     path('lobby/', views.lobby),
     path('lobby/run_match/<str:AI_type>/', views.pairmatch),
