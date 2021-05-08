@@ -9,60 +9,30 @@
     }
 </style>
 <div>
-    <h4>井字棋</h4>
+    <h4>选数字</h4>
     <ul>
-        <li>双方AI分别控制在3*3的井字棋盘上下棋</li>
-        <li>首先将棋子连成一行3个（横、竖、对角线）的玩家获得胜利</li>
-        <li>
-            项目地址：
-            <a href="https://github.com/YukkuriC/PyTicTacToe" target='_blank'>PyTicTacToe</a>
-        </li>
+        <li>给定1-9共9个数字</li>
+        <li>双方AI分别在其中选择数字为己有</li>
+        <li>胜利条件：获得任意3个满足求和为15的数字</li>
     </ul>
-    <h4>必要函数：play(board)</h4>
+    <h4>必要函数：play(nums_left, nums_self, nums_other)</h4>
     <ul>
-        <li>接收参数：
+        <li>接收参数:
             <ul>
-                <li>board：棋盘对象
-                    <ul>
-                        <li>为一个包含9个键值对的字典</li>
-                        <li>每个键均为长度为2的元组，元组各位取值为0、1、2的整数，代表棋盘对应位置</li>
-                        <li>取值为长度为1的字符串，其内容与含义如下：
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>内容</th>
-                                        <th>含义</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td><code>"S"</code></td>
-                                        <td>自己(self)落子位置</td>
-                                    </tr>
-                                    <tr>
-                                        <td><code>"F"</code></td>
-                                        <td>对方(friend)落子位置</td>
-                                    </tr>
-                                    <tr>
-                                        <td><code>"E"</code></td>
-                                        <td>空位置，可落子</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </li>
-                        <li>保证棋盘对象至少有一个位置取值为<code>"E"</code>，即可以落子</li>
-                    </ul>
-                </li>
+                <li><em>以下所有参数均为包含数字的列表</em></li>
+                <li>nums_left: 剩余可选择数字</li>
+                <li>nums_self: 自己已选择数字</li>
+                <li>nums_other: 对方已选择数字</li>
             </ul>
         </li>
         <li>需求返回值：
             <ul>
-                <li>长度为2的列表或元组，各位取值为0、1、2的整数，代表本回合将落子的位置
+                <li>一个包含内的整数，代表本回合选择的数字
                     <ul>
-                        <li>不满足要求的返回值将因<code>非法返回值</code>判负</li>
+                        <li>若不是1-9范围内的整数，将因<code>非法返回值</code>判负</li>
+                        <li>若该数字未包含于nums_left列表内，则将因<code>冲突选数</code>判负</li>
                     </ul>
                 </li>
-                <li>落子位置必须为空（即棋盘对象中对应位置取值为<code>"E"</code>），否则将因<code>冲突落子</code>判负</li>
             </ul>
         </li>
     </ul>

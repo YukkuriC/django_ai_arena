@@ -3,7 +3,7 @@ from functools import lru_cache
 import json
 from external._base import BasePairMatch
 from external.factory import FactoryDeco
-from .PyTicTacToe import ttt
+from .PyTicTacToe import ttt, ttt_extend
 
 
 # 比赛进程
@@ -18,7 +18,8 @@ class TTTMatch(BasePairMatch):
         运行一局比赛
         并返回比赛记录对象
         '''
-        return ttt.Game(d_local['players'], d_local['names'], 1).match()
+        return ttt_extend.GameSum15(d_local['players'], d_local['names'],
+                                    1).match()
 
     @classmethod
     def output_queue(cls, match_log):
