@@ -215,7 +215,7 @@ CODE_DIR = 'code'  # 比赛记录存储目录
 PAIRMATCH_DIR = os.path.join(MEDIA_ROOT, 'pairmatch')  # 比赛记录存储目录
 TEAM_ICON_DIR = 'team_icon'  # 小组用户头像存储目录
 
-MAX_CODE_PER_GAME = 5  # 单用户单游戏最多保存代码数
+MAX_CODE_PER_GAME = 1  # 单用户单游戏最多保存代码数
 
 ### 比赛系统参数
 AI_TYPES = {  # AI比赛类型

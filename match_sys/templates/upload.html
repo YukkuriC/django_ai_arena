@@ -70,5 +70,9 @@
     window.addEventListener('load', () => {
         document.getElementById('id_ai_type').value = aitype
     })
+
+    var name_field = document.getElementById('id_name')
+    name_field.value = '新的代码'
+    name_field.parentElement.style.display = 'none'
 </script>
 {% endblock %}

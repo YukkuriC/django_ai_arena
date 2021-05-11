@@ -146,6 +146,8 @@ if 'forms':
         ai_type = request.GET.get('id', '')
         user = get_user(request)
 
+        print(request.POST)
+
         form = (forms.CodeEmptyForm if empty else forms.CodeUploadForm)(
             request.POST or None, request.FILES or None)
 
@@ -168,6 +170,11 @@ if 'forms':
                 code.author = user
                 code.edit_datetime = timezone.now()
                 form.save()
+
+                # 固定名称
+                code.name = '%s的代码' % user.username
+                code.save()
+
                 messages.info(request, '上传文件"%s"成功' % code.name)
                 return redirect('/home/')
             else:
@@ -381,12 +388,12 @@ if 'view code':
         to_update = False
 
         # 更新名称
-        new_name = request.POST.get('name')
-        if new_name != None:
-            new_name = new_name[:20].strip() or '未命名'
-            to_update = True
-            code.name = new_name
-            res['name'] = new_name
+        # new_name = request.POST.get('name')
+        # if new_name != None:
+        #     new_name = new_name[:20].strip() or '未命名'
+        #     to_update = True
+        #     code.name = new_name
+        #     res['name'] = new_name
 
         # 更新代码是否公开
         new_public = request.POST.get('public')
