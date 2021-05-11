@@ -90,29 +90,12 @@ WSGI_APPLICATION = 'main.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
-if os.sys.platform == 'win32':
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-        }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
-else:
-    # 替换数据库后端
-    import pymysql
-    pymysql.version_info = (1, 3, 13, 'final', 0)
-    pymysql.install_as_MySQLdb()
-
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': 'arena',
-            'USER': os.environ['MYSQL_USER'],
-            'PASSWORD': os.environ['MYSQL_PASSWD'],
-            'HOST': os.environ['MYSQL_HOST'],
-            'PORT': os.environ['MYSQL_PORT'],
-        }
-    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
@@ -193,7 +176,7 @@ TEAMLADDER_NMATCH = [
 ]
 
 # Gravatar网址
-GRAVATAR_SITE="https://gravatar.loli.net/avatar/"
+GRAVATAR_SITE = "https://gravatar.loli.net/avatar/"
 
 # 合法字符集合
 RAND_CHARPOOL = 'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz0123456789_'  # 用于生成随机字符串
