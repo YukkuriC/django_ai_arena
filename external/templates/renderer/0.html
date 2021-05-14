@@ -7,19 +7,19 @@
 <style>
     #main {
         display: grid;
-        grid-template-columns: repeat(3, 200px);
-        grid-template-rows: repeat(3, 200px);
+        grid-template-columns: repeat(3, 150px);
+        grid-template-rows: repeat(3, 150px);
         background-color: #ddd;
-        width: 600px;
-        height: 600px;
+        width: 450px;
+        height: 450px;
         margin: auto;
     }
 
     .node {
-        width: 180px;
-        height: 180px;
+        width: 130px;
+        height: 130px;
         margin: 10px;
-        font-size: 100px;
+        font-size: 75px;
         font-weight: bolder;
         text-align: center;
         display: flex;
@@ -48,6 +48,23 @@
     #chart {
         transition: 0.5s all;
     }
+
+    .stickpool {
+        width: 450px;
+    }
+
+    .stickpool>div {
+        background-color: #ddd;
+        margin: 2px 0;
+    }
+
+    .stickpool>div>div {
+        border: 1px solid black;
+        height: 30px;
+        border-radius: 5px;
+        display: inline-block;
+        text-align: center;
+    }
 </style>
 {% endblock %}
 
@@ -64,8 +81,19 @@
 {% endblock %}
 
 {% block display_body %}
-<div class='col-sm-12'>
+<div class='col-sm-6'>
     <div id="main">
+    </div>
+</div>
+<div class='col-sm-6' id='stick_main'>
+    <h4>先手占优</h4>
+    <div class='stickpool' id='pool_0'>
+    </div>
+    <h4>后手占优</h4>
+    <div class='stickpool' id='pool_1'>
+    </div>
+    <h4>其它组合</h4>
+    <div class='stickpool' id='pool_null'>
     </div>
 </div>
 {% endblock %}
@@ -73,6 +101,76 @@
 {% block script %}
 {{ block.super }}
 <script>
+    class StickPool {
+        constructor() {
+        }
+    }
+    // sticks
+    var pool_0 = document.getElementById('pool_0'),
+        pool_1 = document.getElementById('pool_1'),
+        pool_null = document.getElementById('pool_null'),
+        pool_root = document.getElementById('stick_main')
+    sticks = []
+    function init_sticks() {
+        for (var i = 1; i <= 7; i++) {
+            for (var j = i + 1; j <= 8; j++) {
+                for (var k = j + 1; k <= 9; k++) {
+                    if (i + j + k == 15) {
+                        var stick = document.createElement('div')
+                        stick.id = `stick_${i}${j}${k}`
+                        stick.values = [i, j, k]
+                        for (var val of stick.values) {
+                            var piece = document.createElement('div')
+                            piece.innerHTML = val
+                            Object.assign(piece.style, {
+                                width: (30 * val) + 'px',
+                                backgroundColor: `var(--clr_${val})`,
+                                color: `var(--clr_inv_${val})`
+                            })
+                            stick.appendChild(piece)
+                        }
+                        pool_null.appendChild(stick)
+                        sticks.push(stick)
+                    }
+                }
+            }
+        }
+    }
+    function refresh_sticks(orders) {
+        for (var i = 1; i <= 9; i++) {
+            pool_root.style.removeProperty(`--clr_${i}`)
+            pool_root.style.removeProperty(`--clr_inv_${i}`)
+        }
+        orders.forEach((nums, pid) => {
+            for (var i of nums) {
+                pool_root.style.setProperty(`--clr_${i}`, COLORS[pid])
+                pool_root.style.setProperty(`--clr_inv_${i}`, is_dark(COLORS[pid]))
+            }
+        })
+        sticks.forEach(e => {
+            e.parentNode.removeChild(e)
+            var is_0 = false,
+                is_1 = false,
+                filled = 0
+            for (var val of e.values) {
+                if (orders[0].includes(val)) {
+                    is_0 = true
+                    filled++
+                }
+                else if (orders[1].includes(val)) {
+                    is_1 = true
+                    filled++
+                }
+            }
+            e.classList.remove('grouped')
+            if (is_0 == is_1) pool_null.appendChild(e)
+            else {
+                (is_0 ? pool_0 : pool_1).appendChild(e)
+                if (filled == 3) e.classList.add('grouped')
+            }
+        })
+    }
+
     REMAPPER = {
         '0,0': 8, '0,1': 1, '0,2': 6,
         '1,0': 3, '1,1': 5, '1,2': 7,
@@ -86,13 +184,13 @@
             g = (clr_num >> 8) & 255,
             r = (clr_num >> 16) & 255
 
-        return r + g + b < 382.5
+        return (r + g + b < 382.5) ? 'white' : 'black'
     }
 
     // 变量配置
     function init() {
         TOTAL_FRAMES = record_obj.orders.length
-        PLAYING_FPS = 2
+        PLAYING_FPS = 1
         // 创建棋盘
         var main = document.getElementById('main')
         for (var c = 0; c < 3; c++) {
@@ -113,13 +211,15 @@
         }
 
         // 复原棋盘
-        var board = {}
+        var board = { orders: [[], []] }
         record_obj.orders.forEach((pos, i) => {
             let key = pos + ''
             board[key] = i % 2
+            board.orders[i % 2].push(REMAPPER[key])
             board_copy = {}
             for (let key in board) board_copy[key] = board[key]
             board_copy.curr = key
+            board_copy.orders = board.orders.map(x => Array.from(x))
             FRAMES.push(board_copy)
         })
         if (record_obj.reason <= -3) {
@@ -129,6 +229,7 @@
 
         // 配置控件
         init_widgets()
+        init_sticks()
     }
 
     FRAMES = []
@@ -182,7 +283,7 @@
                 if (is_occupied) {
                     cell.style.backgroundColor = COLORS[num]
                     cell.classList.add('occupied')
-                    cell.style.color = is_dark(COLORS[num]) ? 'white' : 'black'
+                    cell.style.color = is_dark(COLORS[num])
                 } else {
                     cell.style.backgroundColor = 'transparent'
                     cell.classList.remove('occupied')
@@ -256,6 +357,7 @@
         update_board(frame)
         update_descrip(frame, index)
         update_ending(frame, index)
+        refresh_sticks(frame.orders)
     }
 </script>
 {% endblock %}
