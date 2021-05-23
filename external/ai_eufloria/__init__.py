@@ -27,7 +27,7 @@ class EufMatch(BasePairMatch):
         读取比赛记录
         返回比赛结果元组
         '''
-        return (cls.get_winner(match_log), )
+        return (match_log['winner'], )
 
     @classmethod
     def runner_fail_log(cls, winner, descrip, d_local, d_global):
