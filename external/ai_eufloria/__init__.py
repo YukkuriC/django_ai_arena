@@ -10,6 +10,11 @@ class EufMatch(BasePairMatch):
         required_classes = [['player_class', ['__init__', 'player_func']]]
         game_whitelist = ['GameMap', 'config']
 
+    def get_timeout(self):
+        '''获取超时限制'''
+        return self.params['rounds'] * (
+            api.config.MAX_TIME * api.config.MAX_TURN * 2 + 10)
+
     @classmethod
     def run_once(cls, d_local, d_global):
         '''
