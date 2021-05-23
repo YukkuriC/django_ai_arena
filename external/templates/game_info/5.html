@@ -1,1 +1,24 @@
 {% extends 'game_info/base.html' %}
+{% load static %}
+
+{% block intro %}
+<h4>地空数算课2021期末作业：星际群落</h4>
+<ul>
+    <li>
+        这次的大作业主题是围绕星际群落的生命演化游戏展开的
+        在这个游戏中，双方玩家将操纵己方生命单位向不同节点移动，在生产、衰减、抢占资源、与敌方作战等多重策略博弈中享受生命演化过程的快乐
+        最终，率先占领对方大本营的玩家将获胜，赢得在这片星际中的绝对统治
+        本游戏中，玩家的操作内容十分简单，但涉及的策略却变化多端，充满挑战性
+        游戏创意与知名P社游戏《群星(Stellaris)》有关，因此本次大作业命名为“星际群落Stellar”
+    </li>
+    <li>
+        项目地址：
+        <a href="https://github.com/pkulab409/pkudsa.stellar" target='_blank'>pkudsa.stellar</a>
+        ；详细说明请见其文档。
+    </li>
+</ul>
+{% endblock %}
+
+{% block images %}
+<img src="{% static 'images/game_info/stellar.png' %}" style='width:100%'>
+{% endblock %}
