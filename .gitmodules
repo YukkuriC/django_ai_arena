@@ -1,6 +1,6 @@
 [submodule "external/ai_eufloria/dsa2021"]
 	path = external/ai_eufloria/dsa2021
-	url = https://github.com.cnpmjs.org/pkulab409/pkudsa2021.git
+	url = https://github.com.cnpmjs.org/pkulab409/pkudsa.stellar.git
 	branch = for-arena
 [submodule "external/ai_ttt/PyTicTacToe"]
 	path = external/ai_ttt/PyTicTacToe
