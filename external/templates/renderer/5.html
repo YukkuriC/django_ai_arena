@@ -7,6 +7,7 @@
 <style>
     svg text {
         pointer-events: none;
+        user-select: none;
     }
 </style>
 {% endblock %}
@@ -37,12 +38,12 @@
     let database = [];
 
     const TRANSITION_COLOR_TEXT = 500;
-    const TRANSITION_ARMY_FADE = 250;
-    const TRANSITION_ARMY_MOVE = 1000;
+    const TRANSITION_ARMY_FADE = 50;
+    const TRANSITION_ARMY_MOVE = 250;
 
     function normalize(r, factor = 1) {
-        if (r < 5) r = 5;
-        if (r > 100) r = 100;
+        if (r < 10) r = 10;
+        if (r > 50) r = 50;
         return factor * Math.log(r) + "em";
     }
 
@@ -328,9 +329,11 @@
             .duration(TRANSITION_ARMY_FADE)
             .style("font-size", "0em")
             .remove()
-            .on("end", () => {
-                updateMap(data);
-            });
+        // .on("end", () => {
+        //     updateMap(data);
+        // });
+
+        updateMap(data);
     }
 
     document.body.addEventListener("dragover", event => event.preventDefault(), false);
