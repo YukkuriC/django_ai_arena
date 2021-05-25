@@ -37,7 +37,7 @@ class GameWithModule(Game):
 
         # 创建地图
         # TODO 可选多种地图
-        maps = Generate_Hexagon(4, 0.20, 0.20)
+        maps = Generate_Hexagon(7, 0.20, 0.20)
 
         # 父类初始化
         super().__init__(*names, maps)
