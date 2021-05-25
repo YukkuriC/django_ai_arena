@@ -41,10 +41,9 @@
     const TRANSITION_ARMY_FADE = 50;
     const TRANSITION_ARMY_MOVE = 250;
 
-    function normalize(r, factor = 1) {
-        if (r < 10) r = 10;
-        if (r > 50) r = 50;
-        return factor * Math.log(r) + "em";
+    function normalize(r) {
+        r = Math.max(Math.min(r, 100), 1) // 0-2
+        return (1 + Math.log10(r) * 0.6) + "em";
     }
 
     d3.select("#preview")
@@ -90,7 +89,7 @@
             .enter()
             .append("text")
             //.text(function(d) { return d.type === "Base" ? "\uf286" : "\uf447"; })
-            .style("font-size", "5em")
+            .style("font-size", "1.5em")
             //.attr("dominant-baseline", "middle")
             .attr("text-anchor", "middle")
             //.attr("font-family", "Font Awesome 5 Free")
@@ -118,7 +117,8 @@
             .enter()
             .append("text")
             .classed("text", true)
-            .style("font-size", "2em")
+            .style("font-size", "1.5em")
+            .style("opacity", 0)
             //.attr("dominant-baseline", "top")
             .attr("text-anchor", "middle")
             .style("fill", function (d, i) { return colors[d.owner + 1][2]; })
@@ -219,13 +219,18 @@
                 const r = Math.max(...data.power[i + 1]);
                 return normalize(r);
             })
-            .style("fill", function (d, i) { return colors[data.owner[i + 1] + 1][0]; });
+            .style("fill", function (d, i) {
+                const p = data.power[i + 1]
+                if (p[0] > 0 && p[1] > 0) return colors[0][0]
+                return colors[data.owner[i + 1] + 1][0];
+            });
 
         d3.select(".layout")
             .selectAll(".text")
             .transition()
             .duration(TRANSITION_COLOR_TEXT)
             .style("fill", function (d, i) { return colors[data.owner[i + 1] + 1][2]; })
+            .style("opacity", function (d, i) { return Math.max(...data.power[i + 1]) == 0 ? 0 : 1 })
             .textTween(function (d, i) {
                 const f = Math.max(...data.power[i + 1]);
                 const interpolate = d3.interpolate(d3.select(this).text(), f);
@@ -249,6 +254,8 @@
 
     function loadData(db) {
         database = db.history.flat();
+        for (var i = 0; i < 2; i++) // 移除首帧2个重复画面
+            database.shift()
         console.log(database);
         frame = 0;
         updateFrame();
@@ -279,6 +286,7 @@
             nodes,
             links
         });
+        updateMap(database[0])
     }
 
     function userAction(data) {
@@ -379,7 +387,7 @@
     onresize()
 
     function init() {
-        TOTAL_FRAMES = record_obj.history.length * 3
+        TOTAL_FRAMES = record_obj.history.length * 3 - 2
         PLAYING_FPS = 2
         loadData(record_obj)
     }
