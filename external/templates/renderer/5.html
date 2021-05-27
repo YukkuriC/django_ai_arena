@@ -29,6 +29,7 @@
     let width = null,
         height = null
     let node_size = 5;
+    let N = null
 
     const colors = [
         ['#93c4d2', '#b9e5dd', '#ffd3bf', '#ffa59e'], ['#00429d', '#3761ab', '#5681b9', '#73a2c6'], ['#f4777f', '#dd4c65', '#be214d', '#93003a']
@@ -43,7 +44,11 @@
 
     function normalize(r) {
         r = Math.max(Math.min(r, 100), 1) // 0-2
-        return (1 + Math.log10(r) * 0.6) + "em";
+        return (1 + Math.log10(r) * 0.4) + "em";
+    }
+
+    function num_fix(val) {
+        return val.toFixed(val < 1 ? 1 : 0);
     }
 
     d3.select("#preview")
@@ -123,7 +128,7 @@
             .attr("text-anchor", "middle")
             .style("fill", function (d, i) { return colors[d.owner + 1][2]; })
             .text(function (d) {
-                return Math.max(...d.power).toFixed(2);
+                return num_fix(Math.max(...d.power))
             });
 
         const simulation = d3.forceSimulation(nodes)
@@ -135,6 +140,14 @@
             .force("collide", d3.forceCollide())
             .force("charge", d3.forceManyBody().strength(-2000))
             .on("tick", ticked);
+
+        // 双方基地标注
+        const tmp = Array.from(d3.select(".layout").selectAll(".circle")._groups[0])
+        for (var nn of [tmp[0], tmp.pop()]) {
+            nn.setAttribute('stroke', '#0f0')
+            nn.setAttribute('stroke-width', 5)
+        }
+        N = nodes.length
 
         function ticked() {
             link.attr("x1", function (d) { return d.source.x; })
@@ -221,7 +234,7 @@
             })
             .style("fill", function (d, i) {
                 const p = data.power[i + 1]
-                if (p[0] > 0 && p[1] > 0) return colors[0][0]
+                if (p[0] > 0 && p[1] > 0) return 'gold'
                 return colors[data.owner[i + 1] + 1][0];
             });
 
@@ -229,12 +242,15 @@
             .selectAll(".text")
             .transition()
             .duration(TRANSITION_COLOR_TEXT)
-            .style("fill", function (d, i) { return colors[data.owner[i + 1] + 1][2]; })
+            .style("fill", function (d, i) {
+                if (i == 0 || i == N - 1) return 'white'
+                return colors[data.owner[i + 1] + 1][2];
+            })
             .style("opacity", function (d, i) { return Math.max(...data.power[i + 1]) == 0 ? 0 : 1 })
             .textTween(function (d, i) {
                 const f = Math.max(...data.power[i + 1]);
                 const interpolate = d3.interpolate(d3.select(this).text(), f);
-                return function (t) { return interpolate(t).toFixed(2); };
+                return function (t) { return num_fix(interpolate(t)) };
             });
 
         d3.select(".layout")
