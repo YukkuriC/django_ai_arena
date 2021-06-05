@@ -124,8 +124,11 @@ class BaseCodeLoader:
             return
         if isinstance(lst, (ast.List, ast.Tuple)):
             lst = lst.elts
-        for elem in lst:
-            yield from cls._flatten_ast_list(elem)
+        try:
+            for elem in lst:
+                yield from cls._flatten_ast_list(elem)
+        except:
+            pass
 
     @classmethod
     def _module_template(cls):
