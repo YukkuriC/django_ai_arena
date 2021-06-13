@@ -162,13 +162,12 @@ def pick_names(AI_type, record):
         return tuple(
             os.path.basename(os.path.splitext(record[f'name{i}'])[0])
             for i in range(2))
+    if AI_type == 5:  # stellar
+        return [record['player_name'][i] for i in (0, 1)]
 
     return ('foo', 'bar')
 
 
 def pick_winner(AI_type, record):
     """ 按类型提取胜者 """
-    if AI_type in (3, 4):  # osmo+2048
-        return record['winner']
-
-    return None
+    return record['winner']
