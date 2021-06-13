@@ -163,7 +163,8 @@ def pick_names(AI_type, record):
             os.path.basename(os.path.splitext(record[f'name{i}'])[0])
             for i in range(2))
     if AI_type == 5:  # stellar
-        return [record['player_name'][i] for i in (0, 1)]
+        names = record['player_name']
+        return [names[str(i)] for i in (0, 1)]
 
     return ('foo', 'bar')
 
