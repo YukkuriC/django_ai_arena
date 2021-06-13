@@ -164,7 +164,7 @@ def pick_names(AI_type, record):
             for i in range(2))
     if AI_type == 5:  # stellar
         names = record['player_name']
-        return [names[str(i)] for i in (0, 1)]
+        return tuple(names[str(i)] for i in (0, 1))
 
     return ('foo', 'bar')
 
