@@ -72,7 +72,10 @@ _井字棋：“你有事吗”_
         url = https://github.com/{仓库所有人}/{仓库名称}.git
 	    branch = {想要拉取的分支名}
         ```
-        * 可选：配置镜像源（如 github.com.cnpmjs.org 等）
+        * 可选：配置镜像源
+            * ~~github.com.cnpmjs.org~~ RIP
+            * ~~hub.fastgit.xyz~~ 只能pull没法push
+            * 寄
 
     1. 拉取submodule
         ```bash
