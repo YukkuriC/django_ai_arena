@@ -128,7 +128,22 @@ _井字棋：“你有事吗”_
 
     * `swap_fields(cls, d_local, d_global)`：先后手玩家交换时运行一次，可按需使用
 
+* 代码规范接口：Meta类
+    * 继承自[基础设施](external/_base.py)中的`BaseCodeLoader.Meta`（即`BasePairMatch.Meta`）类，用于进行AST代码审查
+    * 可自定义内容如下（以下各项均为列表）：
+        变量名|是否含默认实现|内容|元素类型
+        -|-|-
+        module_whitelist|是|可import的内置库|字符串，为库名称
+        func_blacklist|是|禁止使用的内置函数|字符串，为函数名称
+        game_whitelist|否|可额外import的游戏基础设施库|字符串，为库名称
+        required_functions|否|代码模块中需要实现的函数|字符串，为函数名称
+        required_classes|否|代码模块中需要实现的类|元组，`#0`位为类名称，`#1`位为类中需要的函数名称列表（定义同`required_functions`）
+
 * 其余接口可查看[基础设施](external/_base.py)中相关函数注释
+
+* 建议：二次封装
+    * 将比赛对局发生统一为“两个分别取了名的代码模块发生一场比赛，返回其记录”的函数
+    * 将比赛记录文件统一为JSON格式
 
 ## 四、比赛记录标签解析文件（[示例](external/tags/ttt.py)）
 
