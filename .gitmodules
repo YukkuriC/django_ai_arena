@@ -17,3 +17,6 @@
 	path = external/ai_2048/sessdsa.2048
 	url = https://hub.fastgit.xyz/pkulab409/sessdsa.2048.git
 	branch = for-arena
+[submodule "external/ai_tetris/pkudsa.tetris"]
+	path = external/ai_tetris/pkudsa.tetris
+	url = https://hub.fastgit.xyz/pkulab409/pkudsa.tetris.git
