@@ -20,3 +20,4 @@
 [submodule "external/ai_tetris/pkudsa.tetris"]
 	path = external/ai_tetris/pkudsa.tetris
 	url = https://hub.fastgit.xyz/pkulab409/pkudsa.tetris.git
+	branch = for-arena
