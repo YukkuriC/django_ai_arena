@@ -1,7 +1,7 @@
 from external._base import BasePairMatch
 from external.factory import FactoryDeco
 from external.helpers_core import stringfy_error
-from .wrap.main import Game, register_player
+from .wrap import Game, register_player
 
 
 # 比赛进程

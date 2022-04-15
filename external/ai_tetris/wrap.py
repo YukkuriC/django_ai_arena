@@ -1,10 +1,13 @@
 # 设置路径
 import os, sys
-tetris_path = os.path.join(os.path.dirname(__file__), 'pkudsa.tetris',
-                           'TetrisProgram')
+tetris_outer = os.path.join(os.path.dirname(__file__), 'pkudsa.tetris')
+tetris_path = os.path.join(tetris_outer, 'TetrisProgram')
 sys.path.append(tetris_path)
 
-import main
+sys.path.insert(0, tetris_outer)
+from TetrisProgram import main
+from TetrisProgram.main import ReviewData, Game
+sys.path.pop(0)
 
 if 'custom import':
     _pool = {}
@@ -20,4 +23,4 @@ if 'custom import':
 if 'disable functions':
     null_func = lambda *a, **kw: None
     main.print = null_func
-    main.RecordData.RecordData.save = null_func
+    main.ReviewData.ReviewData.save = null_func
