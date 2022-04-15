@@ -31,7 +31,7 @@ class TetrisMatch(BasePairMatch):
 
     @classmethod
     def output_queue(cls, record):
-        return (cls._trans_winner(record['winner']), )
+        return (cls._trans_winner(record), )
 
     @classmethod
     def runner_fail_log(cls, winner, descrip, d_local, d_global):
