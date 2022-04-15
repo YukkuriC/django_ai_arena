@@ -175,8 +175,8 @@ if 'forms':
 
         return render(request, 'upload.html', locals())
 
-    @_team_user_forbidden
     @login_required(1)
+    @_team_user_forbidden
     def pairmatch(request, AI_type):
         '''启动一对一比赛'''
 
@@ -239,8 +239,8 @@ if 'forms':
         form = forms.PairMatchFormFactory.get(AI_type)
         return render(request, 'pairmatch.html', locals())
 
-    @_team_user_forbidden
     @login_required(1)
+    @_team_user_forbidden
     def ranked_match(request, AI_type):
         '''积分匹配赛'''
 
@@ -294,8 +294,8 @@ if 'forms':
         form = forms.PairMatchFormFactory.get(AI_type)
         return render(request, 'ranked_match.html', locals())
 
-    @_team_user_forbidden
     @login_required(1)
+    @_team_user_forbidden
     def invite_match(request, AI_type):
         # TODO: 支持向其他用户发起指定参数的比赛
         request.session['curr_game'] = AI_type  # 设置当前页面游戏
