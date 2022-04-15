@@ -5,6 +5,9 @@ MAX_ERR_LENGTH = 50
 
 def stringfy_error(e):
     """ 显示异常类型、内容与行号（如果可行） """
+    if isinstance(e, list):
+        return ';\n'.join(map(stringfy_error, e))
+
     if not isinstance(e, Exception):
         return e
 
