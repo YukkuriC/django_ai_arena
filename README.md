@@ -31,14 +31,22 @@
 1. 监视进程维护多进程比赛运行，支持超时中止与手动中止
 1. 提供抽象层接口，调用ORM与不同比赛模块
 1. 加载、验证比赛代码等辅助功能及接口
+1. 现基于django_cron实现多进程发起比赛系统
+    * 支持通过配置自动发起后台匹配赛
 
 ### 比赛项目
 项目|上传代码+运行比赛|保存比赛记录|前端可视化记录
 -|-|-|-
+[井字棋]](https://github.com/YukkuriC/PyTicTacToe)|√|√|√
 [漂移乒乓](https://github.com/chbpku/pingpong.sessdsa)|√|√|
 [纸带圈地](https://github.com/chbpku/paper.io.sessdsa)|√|√|√
 [OSMO](https://github.com/chbpku/osmo.sessdsa)|√|√|√
 [2048](https://github.com/pkulab409/sessdsa.2048)|√|√|√
+[星际群落](https://github.com/pkulab409/pkudsa.stellar)|√|√|√
+[方块大战](https://github.com/pkulab409/pkudsa.tetris)|√|√|
+
+### 向网站中添加新的比赛项目
+详见[此文档](HOWTO_NEW_GAME.md)
 
 ## 待实现功能：
 
@@ -51,7 +59,6 @@
 
 ### external 比赛系统后端
 1. 基于图与pairmatch的复杂比赛系统框架
-1. 更稳定的多进程维护机制
 
 ### 比赛项目
 1. 黑白棋
@@ -60,6 +67,3 @@
     1. 前端查看比赛记录
 1. 纸带圈地
     1. 前端页面布局修改
-
-### 天梯赛
-1. 后台自动匹配赛
