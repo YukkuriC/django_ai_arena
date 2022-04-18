@@ -147,6 +147,10 @@ _井字棋：“你有事吗”_
 * 建议：二次封装
     * 将比赛对局发生统一为“两个分别取了名的代码模块发生一场比赛，返回其记录”的函数
     * 将比赛记录文件统一为JSON格式
+        * 读写比赛记录接口函数：
+            * `save_log(cls, round_id, plat, d_local, d_global)`
+            * `load_record(cls, match_dir, rec_id)`
+            * `load_record_path(cls, record_path)`
 
 ## 四、比赛记录标签解析文件（[示例](external/tags/ttt.py)）
 
@@ -184,4 +188,41 @@ _井字棋：“你有事吗”_
 
 ## 六、前端对局可视化页面`external/templates/renderer/{index}.html`
 
-## TODO
+* 本页面基于Django模板开发，主要可继承标签如下表：  
+    标签名|位置|内容|是否需要block.super
+    -|-|-|-
+    css|无|额外的页面CSS样式|是
+    description|页面上部，进度条控件上方|用于放置对局回合描述信息、样式更改控件等|否
+    display_body|页面主体，进度条控件下方|用于可视化显示局面主体|否
+    script|无|用于实现可视化所需的代码接口|是
+
+    更详细的结构参考[继承模板页](external/templates/renderer/base.html)
+
+* [模板页](external/templates/renderer/base.html)中预置了实现读入比赛记录JSON与拖动进度条所需的相关基础代码，以下列举一些开发接口可能需要的全局变量：
+    变量名|内容
+    -|-
+    record_obj|比赛记录对象
+    CURR_FRAME|当前显示帧数(0-index)
+    TOTAL_FRAMES|总帧数
+    PLAYING_FPS|默认播放速度倍率为1时的播放帧率（单位：帧每秒）
+
+
+* 需要根据各游戏设计与比赛记录格式等，结合`display_body`标签内HTML，实现相关可视化接口：
+    * `init()`：初始化函数，在页面加载完成后执行一次
+        * 需从`record_obj`中读取总帧数并赋值于`TOTAL_FRAMES`
+        * 可用于`record_obj`的预处理等
+    * `draw_frame(index = CURR_FRAME)`：在页面内可视化第index帧
+
+* 其余内容敬请发挥想象力随意开发_(:з」∠)_
+
+## 七、前端侧运行检验
+
+* 此时整个游戏已完全嵌入网站基础框架中，可以使用更丰富的代码开启更大规模的测试
+
+## 八、附加功能：期末比赛记录汇总可视化
+
+1. 将期末比赛记录按适当目录分级与命名存放
+
+1. 在Django配置的`MEDIA_ROOT`目录下，打开`results`目录，新建名为`{index}`的文件夹，将上述比赛记录存放于此
+
+1. 通过链接`{代码竞技场主页}/ai_arena/results/{index}/`，或从比赛介绍页面点击右上角`课堂对战结果`访问该部分离线比赛记录
