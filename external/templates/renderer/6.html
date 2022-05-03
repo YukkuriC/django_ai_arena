@@ -5,19 +5,236 @@
 {% block css %}
 {{ block.super }}
 <style>
+    /* 全局变量 */
+    #main {
+        --size: 35px;
+        --W: 25;
+        --H: 10;
+    }
+
+    #main {
+
+        display: grid;
+        grid-template-columns: repeat(var(--W), var(--size));
+        grid-template-rows: repeat(var(--H), var(--size));
+        width: calc(var(--size) * var(--W));
+        height: calc(var(--size) * var(--H));
+        background-color: #ddd;
+        margin: auto;
+    }
+
+    #ending {
+        width: calc(var(--size) * var(--W));
+        height: calc(var(--size) * var(--H));
+        background-color: rgba(255, 255, 255, 0.8);
+        overflow: auto;
+        opacity: 0;
+        margin: auto;
+        position: absolute;
+        z-index: 1000;
+        transition: 0.5s all;
+        display: flex;
+        align-items: center;
+    }
+
+    #mid {
+        width: calc(var(--size) * 5);
+        height: calc(var(--size) * var(--H));
+        background-color: rgba(255, 255, 255, 0.8);
+        /* margin: 0;
+        padding: 0;
+        position: absolute;
+        left: calc(var(--size) * 10); */
+        grid-area: 1/11/auto/auto;
+        z-index: 2;
+        transition: 0.5s all;
+    }
+
+    #ending>pre {
+        margin: auto;
+        font-size: 20px;
+        text-align: center;
+        font-family: sans-serif;
+    }
+
+    .node {
+        width: calc(var(--size) - 4px);
+        height: calc(var(--size) - 4px);
+        margin: 2px;
+        z-index: 4;
+        /* font-size: 28px;
+        font-weight: bolder;
+        text-align: center;
+        display: flex;
+        align-items: center; */
+        border-radius: 5px;
+        transition: 0.1s all;
+    }
+
+    .free {
+        opacity: 60%;
+    }
+
+    .occupied {
+        box-shadow: gray 0px 5px 10px;
+    }
+
+    div p {
+        margin: auto;
+        text-align: center;
+    }
 </style>
 {% endblock %}
 
 {% block descriptions %}
-TODO
+<div class='row x_block'>
+    <div class='col-sm-1' id='d_turn'>回合</div>
+    <div class='col-sm-2' id='d_action'>动作</div>
+    <div class='col-sm-2' id='d_score'>得分</div>
+    <div class='col-sm-7' id='widget_group'>
+        <span>方块颜色：</span>
+        <input type="color" id='clr1' title='方块颜色'>
+        <!-- <input type="color" id='clr2' title='后手颜色'> -->
+    </div>
+</div>
 {% endblock %}
 
 {% block display_body %}
 <div class='col-sm-12'>
-    TODO
+    <div id="main">
+        <div id='ending'></div>
+        <div id='mid'></div>
+    </div>
 </div>
 {% endblock %}
 
 {% block script %}
 {{ block.super }}
+<!-- 调色 -->
+<script>
+    COLOR_SCALES = [
+        // [255, 100, 100],
+        [100, 100, 255],
+    ]
+    WIDGETS = {} // 存放颜色控件
+
+    // 调色控件
+    function init_widgets() {
+        for (var x of document.getElementById('widget_group').children) {
+            WIDGETS[x.id] = x
+        }
+
+        for (var i = 0; i < 1; i++) {
+            var widget = WIDGETS['clr' + (i + 1)]
+            bind_color(widget, i)
+        }
+    }
+
+    // 辅助函数
+    // 虽然这次用不了这么复杂，不过进行一个贴的粘
+    function bind_color(widget, /*grp,*/ ind) {
+        widget.value = arr2clr(COLOR_SCALES[ind])
+        widget.addEventListener('change', e => {
+            COLOR_SCALES[ind] = clr2arr(e.target.value)
+            draw_frame()
+        })
+    }
+    function clr2arr(clr) {
+        var arr = []
+        for (var i = 1; i < 7; i += 2)
+            arr.push(parseInt(clr.slice(i, i + 2), 16))
+        return arr
+    }
+    function arr2clr(arr) {
+        return '#' + arr.map(x => x.toString(16)).join('')
+    }
+    function pick_color() {
+        var res = COLOR_SCALES[0]
+        return `rgb(${res.join(',')})`
+    }
+</script>
+
+<!-- 比赛描述 -->
+<script>
+    var descrips = [
+        document.getElementById('d_turn'),
+        document.getElementById('d_action'),
+        document.getElementById('d_score'),
+    ]
+    function update_descrip(frame) {
+        // 当前帧
+        descrips[0].innerText = `#${CURR_FRAME + 1}`
+
+        // 描述
+        var is_plr2 = (CURR_FRAME % 2)
+        descrips[1].innerText = `${'先后'[is_plr2]}手：${frame.currentBlock}`
+        if (frame.combo > 0)
+            descrips[1].innerText += ` (${frame.combo} Combo)`
+
+        // 得分
+        descrips[2].innerText = `${frame.point1} : ${frame.point2}`
+
+        return 'TODO'
+    }
+</script>
+
+<!-- 主接口 -->
+<script>
+    W = 25
+    H = 10
+    NODES = {}
+    function init() {// 初始化
+        // 初始化参数
+        TOTAL_FRAMES = Object.values(record_obj.matchData).length
+        PLAYING_FPS = 3
+
+        // 创建棋盘
+        var main = document.getElementById('main')
+        for (var c = 0; c < W; c++) {
+            for (var r = 0; r < H; r++) {
+                var node = document.createElement('div')
+                Object.assign(node, {
+                    id: `tile${c},${r}`,
+                    className: 'node',
+                    style: `grid-column: ${c + 1};grid-row: ${r + 1};`
+                })
+                main.appendChild(node)
+                NODES[`${c},${r}`] = node
+            }
+        }
+
+        // 初始化控件
+        init_widgets()
+    }
+
+    function draw_frame(index = CURR_FRAME) {// 绘制指定帧
+        var frame = record_obj.matchData[index + 1]
+
+        // 棋盘
+        var board = frame.board
+        for (var i = 0; i < W; i++) {
+            var col = board[i]
+            for (var j = 0; j < H; j++) {
+                var cell_val = col[j]
+                var cell = NODES[`${i},${j}`]
+                switch (cell_val) {
+                    case 0:
+                        cell.classList.add('free')
+                        cell.classList.remove('occupied')
+                        cell.style.backgroundColor = 'rgba(0,0,0,0)'
+                        break
+                    case 1:
+                        cell.classList.add('occupied')
+                        cell.classList.remove('free')
+                        cell.style.backgroundColor = pick_color()
+                        break
+                }
+            }
+        }
+
+        // 描述
+        update_descrip(frame)
+    }
+</script>
+
 {% endblock %}
