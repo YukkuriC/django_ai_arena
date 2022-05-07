@@ -42,7 +42,7 @@ class OsmoMatch(BasePairMatch):
         并返回比赛记录对象
         '''
         if d_local['who_first'] != "4" or d_local['rid'] % 2 == 0:
-            cls.last_seed = int(time.time())
+            cls.last_seed = int(time.time() * 1000)
         wld = osmo_api.one_race(d_local['players'], cls.init_params,
                                 d_local['names'], cls.last_seed)
         if wld.result['winner'] not in (0, 1):
