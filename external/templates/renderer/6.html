@@ -6,27 +6,29 @@
 {{ block.super }}
 <style>
     /* 全局变量 */
+    
     #main {
         --size: 35px;
+        --tot_W: 30;
         --W: 25;
         --H: 10;
+        --trans: 0.3
     }
-
+    
     #main {
-
         display: grid;
-        grid-template-columns: repeat(var(--W), var(--size));
+        grid-template-columns: repeat(var(--tot_W), var(--size));
         grid-template-rows: repeat(var(--H), var(--size));
-        width: calc(var(--size) * var(--W));
+        width: calc(var(--size) * var(--tot_W));
         height: calc(var(--size) * var(--H));
         background-color: #ddd;
         margin: auto;
     }
-
+    
     #ending {
         width: calc(var(--size) * var(--W));
         height: calc(var(--size) * var(--H));
-        background-color: rgba(255, 255, 255, 0.8);
+        background-color: rgba(255, 255, 255, 1);
         overflow: auto;
         opacity: 0;
         margin: auto;
@@ -37,48 +39,66 @@
         align-items: center;
     }
 
+    #block {
+        width: calc(var(--size) * 4);
+        height: calc(var(--size) * 4);
+        background-color: rgba(100, 100, 100, var(--trans));
+        grid-area: 1/27/auto/auto;
+        z-index: 2;
+        transition: 0.5s all;
+    }
+    
+    #left {
+        width: calc(var(--size) * 10);
+        height: calc(var(--size) * var(--H));
+        background-color: rgba(200, 0, 0, var(--trans));
+        grid-area: 1/1/auto/auto;
+        z-index: 2;
+        transition: 0.5s all;
+    }
+    
     #mid {
         width: calc(var(--size) * 5);
         height: calc(var(--size) * var(--H));
-        background-color: rgba(255, 255, 255, 0.8);
-        /* margin: 0;
-        padding: 0;
-        position: absolute;
-        left: calc(var(--size) * 10); */
+        background-color: rgba(100, 100, 100, var(--trans));
         grid-area: 1/11/auto/auto;
         z-index: 2;
         transition: 0.5s all;
     }
-
+    
+    #right {
+        width: calc(var(--size) * 10);
+        height: calc(var(--size) * var(--H));
+        background-color: rgba(0, 0, 200, var(--trans));
+        grid-area: 1/16/auto/auto;
+        z-index: 2;
+        transition: 0.5s all;
+    }
+    
     #ending>pre {
         margin: auto;
         font-size: 20px;
         text-align: center;
         font-family: sans-serif;
     }
-
+    
     .node {
         width: calc(var(--size) - 4px);
         height: calc(var(--size) - 4px);
         margin: 2px;
-        z-index: 4;
-        /* font-size: 28px;
-        font-weight: bolder;
-        text-align: center;
-        display: flex;
-        align-items: center; */
+        z-index: 1000;
         border-radius: 5px;
         transition: 0.1s all;
     }
-
+    
     .free {
         opacity: 60%;
     }
-
+    
     .occupied {
         box-shadow: gray 0px 5px 10px;
     }
-
+    
     div p {
         margin: auto;
         text-align: center;
@@ -89,32 +109,52 @@
 {% block descriptions %}
 <div class='row x_block'>
     <div class='col-sm-1' id='d_turn'>回合</div>
-    <div class='col-sm-2' id='d_action'>动作</div>
-    <div class='col-sm-2' id='d_score'>得分</div>
+    <div class='col-sm-3' id='d_action'>动作</div>
+    <div class='col-sm-1' id='d_score'>得分</div>
     <div class='col-sm-7' id='widget_group'>
         <span>方块颜色：</span>
-        <input type="color" id='clr1' title='方块颜色'>
-        <!-- <input type="color" id='clr2' title='后手颜色'> -->
+        <input type="color" id='clr1' title='I'>
+        <input type="color" id='clr2' title='J'>
+        <input type="color" id='clr3' title='L'>
+        <input type="color" id='clr4' title='O'>
+        <input type="color" id='clr5' title='S'>
+        <input type="color" id='clr6' title='T'>
+        <input type="color" id='clr7' title='Z'>
+        <select id="chart_mode" onchange='set_chart(this.value)' title='得分图表'>
+            <option value="score" title='双方得分'>得分</option>
+            <option value="dscore" title='双方得分之差'>分差</option>
+            <option value="hide">隐藏</option>
+        </select>
     </div>
 </div>
+<div id="chart"></div>
 {% endblock %}
 
 {% block display_body %}
 <div class='col-sm-12'>
     <div id="main">
         <div id='ending'></div>
+        <div id='left'></div>
         <div id='mid'></div>
+        <div id='right'></div>
+        <div id='block'></div>
     </div>
 </div>
 {% endblock %}
 
 {% block script %}
+<script src="{% static 'lib/echarts.min.js' %}"></script>
 {{ block.super }}
 <!-- 调色 -->
 <script>
     COLOR_SCALES = [
-        // [255, 100, 100],
-        [100, 100, 255],
+        [0x00, 0xff, 0xff],
+        [0x00, 0x00, 0xff],
+        [0xff, 0x80, 0x00],
+        [0xff, 0xff, 0x00],
+        [0x00, 0xff, 0x00],
+        [0xaa, 0x00, 0xff],
+        [0xff, 0x00, 0x00]
     ]
     WIDGETS = {} // 存放颜色控件
 
@@ -124,14 +164,13 @@
             WIDGETS[x.id] = x
         }
 
-        for (var i = 0; i < 1; i++) {
+        for (var i = 0; i < 7; i++) {
             var widget = WIDGETS['clr' + (i + 1)]
             bind_color(widget, i)
         }
     }
 
     // 辅助函数
-    // 虽然这次用不了这么复杂，不过进行一个贴的粘
     function bind_color(widget, /*grp,*/ ind) {
         widget.value = arr2clr(COLOR_SCALES[ind])
         widget.addEventListener('change', e => {
@@ -139,21 +178,34 @@
             draw_frame()
         })
     }
+
     function clr2arr(clr) {
         var arr = []
-        for (var i = 1; i < 7; i += 2)
-            arr.push(parseInt(clr.slice(i, i + 2), 16))
+        for (var i = 1; i < 7; i += 2) {
+            var s = parseInt(clr[i], 16)
+            s += 16 * parseInt(clr[i + 1], 16)
+            arr.push(s)
+        }
         return arr
     }
+
     function arr2clr(arr) {
-        return '#' + arr.map(x => x.toString(16)).join('')
+        str = '#'
+        for (var i = 0; i < 3; i++) {
+            str += parseInt(arr[i] / 16).toString(16)
+            str += (arr[i] % 16).toString(16)
+        }
+        return str
     }
-    function pick_color() {
-        var res = COLOR_SCALES[0]
+
+    function pick_color(id) {
+        if (id == 0) {
+            return `rgba(0, 0, 0, 0.1)`
+        }
+        var res = COLOR_SCALES[id - 1]
         return `rgb(${res.join(',')})`
     }
 </script>
-
 <!-- 比赛描述 -->
 <script>
     var descrips = [
@@ -161,35 +213,54 @@
         document.getElementById('d_action'),
         document.getElementById('d_score'),
     ]
+
     function update_descrip(frame) {
         // 当前帧
-        descrips[0].innerText = `#${CURR_FRAME + 1}`
-
-        // 描述
+        descrips[0].innerText = `#${parseInt(CURR_FRAME / 2)}`
+            // 描述
         var is_plr2 = (CURR_FRAME % 2)
         descrips[1].innerText = `${'先后'[is_plr2]}手：${frame.currentBlock}`
         if (frame.combo > 0)
             descrips[1].innerText += ` (${frame.combo} Combo)`
+        descrips[1].innerText += `\n回合标签: `
+        if (frame.tag.length == 0)
+            descrips[1].innerText += ` -`
+        else
+            descrips[1].innerText += ` ${frame.tag.join(', ')}`
 
         // 得分
         descrips[2].innerText = `${frame.point1} : ${frame.point2}`
-
-        return 'TODO'
     }
 </script>
-
 <!-- 主接口 -->
 <script>
     W = 25
     H = 10
     NODES = {}
-    function init() {// 初始化
+    NODES_BLOCK = {}
+    CHART = null // 得分统计图
+    CHART_SERIES = {} // 统计图数据
+    DATAS = [
+            [],
+            []
+        ] // 当前图表对应数据
+    BLOCKS = [
+        [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],
+        [[0,1,0,0],[0,1,1,1],[0,0,0,0],[0,0,0,0]],
+        [[0,0,0,1],[0,1,1,1],[0,0,0,0],[0,0,0,0]],
+        [[0,0,1,1],[0,0,1,1],[0,0,0,0],[0,0,0,0]],
+        [[0,0,1,1],[0,1,1,0],[0,0,0,0],[0,0,0,0]],
+        [[0,0,1,0],[0,1,1,1],[0,0,0,0],[0,0,0,0]],
+        [[0,1,1,0],[0,0,1,1],[0,0,0,0],[0,0,0,0]],
+    ]
+    // 初始化
+    function init() {
         // 初始化参数
         TOTAL_FRAMES = Object.values(record_obj.matchData).length
         PLAYING_FPS = 3
 
-        // 创建棋盘
         var main = document.getElementById('main')
+        // 创建棋盘
         for (var c = 0; c < W; c++) {
             for (var r = 0; r < H; r++) {
                 var node = document.createElement('div')
@@ -203,38 +274,149 @@
             }
         }
 
+        // 创建block窗口
+        for (var c = 0; c < 4; c++) {
+            for (var r = 0; r < 4; r++) {
+                var node = document.createElement('div')
+                Object.assign(node, {
+                    id: `block${c},${r}`,
+                    className: 'node',
+                    style: `grid-column: ${c + 27};grid-row: ${r + 1};`
+                })
+                main.appendChild(node)
+                NODES_BLOCK[`${c},${r}`] = node
+            }
+        }
+
         // 初始化控件
         init_widgets()
+        // test_chart()
+        init_score_chart()
     }
 
-    function draw_frame(index = CURR_FRAME) {// 绘制指定帧
-        var frame = record_obj.matchData[index + 1]
+    function init_score_chart() {
+        var player0 = [],
+            player1 = [] // 总分
+        var dp0 = [],
+            dp1 = [] // 分差
+        var idx = [];
+        var i = 0;
+        for (var key in record_obj.matchData) {
+            var p0 = record_obj.matchData[key]["point1"]
+            var p1 = record_obj.matchData[key]["point2"]
+            var dp = p0 - p1
+            player0.push(p0)
+            player1.push(p1)
+            dp0.push(Math.max(dp, 0))
+            dp1.push(Math.min(dp, 0))
+            idx.push(i++)
+        }
+        CHART = echarts.init(document.getElementById("chart"));
+        var option = {
+            xAxis: {
+                show: false,
+                data: idx
+            },
+            yAxis: {},
+            grid: {
+                "left": 0,
+                "right": 0,
+                "top": 0,
+                "bottom": 0
+            },
+        };
+        CHART.resize({height: 100})
+        CHART.setOption(option);
 
-        // 棋盘
+        for (var data of[
+                ['score', player0, player1],
+                ['dscore', dp0, dp1],
+            ])
+            CHART_SERIES[data[0]] = [{
+            type: 'line',
+            data: data[1],
+            showSymbol: false,
+            lineStyle: {
+                "color": "#ff9999"
+            },
+            areaStyle: {
+                "color": "#ffaaaa"
+            },
+            step: true,
+        }, {
+            type: 'line',
+            data: data[2],
+            showSymbol: false,
+            lineStyle: {
+                "color": "#9999ff"
+            },
+            areaStyle: {
+                "color": "#aaaaff"
+            },
+            step: true,
+        }, ]
+        if (idx.length > 1)
+            set_chart('score')
+        else {
+            set_chart('hide')
+            $('#chart_mode').hide()
+        }
+    }
+
+    function set_chart(mode) {
+        if (mode in CHART_SERIES) {
+            Object.assign(CHART._dom.style, {
+                height: '100px',
+                opacity: 1,
+            })
+            CHART.setOption({series: CHART_SERIES[mode]})
+            DATAS = CHART_SERIES[mode].map(x => x.data)
+        } else {
+            Object.assign(CHART._dom.style, {
+                height: 0,
+                opacity: 0,
+            })
+            DATAS = CHART_SERIES['level'].map(x => x.data)
+        }
+        $('#chart_mode').val(mode)
+    }
+
+    function draw_frame(index = CURR_FRAME) {
+        var frame = record_obj.matchData[index + 1]
         var board = frame.board
         for (var i = 0; i < W; i++) {
             var col = board[i]
             for (var j = 0; j < H; j++) {
-                var cell_val = col[j]
+                var y = H - j - 1
+                var cell_val = col[y]
                 var cell = NODES[`${i},${j}`]
-                switch (cell_val) {
-                    case 0:
-                        cell.classList.add('free')
-                        cell.classList.remove('occupied')
-                        cell.style.backgroundColor = 'rgba(0,0,0,0)'
-                        break
-                    case 1:
-                        cell.classList.add('occupied')
-                        cell.classList.remove('free')
-                        cell.style.backgroundColor = pick_color()
-                        break
+                if (cell_val == 0) {
+                    cell.classList.add('free')
+                    cell.classList.remove('occupied')
+                } else {
+                    cell.classList.add('occupied')
+                    cell.classList.remove('free')
                 }
+                cell.style.backgroundColor = pick_color(cell_val)
+            }
+        }
+        var block_type = record_obj.matchData[index + 1]["currentBlock"]
+        for (var i = 0; i < 4; i++) {
+            for (var j = 0; j < 4; j++) {
+                var cell = NODES_BLOCK[`${i},${j}`]
+                var cell_val = BLOCKS[block_type - 1][j][i]
+                if (cell_val == 0) {
+                    cell.classList.add('free')
+                    cell.classList.remove('occupied')
+                } else {
+                    cell.classList.add('occupied')
+                    cell.classList.remove('free')
+                }
+                cell.style.backgroundColor = pick_color(cell_val * block_type)
             }
         }
 
-        // 描述
         update_descrip(frame)
     }
 </script>
-
 {% endblock %}
