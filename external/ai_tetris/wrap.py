@@ -1,13 +1,17 @@
+from ..helpers_core import silenced
+
 # 设置路径
 import os, sys
 tetris_outer = os.path.join(os.path.dirname(__file__), 'pkudsa.tetris')
 tetris_path = os.path.join(tetris_outer, 'TetrisProgram')
 sys.path.append(tetris_path)
 
-sys.path.insert(0, tetris_outer)
-from TetrisProgram import main
-from TetrisProgram.main import ReviewData, Game
-sys.path.pop(0)
+# 静默import
+with silenced():
+    sys.path.insert(0, tetris_outer)
+    from TetrisProgram import main
+    from TetrisProgram.main import ReviewData, Game
+    sys.path.pop(0)
 
 if 'custom import':
     _pool = {}

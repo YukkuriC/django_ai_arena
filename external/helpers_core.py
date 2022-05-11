@@ -42,3 +42,17 @@ class queue_io:
 
     def __getattr__(self, a):
         return lambda *a, **kw: None
+
+
+# 静默区域
+class silenced:
+    print_bak = print
+
+    # 开启静默
+    def __enter__(self):
+        self.print_bak = print
+        __builtins__['print'] = lambda *a, **kw: None
+
+    # 退出
+    def __exit__(self, *a):
+        __builtins__['print'] = self.print_bak
