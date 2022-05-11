@@ -10,6 +10,10 @@ class TetrisMatch(BasePairMatch):
     class Meta(BasePairMatch.Meta):
         required_classes = [('Player', ['output'])]
 
+    def get_timeout(self):
+        '''获取超时限制'''
+        return self.params['rounds'] * 30
+
     @classmethod
     def pre_run(cls, d_local, d_global):
         for module, name in zip(d_local['players'], d_local['names']):
@@ -17,7 +21,7 @@ class TetrisMatch(BasePairMatch):
 
     @classmethod
     def run_once(cls, d_local, d_global):
-        play = Game(*d_local['names'], 100)
+        play = Game(*d_local['names'], 10)
         while play.state == "gaming":
             play.turn()
         play.end()
