@@ -53,3 +53,7 @@ class TetrisMatch(BasePairMatch):
         if winner != None and record['player1'] == 'code2':
             winner = 1 - winner
         return winner
+
+    @classmethod
+    def analyze_tags(cls, record):
+        return record["tag"]

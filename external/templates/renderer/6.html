@@ -88,6 +88,8 @@
         margin: 2px;
         z-index: 1000;
         border-radius: 5px;
+        /* border-style: solid; */
+        /* border-width: 2px; */
         transition: 0.1s all;
     }
     
@@ -108,10 +110,10 @@
 
 {% block descriptions %}
 <div class='row x_block'>
-    <div class='col-sm-1' id='d_turn'>回合</div>
-    <div class='col-sm-3' id='d_action'>动作</div>
+    <div class='col-sm-1' id='d_round'>回合</div>
+    <div class='col-sm-4' id='d_action'>动作</div>
     <div class='col-sm-1' id='d_score'>得分</div>
-    <div class='col-sm-7' id='widget_group'>
+    <div class='col-sm-6' id='widget_group'>
         <span>方块颜色：</span>
         <input type="color" id='clr1' title='I'>
         <input type="color" id='clr2' title='J'>
@@ -149,13 +151,14 @@
 <script>
     COLOR_SCALES = [
         [0x00, 0xff, 0xff],
-        [0x00, 0x00, 0xff],
+        [0x00, 0x80, 0xff],
         [0xff, 0x80, 0x00],
         [0xff, 0xff, 0x00],
         [0x00, 0xff, 0x00],
         [0xaa, 0x00, 0xff],
         [0xff, 0x00, 0x00]
     ]
+
     WIDGETS = {} // 存放颜色控件
 
     // 调色控件
@@ -202,26 +205,39 @@
         if (id == 0) {
             return `rgba(0, 0, 0, 0.1)`
         }
-        var res = COLOR_SCALES[id - 1]
+        var res = COLOR_SCALES[Math.abs(id) - 1];
+        return `rgb(${res.join(',')})`
+    }
+
+    function pick_block_color(id) {
+        if (id == 0) {
+            return `rgba(0, 0, 0, 0.1)`
+        }
+        res = COLOR_SCALES[id - 1]
         return `rgb(${res.join(',')})`
     }
 </script>
 <!-- 比赛描述 -->
 <script>
     var descrips = [
-        document.getElementById('d_turn'),
+        document.getElementById('d_round'),
         document.getElementById('d_action'),
         document.getElementById('d_score'),
     ]
 
     function update_descrip(frame) {
         // 当前帧
-        descrips[0].innerText = `#${parseInt(CURR_FRAME / 2)}`
+        descrips[0].innerText = `#${frame.round}`
             // 描述
         var is_plr2 = (CURR_FRAME % 2)
-        descrips[1].innerText = `${'先后'[is_plr2]}手：${frame.currentBlock}`
+        if (frame.isFirst) {
+            descrips[1].innerText = `先手动作 [y, x, dir]: [${frame.action}]\n`
+        }
+        else {
+            descrips[1].innerText = `后手动作 [y, x, dir]: [${frame.action}]\n`
+        }
         if (frame.combo > 0)
-            descrips[1].innerText += ` (${frame.combo} Combo)`
+            descrips[1].innerText += `Combo: ${frame.combo}`
         descrips[1].innerText += `\n回合标签: `
         if (frame.tag.length == 0)
             descrips[1].innerText += ` -`
@@ -245,13 +261,13 @@
             []
         ] // 当前图表对应数据
     BLOCKS = [
-        [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],
-        [[0,1,0,0],[0,1,1,1],[0,0,0,0],[0,0,0,0]],
-        [[0,0,0,1],[0,1,1,1],[0,0,0,0],[0,0,0,0]],
-        [[0,0,1,1],[0,0,1,1],[0,0,0,0],[0,0,0,0]],
-        [[0,0,1,1],[0,1,1,0],[0,0,0,0],[0,0,0,0]],
-        [[0,0,1,0],[0,1,1,1],[0,0,0,0],[0,0,0,0]],
-        [[0,1,1,0],[0,0,1,1],[0,0,0,0],[0,0,0,0]],
+        [[0,0,0,0],[0,0,0,0],[1,1,1,1],[0,0,0,0]],
+        [[0,0,0,0],[0,1,0,0],[0,1,1,1],[0,0,0,0]],
+        [[0,0,0,0],[0,0,0,1],[0,1,1,1],[0,0,0,0]],
+        [[0,0,0,0],[0,0,1,1],[0,0,1,1],[0,0,0,0]],
+        [[0,0,0,0],[0,0,1,1],[0,1,1,0],[0,0,0,0]],
+        [[0,0,0,0],[0,0,1,0],[0,1,1,1],[0,0,0,0]],
+        [[0,0,0,0],[0,1,1,0],[0,0,1,1],[0,0,0,0]],
     ]
     // 初始化
     function init() {
@@ -382,7 +398,8 @@
     }
 
     function draw_frame(index = CURR_FRAME) {
-        var frame = record_obj.matchData[index + 1]
+        if (!(index in record_obj.matchData)) return;
+        var frame = record_obj.matchData[index]
         var board = frame.board
         for (var i = 0; i < W; i++) {
             var col = board[i]
@@ -393,14 +410,27 @@
                 if (cell_val == 0) {
                     cell.classList.add('free')
                     cell.classList.remove('occupied')
+                    cell.style.border = null
                 } else {
                     cell.classList.add('occupied')
                     cell.classList.remove('free')
+                    if (cell_val > 0)cell.style.border = null
+                    else cell.style.border = "2px solid"
                 }
+                if (frame.newblock != null) {
+                    frame.newblock.forEach(element => {
+                        if (element[0] == i && element[1] == y)
+                            cell.style.border = "3px solid white";
+                    });
+                }
+                frame.stolenLines.forEach((element)=>{
+                    if (i == element)
+                        cell.style.border = "3px solid white";
+                })
                 cell.style.backgroundColor = pick_color(cell_val)
             }
         }
-        var block_type = record_obj.matchData[index + 1]["currentBlock"]
+        var block_type = record_obj.matchData[index]["currentBlock"]
         for (var i = 0; i < 4; i++) {
             for (var j = 0; j < 4; j++) {
                 var cell = NODES_BLOCK[`${i},${j}`]
@@ -412,7 +442,12 @@
                     cell.classList.add('occupied')
                     cell.classList.remove('free')
                 }
-                cell.style.backgroundColor = pick_color(cell_val * block_type)
+                if (frame.isFirst) {
+                    cell.style.backgroundColor = pick_color(cell_val * block_type)
+                }
+                else {
+                    cell.style.backgroundColor = pick_color(-cell_val * block_type)
+                }
             }
         }
 
