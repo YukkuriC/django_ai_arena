@@ -229,13 +229,10 @@
         // 当前帧
         descrips[0].innerText = `#${frame.round}`
             // 描述
-        var is_plr2 = (CURR_FRAME % 2)
-        if (frame.isFirst) {
-            descrips[1].innerText = `先手动作 [y, x, dir]: [${frame.action}]\n`
-        }
-        else {
-            descrips[1].innerText = `后手动作 [y, x, dir]: [${frame.action}]\n`
-        }
+        if (frame.isFirst) descrips[1].innerText = `先`;
+        else descrips[1].innerText = `后`;
+        if (frame.middleboard) descrips[1].innerText += `手动作 [y, x, dir]: [${frame.action}]\n`;
+        else descrips[1].innerText += `手动作: 消行\n`;
         if (frame.combo > 0)
             descrips[1].innerText += `Combo: ${frame.combo}`
         descrips[1].innerText += `\n回合标签: `
