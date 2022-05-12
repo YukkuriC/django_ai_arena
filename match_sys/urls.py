@@ -6,6 +6,7 @@ urlpatterns = [
     path('code/<str:code_id>/<str:code_op>/', views.view_code),
     path('match/<str:match_name>/', views.view_pairmatch),
     path('match/<str:match_name>/<str:record_id>/', views.view_record),
+    path('local_record/<str:AI_type>/', views.local_record),
     path('upload/', views.upload),
     path('upload/empty/', lambda r: views.upload(r, True)),
     path('game/<str:AI_type>/', views.game_info),

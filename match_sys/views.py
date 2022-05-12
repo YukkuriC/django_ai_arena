@@ -543,3 +543,9 @@ if 'view':
         not_last_record = (record_id + 1 != match.finished_rounds)
 
         return render(request, 'renderer/%s.html' % match.ai_type, locals())
+
+    @login_required(1)
+    def local_record(request, AI_type):
+        pass  # TODO
+
+        return render(request, 'renderer/%s.html' % match.ai_type, locals())

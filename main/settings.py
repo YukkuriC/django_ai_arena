@@ -193,7 +193,7 @@ TEAMLADDER_NMATCH = [
 ]
 
 # Gravatar网址
-GRAVATAR_SITE="https://gravatar.loli.net/avatar/"
+GRAVATAR_SITE = "https://gravatar.loli.net/avatar/"
 
 # 合法字符集合
 RAND_CHARPOOL = 'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz0123456789_'  # 用于生成随机字符串
@@ -280,3 +280,7 @@ try:
 except:
     import traceback
     traceback.print_exc()
+
+# 本地读比赛记录支持
+LOCAL_RECORD_WHITELIST = [0, 5, 6]
+LOCAL_RECORD_FLAG = '@LOCAL@'

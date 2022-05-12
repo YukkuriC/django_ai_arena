@@ -79,7 +79,10 @@
 {% block script %}
 <script>
     // 读入数据
-    record_obj = JSON.parse(document.getElementById('record_receiver').innerHTML)
+    record_obj = document.getElementById('record_receiver').innerHTML
+    IS_LOCAL_RECORD = record_obj == '{% settings.LOCAL_RECORD_FLAG %}'
+    if (!IS_LOCAL_RECORD)
+        record_obj = JSON.parse(record_obj)
 
     // 定义全局变量
     CURR_FRAME = 0 // 当前渲染帧
@@ -192,11 +195,17 @@
 
     // 初始化事件
     window.addEventListener('load', () => {
-        init()
+        if (IS_LOCAL_RECORD) init_local()
+        else init()
         scroller.max = TOTAL_FRAMES - 1
         draw_frame()
         play_pause()
     })
+
+    // 本地读取JSON记录
+    function init_local() {
+        // TODO
+    }
 
     // 通用接口
     function init() {// 初始化
