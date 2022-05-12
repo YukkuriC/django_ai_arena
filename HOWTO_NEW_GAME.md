@@ -88,7 +88,7 @@ _井字棋：“你有事吗”_
 * 目标：继承[基础设施](external/_base.py)内的`BasePairMatch`类，实现“完成一局数轮比赛并输出结果”功能
     * 通过引用`from external.factory import FactoryDeco`并在类上使用装饰器`FactoryDeco({index})`以注册至主环境
 
-* 主要函数接口（以下均为`@classmethod`，默认为`NotImplementedError`）
+* 主要函数接口（除特别标注外以下均为`@classmethod`，默认为`NotImplementedError`）
     * `run_once(cls, d_local, d_global)`：运行一局比赛，返回比赛记录对象
         * 通过`d_local['players']`获取玩家代码模块列表
         * 通过`d_local['names']`获取玩家名称列表
@@ -123,6 +123,11 @@ _井字棋：“你有事吗”_
         0|大局发起方胜利
         1|大局接收方胜利
         None|平局
+
+    * `get_timeout(self)`：返回该比赛进程最大运行时间，超时后进程将被终止
+        * 可通过`self.params['rounds']`读取比赛运行回合数
+        * 默认定义：`settings.DEFAULT_MAX_RUNNING_SEC * self.params['rounds']` = (2*局数)秒 (若不修改`override.json`)
+        * 常见定义方式：局数*(2*单人时限+缓冲时间)
             
 
 * 主要可选函数接口（以下均为`@classmethod`，默认实现不会抛出异常）
