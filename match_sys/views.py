@@ -546,6 +546,12 @@ if 'view':
 
     @login_required(1)
     def local_record(request, AI_type):
-        pass  # TODO
+        try:
+            assert int(AI_type) in settings.LOCAL_RECORD_WHITELIST
+        except:
+            return sorry(request, text='不支持的比赛类型: %s' % AI_type)
 
-        return render(request, 'renderer/%s.html' % match.ai_type, locals())
+        is_local_record = True
+        record_content = settings.LOCAL_RECORD_FLAG
+
+        return render(request, 'renderer/%s.html' % AI_type, locals())

@@ -4,6 +4,8 @@
 查看比赛记录:
 {% if match %}
 {{match.code1.name}} vs. {{match.code2.name}} - {{record_id}}
+{% elif is_local_record %}
+本地记录可视化
 {% else %}
 课堂记录复盘
 {% endif %}
@@ -22,11 +24,45 @@
 </style>
 {% endblock %}
 
+{% block content %}
+{% if is_local_record %}
+<style>
+    #upload_mask {
+        z-index: 900;
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 56px;
+        bottom: 0;
+        background-color: rgba(200, 220, 250, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    #upload_error {
+        color: red;
+    }
+</style>
+<div id='upload_mask'>
+    <div>
+        <h1>上传比赛记录</h1>
+        <input type="file" id='upload_input'>
+        <div id='upload_error'></div>
+    </div>
+</div>
+{% endif %}
+{{ block.super }}
+{% endblock %}
+
 {% block header %}
 <div class='col-sm-4'>
     <h1>
         {% if match %}
         <a href='../' title='{{match.code1.name}} vs. {{match.code2.name}}'>返回比赛</a>
+        {% elif is_local_record %}
+        <a href='../../game/{{AI_type}}/'>返回介绍页</a>
+        <a href='./'>选择新文件</a>
         {% else %}
         <a href='../'>返回课堂比赛结果</a>
         {% endif %}
@@ -80,7 +116,7 @@
 <script>
     // 读入数据
     record_obj = document.getElementById('record_receiver').innerHTML
-    IS_LOCAL_RECORD = record_obj == '{% settings.LOCAL_RECORD_FLAG %}'
+    IS_LOCAL_RECORD = record_obj == '{{ settings.LOCAL_RECORD_FLAG }}'
     if (!IS_LOCAL_RECORD)
         record_obj = JSON.parse(record_obj)
 
@@ -195,16 +231,49 @@
 
     // 初始化事件
     window.addEventListener('load', () => {
-        if (IS_LOCAL_RECORD) init_local()
-        else init()
-        scroller.max = TOTAL_FRAMES - 1
-        draw_frame()
-        play_pause()
+        var loadFunc = () => {
+            init()
+            scroller.max = TOTAL_FRAMES - 1
+            draw_frame()
+            play_pause()
+        }
+        if (IS_LOCAL_RECORD) init_local(loadFunc)
+        else loadFunc()
     })
 
     // 本地读取JSON记录
-    function init_local() {
-        // TODO
+    function init_local(callback) {
+        var infile = document.getElementById('upload_input'),
+            errors = document.getElementById('upload_error'),
+            upload_mask = document.getElementById('upload_mask')
+        infile.addEventListener('change', () => {
+            errors.innerHTML = ''
+            var data;
+            if (infile.files.length == 0) {
+                errors.innerText = `请选择比赛记录文件`
+                return
+            }
+            try {
+                let file = infile.files[0];
+                let reader = new FileReader();
+                reader.onload = function () {
+                    var data = reader.result
+                    try {
+                        record_obj = JSON.parse(data)
+                    } catch (e) {
+                        errors.innerText = `解析比赛记录失败: ${e}`
+                        return
+                    }
+
+                    // 回复加载流程
+                    upload_mask.style.display = 'none'
+                    callback()
+                };
+                reader.readAsText(file);
+            } catch (e) {
+                errors.innerText = `读取文件失败: ${e}`
+            }
+        }, false);
     }
 
     // 通用接口
