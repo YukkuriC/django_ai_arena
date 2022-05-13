@@ -13,6 +13,7 @@ from django.template import loader
 from django.shortcuts import render
 from usr_sys import models as usr_models
 import json
+from urllib import parse
 
 
 def attach_settings(request):
@@ -95,18 +96,26 @@ def show_date(date):
 
 if 'user system':
 
-    def login_required(req_yes, req_email=True, target=None):
-        if target == None:
-            target = '/login/' if req_yes else '/home/'
-
+    def login_required(req_yes, req_email=True):
         def decorator(func):
             def wrap(req, *a, **kw):
-                if bool(req.session.get('userid')) == req_yes:
-                    if req_yes and req_email and not get_user(
-                            req).email_validated:
+                has_user = bool(req.session.get('userid'))
+                user_email = has_user and get_user(req).email_validated
+
+                # 已登录重定向
+                if has_user:
+                    if not req_yes:
+                        return redirect('/home/')
+                    if req_email and not user_email:
                         return redirect('/validate/')
-                    return func(req, *a, **kw)
-                return redirect(target)
+
+                # 未登录重定向
+                elif req_yes:
+                    encoded = parse.quote(req.get_full_path())
+                    return redirect('/login/?next=' + encoded)
+
+                # 原函数
+                return func(req, *a, **kw)
 
             return wrap
 
