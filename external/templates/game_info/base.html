@@ -32,7 +32,7 @@
 <!-- <div class='x_title'>
     <h1>传送门</h1>
 </div> -->
-<div class='row x_block'>
+<div class='row x_block' id='button_pool'>
     <div class='col-sm-4'>
         <a href="/lobby/ranked_match/{{AI_type}}/" class='btn btn-primary form-control'>匹配对战</a>
     </div>
@@ -42,6 +42,17 @@
     <div class='col-sm-4'>
         <a href="/lobby/ladder/{{AI_type}}/" class='btn btn-primary form-control'>查看天梯</a>
     </div>
+    {% if AI_type in settings.LOCAL_RECORD_WHITELIST %}
+    <div class='col-sm-3'>
+        <a href="/local_record/{{AI_type}}/" class='btn btn-primary form-control'>预览本地比赛记录</a>
+    </div>
+    <script>
+        for(var btn of document.querySelectorAll('#button_pool>div')){
+            btn.classList.remove('col-sm-4')
+            btn.classList.add('col-sm-3')
+        }
+    </script>
+    {% endif %}
 </div>
 
 {% if request.session.userid %}
