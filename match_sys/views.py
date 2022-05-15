@@ -543,3 +543,15 @@ if 'view':
         not_last_record = (record_id + 1 != match.finished_rounds)
 
         return render(request, 'renderer/%s.html' % match.ai_type, locals())
+
+    @login_required(1)
+    def local_record(request, AI_type):
+        try:
+            assert int(AI_type) in settings.LOCAL_RECORD_WHITELIST
+        except:
+            return sorry(request, text='不支持的比赛类型: %s' % AI_type)
+
+        is_local_record = True
+        record_content = settings.LOCAL_RECORD_FLAG
+
+        return render(request, 'renderer/%s.html' % AI_type, locals())

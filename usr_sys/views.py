@@ -53,24 +53,27 @@ def login(request):
     '''
     登录
     '''
+    next = request.GET.get('next', '/home/')
+    form = forms.LoginForm(request.POST or None)
     if request.method == 'POST':
-        form = forms.LoginForm(request.POST)
         # check username
-        key = request.POST.get('username')
-        pw = request.POST.get('passwd')
-        if key and pw:
-            try:
-                user = User.objects.get(
-                    Q(username=key) | Q(email_field=key) | Q(stu_code=key))
-            except:
-                user = None
-            if user and user.match_passwd(pw):
-                set_user(request, user)
-                messages.info(request, '登录成功')
-                return redirect('/home/')
-        messages.warning(request, '用户名或密码错误')
-        return render(request, 'login.html', locals())
-    return render(request, 'login.html', {'form': forms.LoginForm()})
+        if form.is_valid():
+            data = form.cleaned_data
+            key = data['username']
+            pw = data['passwd']
+            if key and pw:
+                try:
+                    user = User.objects.get(
+                        Q(username=key) | Q(email_field=key) | Q(stu_code=key))
+                except:
+                    user = None
+                if user and user.match_passwd(pw):
+                    set_user(request, user)
+                    messages.info(request, '登录成功')
+                    return redirect(next)
+            messages.warning(request, '用户名或密码错误')
+
+    return render(request, 'login.html', locals())
 
 
 def logout(request):
@@ -238,10 +241,12 @@ def forgotpasswd(request, code=None):
                     # 小组用户无邮箱
                     if user.is_team:
                         return sorry(
-                            request, text=[
+                            request,
+                            text=[
                                 '小组用户不可通过邮箱重置密码',
                                 '若忘记密码请联系课程团队',
-                            ])
+                            ],
+                        )
 
             # 发送邮件
             if form.is_valid():
