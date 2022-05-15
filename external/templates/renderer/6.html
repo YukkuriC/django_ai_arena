@@ -92,6 +92,19 @@
         /* border-width: 2px; */
         transition: 0.1s all;
     }
+
+    @keyframes ssfd {
+        0% { transform: rotate(0deg); }
+        25% { transform: rotate(30deg); }
+        50% { transform: rotate(0deg); }
+        75% { transform: rotate(-30deg); }
+        100% { transform: rotate(0deg); }
+    }
+    .rotated {
+        -webkit-animation: 0.3s ssfd 1;
+        animation: 0.3s ssfd 1;
+        animation-fill-mode: forwards;
+    }
     
     .free {
         opacity: 60%;
@@ -404,6 +417,7 @@
                 var y = H - j - 1
                 var cell_val = col[y]
                 var cell = NODES[`${i},${j}`]
+                cell.classList.remove("rotated")
                 if (cell_val == 0) {
                     cell.classList.add('free')
                     cell.classList.remove('occupied')
@@ -421,8 +435,10 @@
                     });
                 }
                 frame.stolenLines.forEach((element)=>{
-                    if (i == element)
+                    if (i == element) {
                         cell.style.border = "3px solid white";
+                        cell.classList.add("rotated");
+                    }
                 })
                 cell.style.backgroundColor = pick_color(cell_val)
             }
