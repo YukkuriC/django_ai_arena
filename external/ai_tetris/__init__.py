@@ -2,6 +2,7 @@ from external._base import BasePairMatch
 from external.factory import FactoryDeco
 from external.helpers_core import stringfy_error
 from .wrap import Game, register_player
+import random, time
 
 
 # 比赛进程
@@ -21,6 +22,11 @@ class TetrisMatch(BasePairMatch):
 
     @classmethod
     def run_once(cls, d_local, d_global):
+        # 每两轮更换固定种子
+        if d_local['who_first'] != "4" or d_local['rid'] % 2 == 0:
+            cls.last_seed = int(time.time() * 1000)
+        random.seed(getattr(cls, 'last_seed'))
+
         play = Game(*d_local['names'], 10)
         while play.state == "gaming":
             play.turn()
