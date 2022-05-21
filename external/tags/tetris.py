@@ -16,5 +16,8 @@ class TetrisRecord(RecordBase):
     def r_win_desc(_, match, record):
         return record['reason']
 
-    def r_desc_plus(_, match, record):
+    def r_desc_plus(_, match, record):  # 报错信息
+        errors = record.get('errors')
+        if errors:
+            return ';\n'.join(e for e in errors if e)
         return '无'

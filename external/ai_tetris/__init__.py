@@ -32,6 +32,10 @@ class TetrisMatch(BasePairMatch):
             play.turn()
         play.end()
 
+        # 写入报错
+        play.reviewData.gameData['errors'] = list(
+            map(stringfy_error, play.errors))
+
         return play.reviewData.gameData
 
     @classmethod
