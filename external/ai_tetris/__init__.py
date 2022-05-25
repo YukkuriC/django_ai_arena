@@ -48,7 +48,7 @@ class TetrisMatch(BasePairMatch):
         return (cls._trans_winner(record), )
 
     @classmethod
-    def runner_fail_log(cls, winner, descrip, d_local, d_global):
+    def runner_fail_log(cls, winner, e, d_local, d_global):
         winner = winner + 1 if isinstance(winner, int) else -1
         names = d_local['names']
         log = {
@@ -59,6 +59,7 @@ class TetrisMatch(BasePairMatch):
             "tag": None,
             "matchData": {}
         }
+        return log
 
     @classmethod
     def get_winner(cls, record):
