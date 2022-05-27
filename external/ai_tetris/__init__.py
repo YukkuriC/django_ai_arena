@@ -13,7 +13,7 @@ class TetrisMatch(BasePairMatch):
 
     def get_timeout(self):
         '''获取超时限制'''
-        return self.params['rounds'] * 50
+        return self.params['rounds'] * 30
 
     @classmethod
     def pre_run(cls, d_local, d_global):
@@ -27,7 +27,7 @@ class TetrisMatch(BasePairMatch):
             cls.last_seed = int(time.time() * 1000)
         random.seed(getattr(cls, 'last_seed'))
 
-        play = Game(*d_local['names'], 20)
+        play = Game(*d_local['names'], 10)
         while play.state == "gaming":
             play.turn()
         play.end()
