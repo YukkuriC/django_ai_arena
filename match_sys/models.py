@@ -56,15 +56,34 @@ class Code(models.Model):
 set_autodelete(locals(), Code, 'content')
 
 
+def mark_code1_matches_on_delete(sender, instance, **kwargs):
+    user = instance.author
+    for match in PairMatch.objects.filter(code1=instance):
+        match.code1 = None
+        match.user1 = user
+        match.save()
+
+
+models.signals.pre_delete.connect(mark_code1_matches_on_delete, Code)
+
+
 class PairMatch(models.Model):
     ai_type = models.IntegerField(
         verbose_name='AI类型', choices=settings.AI_TYPES.items())
     name = models.CharField('名称', max_length=128)
     code1 = models.ForeignKey(
         Code,
-        models.CASCADE,
+        models.DO_NOTHING,
         verbose_name='我方代码',
         related_name='pmatch1',
+        null=True,
+        default=None,
+    )
+    user1 = models.ForeignKey(
+        usr_models.User,
+        models.CASCADE,
+        null=True,
+        default=None,
     )
     code2 = models.ForeignKey(
         Code,
@@ -107,6 +126,10 @@ class PairMatch(models.Model):
             shutil.rmtree(path_to_remove)
         except:
             pass
+
+    @property
+    def holder(self):
+        return self.user1 or self.code1.author
 
 
 # 绑定删除文件夹事件

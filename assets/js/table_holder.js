@@ -63,13 +63,22 @@ class TableHolder {
                 case 'code2':
                     if (typeof content[1] == 'number') {
                         var link = document.createElement('a')
-                        link.href = '/code/' + content[1]
+                        if (content[1] > 0)
+                            link.href = '/code/' + content[1]
+                        else
+                            link.href = '/user/' + (-content[1])
 
                         var icon = document.createElement('img')
                         icon.className = 'user-icon-24'
                         icon.src = content[2]
                         link.appendChild(icon)
-                        link.innerHTML += content[0]
+                        if (content[1] > 0)
+                            link.innerHTML += content[0]
+                        else {
+                            var mark = document.createElement('i')
+                            mark.innerText = content[0]
+                            link.appendChild(mark)
+                        }
 
                         cell.appendChild(link)
                     } else {

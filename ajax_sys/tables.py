@@ -108,6 +108,12 @@ class MatchTablePage(TablePageBase):
     def grab_cell(cls, cell_type, item, params):
         if cell_type[:4] == 'code':  # name, id or null
             code = getattr(item, cell_type)
+            if cell_type == 'code1' and item.code1 is None:
+                return [
+                    '来自' + item.user1.username,
+                    -item.user1.id,
+                    item.user1.gravatar_icon(settings.TABLE_ICON_SIZE),
+                ]
             res = [code.name]
             if params.get('code') == code:
                 res.append(None)
@@ -116,16 +122,6 @@ class MatchTablePage(TablePageBase):
                 # gravatar
                 res.append(code.author.gravatar_icon(settings.TABLE_ICON_SIZE))
             return res
-        if cell_type == 'code1':
-            return [
-                item.code1.name, None
-                if params.get('code') == item.code1 else item.code1.id
-            ]
-        elif cell_type == 'code2':
-            return [
-                item.code2.name, None
-                if params.get('code') == item.code2 else item.code2.id
-            ]
         elif cell_type == 'time':
             return show_date(item.run_datetime)
         elif cell_type == 'rounds':

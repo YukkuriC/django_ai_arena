@@ -7,10 +7,17 @@
 {% block header %}
 <div class='col-sm-4'>
     <h1>
+        {% if match.code1 %}
         <a href="/code/{{match.code1.id}}/">
             <img src="{{match.code1.author | g_icon}}" class='user-icon'>
             {{match.code1.name}}
         </a>
+        {% else %}
+        <a href="/user/{{match.holder.id}}/">
+            <img src="{{match.holder | g_icon}}" class='user-icon'>
+            <i>{{match.user1.name}}的已删除代码</i>
+        </a>
+        {% endif %}
     </h1>
 </div>
 <div class='col-sm-4'>
