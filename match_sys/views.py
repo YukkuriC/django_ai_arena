@@ -505,7 +505,7 @@ if 'view':
                 match_monitor.kill_match('match', match.name)
                 messages.info(request, '比赛已中止')
             elif match.status != 1 and op == 'del':
-                if not settings.CAN_DELETE_MATCH_RESULT:
+                if not (settings.CAN_DELETE_MATCH_RESULT or user.is_admin):
                     return sorry(request, text='删除比赛记录功能已关闭')
                 upper = match.code1.id
                 match.delete()

@@ -59,7 +59,9 @@
             {%if match.status == 1%}
             <a class='btn-sm btn-warning' href="./?op=stop">中止比赛运行</a>
             {%else%}
+            {%if settings.CAN_DELETE_MATCH_RESULT or user.is_admin%}
             <a class='btn-sm btn-danger' href="./?op=del">删除记录</a>
+            {%endif%}
             {%endif%}
             {%endif%}
         </p>
