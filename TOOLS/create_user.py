@@ -66,7 +66,8 @@ def get_pw(username, seed):
 def create_user(username, pw):
     print('USERNAME:', username, 'PW:', pw)
     user, _ = User.objects.get_or_create(username=username)
-    user.username = user.email_field = user.stu_code = user.nickname = user.real_name = username
+    user.username = user.nickname = user.real_name = username
+    user.email_field = user.stu_code = username[:5]  #F11_4
     user.set_passwd(pw)
     user.email_validated = True
     user.is_team = True
