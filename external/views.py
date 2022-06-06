@@ -165,10 +165,16 @@ def pick_names(AI_type, record):
     if AI_type == 5:  # stellar
         names = record['player_name']
         return tuple(names[str(i)] for i in (0, 1))
+    if AI_type == 6:  # tetris
+        return tuple(record['player%s' % i] for i in (1, 2))
 
     return ('foo', 'bar')
 
 
 def pick_winner(AI_type, record):
     """ 按类型提取胜者 """
+    if AI_type == 6:  # tetris
+        return record["winner"] - 1 if record["winner"] > 0 else None
+
+    # default
     return record['winner']
