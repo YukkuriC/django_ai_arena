@@ -41,7 +41,10 @@ class TetrisMatch(BasePairMatch):
     @classmethod
     def _trans_winner(cls, record):
         ''' winner转换至平台设定 '''
-        return record["winner"] - 1 if record["winner"] > 0 else None
+        try:
+            return record["winner"] - 1
+        except:
+            return None
 
     @classmethod
     def output_queue(cls, record):

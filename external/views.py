@@ -129,7 +129,7 @@ def extra_info_scores(AI_type, records, logs):
 
         # 输出单记录与比分信息
         record_extra = f'发起方: {names[0]}; '
-        if record['winner'] == None:
+        if winner == None:
             record_extra += '平局'
             for n in names:
                 curr_counter[n] += 0.5
@@ -174,7 +174,10 @@ def pick_names(AI_type, record):
 def pick_winner(AI_type, record):
     """ 按类型提取胜者 """
     if AI_type == 6:  # tetris
-        return record["winner"] - 1 if record["winner"] > 0 else None
+        try:
+            return record["winner"] - 1
+        except:
+            return None
 
     # default
     return record['winner']

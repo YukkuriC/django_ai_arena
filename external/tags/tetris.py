@@ -8,7 +8,10 @@ class TetrisRecord(RecordBase):
 
     def i_winner(_, match, record):
         w = record['winner']
-        return w - 1 if w > 0 else None
+        try:
+            return w - 1
+        except:
+            return None
 
     def r_length(_, match, record):
         return len(record['matchData'])
