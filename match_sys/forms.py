@@ -13,7 +13,7 @@ class CodeUploadForm(forms.ModelForm):
             raise forms.ValidationError('请填写正确的AI类型')
         file = self.cleaned_data['content']
         try:
-            Factory(ai_type).load_code(file.read(), True)  # 试加载代码内容
+            Factory(ai_type).load_code(file.read(), True, True)  # 试加载代码内容
         except Exception as e:
             raise forms.ValidationError(str(e))
         return file

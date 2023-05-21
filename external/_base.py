@@ -29,6 +29,13 @@ class BaseProcess:
 
         # 获取match对象与代码路径
         self.reload_match()
+
+        # bugfix：创建代码->发起比赛->删除代码
+        if not self.match.code1:
+            self.match.status = 3
+            self.match.save()
+            return
+
         code1 = path.join(settings.MEDIA_ROOT, str(self.match.code1.content))
         code2 = path.join(settings.MEDIA_ROOT, str(self.match.code2.content))
 
