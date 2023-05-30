@@ -196,6 +196,8 @@ class BaseCodeLoader:
             # 非法调用__builtins__
             elif isinstance(node, ast.Name) and node.id == '__builtins__':
                 raise cls._ast_error(node, 1, '__builtins__')
+            elif isinstance(node, ast.Attribute) and node.attr in ('__builtins__', '__dict__'):
+                raise cls._ast_error(node, 1, node.attr)
 
         # 检查是否已导入必要函数与类
         all_func = set()
